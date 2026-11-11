@@ -1,0 +1,39 @@
+/* Installed-app additions: safe areas, sign-in screen, install tip. */
+header { padding-top: calc(14px + env(safe-area-inset-top)); }
+@media (max-width: 600px) { .menubtn { top: calc(12px + env(safe-area-inset-top)); } }
+main { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+body.rl-lock { overflow: hidden; }
+
+.rl-ov { position: fixed; inset: 0; z-index: 50; background: var(--green); overflow-y: auto; padding: calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom)); }
+.rl-ov.hide { display: none; }
+.rl-box { max-width: 420px; margin: 0 auto; color: #fff; text-align: center; }
+.rl-logo { width: 84px; height: 84px; border-radius: 20px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.rl-title { font-size: 24px; font-weight: 800; margin: 10px 0 18px; letter-spacing: .3px; }
+.rl-q { font-size: 20px; font-weight: 700; margin: 6px 0 4px; }
+.rl-q2 { font-size: 16px; opacity: .9; }
+.rl-sub, .rl-sub2 { font-size: 13px; opacity: .8; margin: 14px 0 8px; }
+.rl-sub { text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+.rl-sub2 { margin-top: 4px; }
+.rl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+.rl-grid button { border: 0; border-radius: 12px; padding: 14px 8px; font-size: 17px; font-weight: 600; background: #fff; color: var(--green); }
+.rl-grid button:active { background: var(--mid); }
+.rl-link { border: 0; background: none; color: inherit; font-size: 14px; text-decoration: underline; padding: 6px; margin-top: 14px; cursor: pointer; }
+.rl-box .rl-back { display: block; margin: 0 0 8px; text-decoration: none; opacity: .9; }
+.rl-msg { min-height: 20px; font-size: 14px; margin: 8px 0; font-weight: 600; }
+.rl-msg.err { color: #ffd6d2; }
+.rl-dots { display: flex; justify-content: center; gap: 16px; margin: 18px 0 6px; }
+.rl-dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; }
+.rl-dots i.on { background: #fff; }
+.rl-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 14px 22px; justify-content: center; margin-top: 10px; }
+.rl-pad button { width: 72px; height: 72px; border-radius: 50%; border: 0; background: rgba(255,255,255,.16); color: #fff; font-size: 28px; font-weight: 600; }
+.rl-pad button:active { background: #fff; color: var(--green); }
+.rl-btn { border: 0; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 700; background: #fff; color: var(--green); }
+
+.rl-who { margin-top: 8px; }
+.rl-who .rl-link { margin: 0; padding: 0; font-size: 12px; color: var(--green); }
+
+.rl-tip { position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 40; display: flex; align-items: center; gap: 10px; background: #fff; color: var(--ink); border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.2); padding: 12px 12px 12px 14px; font-size: 14px; max-width: 540px; margin: 0 auto; }
+.rl-tip > div { flex: 1; line-height: 1.35; }
+.rl-tip .rl-btn { background: var(--green); color: #fff; }
+.rl-x { border: 0; background: none; font-size: 18px; color: var(--muted); padding: 4px 6px; }
+.rl-share { display: inline-block; width: 14px; height: 17px; vertical-align: -3px; background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 15V2M5 7l5-5 5 5M4 11H2v11h16V11h-2'/%3E%3C/svg%3E"); }

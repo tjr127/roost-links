@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roost Links</title>
+<meta name="theme-color" content="#1E4D2B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Roost Links">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root { --green: #1E4D2B; --light: #EAF4E4; --mid: #D9EAD3; --ink: #1d1d1d; --muted: #6b6b6b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); background: #f4f5f2; }
+  header { background: var(--green); color: #fff; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 2; }
+  header h1 { margin: 0; font-size: 20px; letter-spacing: .3px; }
+  header .sub { font-size: 14px; opacity: .85; margin-top: 2px; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  nav button { flex: 1 1 auto; border: 0; border-radius: 18px; padding: 8px 12px; font-size: 15px; font-weight: 600; background: rgba(255,255,255,.15); color: #fff; line-height: 1.2; white-space: nowrap; }
+  nav button.on { background: #fff; color: var(--green); }
+  .menubtn, .curtab { display: none; }
+  @media (max-width: 600px) {
+    header { padding-right: 70px; }
+    .menubtn { display: flex; align-items: center; justify-content: center; position: absolute; top: 12px; right: 12px; width: 46px; height: 46px; border: 0; border-radius: 12px; background: rgba(255,255,255,.15); color: #fff; font-size: 26px; line-height: 1; }
+    header.open .menubtn { background: #fff; color: var(--green); }
+    .curtab { display: block; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; opacity: .95; }
+    nav { display: none; flex-direction: column; gap: 6px; margin: 12px -58px 2px 0; }
+    header.open nav { display: flex; }
+    nav button { flex: none; text-align: left; padding: 13px 16px; border-radius: 12px; font-size: 17px; }
+  }
+  main { padding: 12px 12px 40px; max-width: 560px; margin: 0 auto; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 18px 4px 8px; }
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 10px; overflow: hidden; }
+  .match { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; padding: 12px 14px; gap: 8px; }
+  .match .name { font-size: 17px; font-weight: 600; }
+  .match .name.r { text-align: right; }
+  .match .thr { font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+  .match .thr.f { color: var(--green); }
+  .match .stk { font-size: 12px; font-weight: 500; color: var(--green); margin-top: 3px; line-height: 1.3; }
+  .match .pts { font-size: 22px; font-weight: 700; min-width: 34px; text-align: center; border-radius: 8px; padding: 2px 4px; }
+  .match .mid { text-align: center; }
+  .match .scores { display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+  .match .ow { font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); margin-top: 6px; white-space: nowrap; }
+  .match .vs { font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 2px; }
+  .match .pts.lead { background: var(--mid); color: var(--green); }
+  .match .thru { grid-column: 1 / -1; font-size: 13px; color: var(--muted); text-align: center; margin-top: -4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; color: var(--muted); padding: 10px 12px 6px; font-weight: 600; }
+  td { padding: 10px 12px; border-top: 1px solid #eee; }
+  td.n, th.n { text-align: center; }
+  td.b { font-weight: 700; }
+  tr.top td { background: var(--light); }
+  .note { font-size: 12px; color: var(--muted); }
+  .team { padding: 12px 14px; }
+  .team .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .team .tname { font-size: 17px; font-weight: 600; }
+  .team .score { font-size: 22px; font-weight: 700; color: var(--green); }
+  .team .meta { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .team .mem { display: flex; justify-content: space-between; font-size: 15px; padding: 6px 0 0; }
+  .team .mem .th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .team .mem .th.f { color: var(--green); }
+  .gamecard { padding: 14px 16px; border-left: 5px solid var(--green); }
+  .gamecard .gname { font-size: 22px; font-weight: 700; color: var(--green); }
+  .gamecard .gdesc { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .empty { padding: 16px; color: var(--muted); text-align: center; }
+  .picker { padding: 12px 14px; }
+  .picker label { display: block; font-size: 12px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .picker select { width: 100%; font-size: 17px; padding: 10px 12px; border: 1px solid #ccd; border-radius: 10px; background: #fff; color: var(--ink); }
+  .summary { font-size: 14px; color: var(--muted); margin: 0 4px 8px; }
+  .wk { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid #eee; }
+  .wk:first-child { border-top: 0; }
+  .wk.next { background: var(--light); }
+  .wk .when { width: 58px; flex: none; }
+  .wk .date { font-size: 15px; font-weight: 700; }
+  .wk .tag { font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; }
+  .wk .what { flex: 1; min-width: 0; }
+  .wk .opp { font-size: 16px; font-weight: 600; }
+  .wk .course { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wk .res { flex: none; text-align: right; }
+  .chip { display: inline-block; min-width: 30px; padding: 3px 8px; border-radius: 12px; font-size: 13px; font-weight: 700; text-align: center; }
+  .chip.W { background: #d4edda; color: #1b5e20; }
+  .chip.L { background: #f8d7da; color: #8b1a1a; }
+  .chip.T { background: #fff3cd; color: #7a5c00; }
+  .chip.bye { background: #eee; color: #777; }
+  .chip.makeup, .chip.pending { background: #ffe0b2; color: #8a4b00; }
+  .chip.upcoming { background: transparent; color: var(--muted); font-weight: 600; }
+  .wk .score { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .wk.bye .opp { color: var(--muted); font-weight: 500; }
+  .sc-sum { display: flex; justify-content: space-between; padding: 12px 14px; gap: 8px; }
+  .sc-sum div { text-align: center; flex: 1; }
+  .sc-sum .v { font-size: 20px; font-weight: 700; color: var(--green); }
+  .sc-sum .k { font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .sc-meta { font-size: 13px; color: var(--muted); margin: 0 4px 8px; }
+  .sc-lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; padding: 10px 10px 2px; }
+  table.sc { table-layout: fixed; font-size: 14px; }
+  table.sc th, table.sc td { padding: 6px 0; text-align: center; border-top: 1px solid #eee; }
+  table.sc th { font-size: 11px; color: var(--muted); text-transform: none; }
+  table.sc .rl { width: 46px; text-align: left; padding-left: 8px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+  table.sc .tot { width: 36px; font-weight: 700; background: #f7f8f5; }
+  table.sc tr.hole td { font-weight: 700; color: var(--green); }
+  table.sc tr.sub td { font-size: 12px; color: var(--muted); }
+  table.stt { table-layout: fixed; font-size: 13px; }
+  .fhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .fhead select { font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1px solid #d5d8d0; background: #fff; color: var(--ink); }
+  th.sorted { color: var(--green); }
+  .fsort { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  table.stt th, table.stt td { padding: 7px 2px; text-align: center; white-space: nowrap; }
+  table.stt th { font-size: 11px; }
+  table.stt th:first-child, table.stt td:first-child { width: 28%; text-align: left; padding-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  table.sc td.g { position: relative; font-weight: 600; }
+  table.sc .dots { position: absolute; top: 0; right: 3px; font-size: 13px; font-weight: 700; line-height: 1; color: var(--green); }
+  .nb { display: inline-block; min-width: 24px; padding: 2px 0; border-radius: 6px; font-weight: 700; }
+  .nb.eagle { background: #f2c94c; color: #4a3500; border-radius: 50%; }
+  .nb.birdie { background: #d93025; color: #fff; border-radius: 50%; }
+  .nb.bogey { background: #cfe3f7; color: #0b3d6e; }
+  .nb.double { background: #1f4e8c; color: #fff; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); margin: 4px 4px 10px; align-items: center; }
+  .legend .nb { min-width: 16px; height: 16px; padding: 0; vertical-align: middle; margin-right: 4px; }
+  .en-info { font-size: 14px; color: var(--muted); margin-top: 10px; text-align: center; }
+  .stepper { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 12px 0 4px; }
+  .stepper button { width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--mid); color: var(--green); font-size: 34px; font-weight: 700; line-height: 1; }
+  .stepper button:active { background: var(--green); color: #fff; }
+  .en-val { min-width: 80px; text-align: center; font-size: 52px; font-weight: 800; color: var(--ink); }
+  .en-rel { text-align: center; font-size: 14px; font-weight: 600; color: var(--muted); min-height: 18px; }
+  .pills { display: flex; justify-content: center; gap: 28px; margin: 14px 0 6px; }
+  .pillcol { display: flex; flex-direction: column; align-items: center; }
+  .pill-lbl { font-size: 17px; font-weight: 600; color: var(--green); margin-bottom: 8px; }
+  .pill { width: 84px; padding: 10px 0; border-radius: 42px; background: var(--mid); display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .pill button { width: 64px; height: 64px; border-radius: 50%; border: 0; background: #fff; color: var(--green); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+  .pill button:active { background: var(--green); color: #fff; }
+  .pill button:disabled { opacity: .5; }
+  .pill button svg { width: 34px; height: 34px; }
+  .pill-val { font-size: 46px; font-weight: 800; color: var(--green); line-height: 1; min-height: 46px; }
+  .en-plbl { text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .stepper.small { margin-top: 2px; }
+  .stepper.small button { width: 48px; height: 48px; font-size: 26px; }
+  .stepper.small .en-val { font-size: 36px; min-width: 60px; }
+  .en-grid button i { display: block; font-style: normal; font-size: 10px; color: var(--muted); min-height: 12px; }
+  .en-save { width: 100%; margin-top: 14px; padding: 14px; border: 0; border-radius: 12px; background: var(--green); color: #fff; font-size: 18px; font-weight: 700; }
+  .en-save:disabled { opacity: .5; }
+  .en-msg { text-align: center; font-size: 14px; margin-top: 8px; min-height: 18px; color: var(--green); font-weight: 600; }
+  .en-msg.err { color: #b3261e; }
+  .en-clear { display: block; margin: 4px auto 0; border: 0; background: none; color: var(--muted); font-size: 13px; text-decoration: underline; }
+  .en-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; padding: 10px; }
+  .en-grid button { border: 1px solid #e2e4df; background: #fff; border-radius: 8px; padding: 4px 0; font-size: 11px; color: var(--muted); }
+  .en-grid button b { display: block; font-size: 16px; color: var(--ink); }
+  .en-grid button.on { border-color: var(--green); background: var(--light); }
+  .en-grid button.empty b { color: #c5c8c0; }
+  .en-grid button.saving b { color: var(--muted); }
+  .en-grid button.saving { border-style: dashed; }
+  .en-grid button.failed { border-color: #b3261e; background: #fdecea; }
+  .en-grid button.failed b { color: #b3261e; }
+  .hc-tiles { display: flex; gap: 10px; margin-bottom: 10px; }
+  .hc-tile { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 12px; text-align: center; }
+  .hc-tile .v { font-size: 34px; font-weight: 800; color: var(--green); line-height: 1.1; }
+  .hc-tile .k { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); font-weight: 700; margin-top: 2px; }
+  .hc-tile .s { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.3; }
+  .hc-chart { padding: 12px 12px 10px; }
+  .hc-tee { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 8px; border-radius: 8px; font-size: 14px; color: var(--muted); }
+  .hc-tee b { font-size: 20px; color: var(--ink); }
+  .hc-tee em { font-style: normal; font-size: 11px; }
+  .hc-tee.mine { background: var(--light); color: var(--green); font-weight: 700; }
+  .hc-tee.mine b { color: var(--green); }
+  .hc-head { display: flex; flex-direction: column; gap: 6px; }
+  .hc-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .hc-key { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); }
+  .hc-key i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .hc-plot { position: relative; height: 190px; margin: 22px 0 16px 28px; border-left: 1px solid #e3e5df; }
+  .hc-grid { position: absolute; left: 0; right: 0; border-top: 1px solid #eef0eb; }
+  .hc-grid.zero { border-top-color: #b9bdb3; }
+  .hc-grid span { position: absolute; left: -30px; top: -7px; width: 26px; text-align: right; font-size: 10px; color: var(--muted); }
+  .hc-line { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 2; pointer-events: none; }
+  .hc-val { position: absolute; left: -6px; right: -6px; text-align: center; font-size: 9px; font-weight: 600; color: var(--muted); letter-spacing: -.3px; line-height: 10px; }
+  .hc-col.sel .hc-val { color: var(--ink); font-weight: 800; }
+  .hc-bars { position: absolute; inset: 0; display: flex; justify-content: center; gap: 2px; padding: 0 2px; }
+  .hc-col { flex: 1; max-width: 44px; position: relative; cursor: pointer; }
+  .hc-bar { position: absolute; left: 0; right: 0; background: #cfd3cb; }
+  .hc-bar.c { background: var(--green); }
+  .hc-bar.pos { border-radius: 4px 4px 0 0; }
+  .hc-bar.neg { border-radius: 0 0 4px 4px; }
+  .hc-col.sel .hc-bar { outline: 2px solid #f2c94c; outline-offset: 1px; }
+  .hc-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-left: 28px; }
+  .hc-detail { margin-top: 10px; padding: 10px 12px; background: #f7f8f5; border-radius: 10px; font-size: 14px; min-height: 42px; }
+  .hc-detail b { color: var(--green); }
+  .hc-detail .muted { color: var(--muted); font-size: 12px; }
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px; }
+  .hide { display: none; }
+
+  .team.tap { cursor: pointer; }
+  .team .tpl { display: inline-block; min-width: 34px; margin-right: 6px; padding: 1px 6px; border-radius: 10px; background: var(--light); color: var(--green); font-size: 13px; font-weight: 700; text-align: center; vertical-align: 2px; }
+  .team .tmore { font-size: 12px; color: var(--green); margin-top: 6px; text-align: right; font-weight: 600; }
+  .inel { font-size: 13px; color: #8b1a1a; font-weight: 600; }
+  .tcount { font-size: 13px; color: var(--muted); margin: 0 2px 8px; font-weight: 600; }
+  .tnav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .tnav button { border: 0; border-radius: 16px; padding: 7px 14px; font-size: 15px; font-weight: 600; background: var(--green); color: #fff; margin-left: 6px; }
+  .tnav .tback { margin-left: 0; background: #fff; color: var(--green); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .thead .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .thead .tbig { font-size: 26px; font-weight: 700; color: var(--green); }
+  .thead .tsub { font-size: 14px; margin-top: 4px; }
+  .thead .tplayers { font-size: 14px; margin-top: 8px; }
+  .thead .th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .thead .th.f { color: var(--green); }
+  table.tdt { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .tdt th { background: var(--green); color: #fff; font-size: 12px; font-weight: 600; padding: 7px 2px; white-space: nowrap; overflow: hidden; max-width: 64px; }
+  .tdt td { padding: 6px 2px; border-bottom: 1px solid #eee; text-align: center; vertical-align: middle; }
+  .tdt td.hn { font-weight: 700; }
+  .tdt td.par { color: var(--muted); }
+  .tdt td.use { background: #cfe8c6; font-weight: 700; color: var(--green); }
+  .tdt td.out { color: #aaa; }
+  .tdt td sup { font-size: 10px; margin-left: 1px; color: var(--green); font-weight: 700; }
+  .tdt td.tv { font-weight: 700; background: var(--light); }
+  .tdt .ttag { font-size: 10px; font-weight: 600; color: var(--muted); }
+  .tdt .ttag.flip { color: #b23c17; }
+  .tdt td.pos { font-size: 12px; line-height: 1.15; }
+  .tdt td.pos div { font-size: 10px; color: var(--muted); }
+  .tdt tr.tot td { font-weight: 700; border-top: 2px solid var(--green); border-bottom: 0; }
+  .tdt .dash { color: #ccc; }
+  .tleg { font-size: 12px; color: var(--muted); margin: 0 4px 12px; }
+  .tleg .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #cfe8c6; vertical-align: -2px; }
+</style>
+<link rel="stylesheet" href="app.css">
+<script src="app.js"></script>
+</head>
+<body>
+<header>
+  <h1>Roost Links</h1>
+  <div class="sub" id="title">Loading…</div>
+  <div class="curtab" id="curtab">Leaderboard</div>
+  <button type="button" class="menubtn" id="menubtn" aria-label="Menu" aria-expanded="false">☰</button>
+  <nav>
+    <button data-tab="tonight" class="on">Leaderboard</button>
+    <button data-tab="teams">Team Leaderboard</button>
+    <button data-tab="standings">Season Standings</button>
+    <button data-tab="schedule">Schedule</button>
+    <button data-tab="cards">ScoreCards</button>
+    <button data-tab="enter">Enter Score</button>
+    <button data-tab="hcp">Player Handicaps</button>
+  </nav>
+</header>
+<main>
+  <section id="tonight">
+    <div id="matchwrap"><h2>Head-to-Head Match Leaderboard</h2><div id="matches"></div></div>
+    <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="field"></div>
+    <div id="statswrap" class="hide"><h2>Individual Stats</h2><div class="card" id="stats"></div></div>
+  </section>
+  <section id="teams" class="hide"><h2>Team game</h2><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
+  <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div></section>
+  <section id="schedule" class="hide">
+    <h2>Schedule</h2>
+    <div class="card picker"><label for="who">Player</label><select id="who"></select></div>
+    <div class="summary" id="schedsum"></div>
+    <div class="card" id="weeks"></div>
+  </section>
+  <section id="cards" class="hide">
+    <h2>ScoreCards</h2>
+    <div class="card picker"><label for="cardwho">Player</label><select id="cardwho"></select></div>
+    <div id="cardbody"></div>
+  </section>
+  <section id="enter" class="hide">
+    <h2>Enter score</h2>
+    <div class="card picker">
+      <label for="enwho">Player</label><select id="enwho"></select>
+      <label for="enhole" style="margin-top:12px">Hole</label><select id="enhole"></select>
+      <div class="en-info" id="eninfo"></div>
+      <div class="pills">
+        <div class="pillcol"><div class="pill-lbl">Score</div>
+          <div class="pill"><button type="button" id="enplus" aria-label="One more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></button><div class="pill-val" id="enval">–</div><button type="button" id="enminus" aria-label="One less"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></button></div>
+        </div>
+        <div class="pillcol"><div class="pill-lbl">Putts</div>
+          <div class="pill"><button type="button" id="enpplus" aria-label="One more putt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></button><div class="pill-val" id="enpval">–</div><button type="button" id="enpminus" aria-label="One less putt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></button></div>
+        </div>
+      </div>
+      <div class="en-rel" id="enrel"></div>
+      <button type="button" class="en-save" id="ensave">Save score</button>
+      <div class="en-msg" id="enmsg"></div>
+      <button type="button" class="en-clear" id="enclear">Clear this hole</button>
+    </div>
+    <div class="card" id="enholes"></div>
+  </section>
+  <section id="hcp" class="hide">
+    <h2>Player handicaps</h2>
+    <div class="card picker"><label for="hcpwho">Player</label><select id="hcpwho"></select></div>
+    <div id="hcpbody"></div>
+  </section>
+  <footer>Updated <span id="updated">…</span> · refreshes every minute</footer>
+</main>
+<script>
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function thr(t) { return t ? '<div class="thr' + (t === 'F' ? ' f' : '') + '">' + esc(t) + '</div>' : ''; }
+  function num(s) { var n = parseFloat(s); return isNaN(n) ? null : n; }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  var data = null;
+
+  function showTab(tab) {
+    document.querySelectorAll('nav button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab); });
+    document.querySelectorAll('main section').forEach(function (s) { s.classList.toggle('hide', s.id !== tab); });
+    store('tab', tab);
+    if (tab === 'hcp' && data) renderHcp();
+    var on = document.querySelector('nav button[data-tab="' + tab + '"]');
+    if (on) document.getElementById('curtab').textContent = on.textContent;
+    setMenu(false);
+  }
+  function setMenu(open) {
+    document.querySelector('header').classList.toggle('open', open);
+    document.getElementById('menubtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.getElementById('menubtn').textContent = open ? '✕' : '☰';
+  }
+  document.getElementById('menubtn').addEventListener('click', function () {
+    setMenu(!document.querySelector('header').classList.contains('open'));
+  });
+  document.querySelectorAll('nav button').forEach(function (b) {
+    b.addEventListener('click', function () { showTab(b.dataset.tab); });
+  });
+  var lastTab = store('tab');
+  if (lastTab && document.getElementById(lastTab)) showTab(lastTab);
+
+  // One "me" pick shared by Schedule, ScoreCards, Enter Score and Player Handicaps.
+  if (store('me') === null) {
+    var oldPick = store('who') || store('card') || store('enwho') || store('hcp');
+    if (oldPick) store('me', oldPick);
+  }
+  var meName = store('me') || '';
+  function me() { return meName; }
+  function setMe(name) {
+    meName = name || ''; store('me', meName);
+    if (!data) return;
+    renderSchedule(); renderCard(); renderEntry(); renderHcp();
+  }
+  document.getElementById('who').addEventListener('change', function () { setMe(this.value); });
+
+  function renderSchedule() {
+    var list = (data && data.schedule) || [];
+    var sel = document.getElementById('who');
+    var want = me();
+    var names = list.map(function (p) { return p.name; });
+    var opts = '<option value="">Choose a player…</option>' + names.map(function (n) {
+      return '<option' + (n === want ? ' selected' : '') + '>' + esc(n) + '</option>';
+    }).join('');
+    if (sel.dataset.opts !== names.join('|')) { sel.innerHTML = opts; sel.dataset.opts = names.join('|'); }
+    sel.value = names.indexOf(want) >= 0 ? want : '';
+
+    var p = list.filter(function (x) { return x.name === sel.value; })[0];
+    if (!p) {
+      document.getElementById('schedsum').textContent = '';
+      document.getElementById('weeks').innerHTML = '<div class="empty">Pick a name to see their schedule</div>';
+      return;
+    }
+    var w = 0, l = 0, t = 0;
+    p.weeks.forEach(function (x) { if (x.status === 'W') w++; if (x.status === 'L') l++; if (x.status === 'T') t++; });
+    document.getElementById('schedsum').textContent = 'Record ' + w + '-' + t + '-' + l + ' (W-T-L)';
+    var label = { W: 'W', L: 'L', T: 'T', bye: 'Bye', makeup: 'Makeup', pending: 'Pending', upcoming: '' };
+    document.getElementById('weeks').innerHTML = p.weeks.map(function (x) {
+      var bye = x.status === 'bye';
+      return '<div class="wk' + (x.next ? ' next' : '') + (bye ? ' bye' : '') + '">' +
+        '<div class="when"><div class="date">' + esc(x.date) + '</div>' + (x.next ? '<div class="tag">Next</div>' : '') + '</div>' +
+        '<div class="what"><div class="opp">' + (bye ? 'Bye' : 'vs ' + esc(x.opp)) + '</div>' +
+          '<div class="course">' + esc(x.course) + '</div></div>' +
+        '<div class="res">' + (label[x.status] ? '<span class="chip ' + x.status + '">' + label[x.status] + '</span>' : '') +
+          (x.score ? '<div class="score">' + esc(x.score) + ' pts</div>' : '') + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('cardwho').addEventListener('change', function () { setMe(this.value); });
+
+  function n(v) { var x = parseFloat(v); return isNaN(x) ? null : x; }
+  function sum(list, key) {
+    var t = 0, any = false;
+    list.forEach(function (h) { var x = n(h[key]); if (x !== null) { t += x; any = true; } });
+    return any ? t : '';
+  }
+  function netClass(h) {
+    var nv = n(h.n), pv = n(h.par);
+    if (nv === null || pv === null) return '';
+    var d = nv - pv;
+    return d <= -2 ? 'eagle' : d === -1 ? 'birdie' : d === 0 ? '' : d === 1 ? 'bogey' : 'double';
+  }
+
+  function cardTable(label, holes, totals) {
+    var head = '<tr class="hole"><td class="rl">Hole</td>' + holes.map(function (h) { return '<td>' + h.hole + '</td>'; }).join('') +
+      totals.map(function (t) { return '<td class="tot">' + t.label + '</td>'; }).join('') + '</tr>';
+    function row(name, cls, cell, totKey) {
+      return '<tr class="' + cls + '"><td class="rl">' + name + '</td>' + holes.map(cell).join('') +
+        totals.map(function (t) { return '<td class="tot">' + (totKey ? esc(sum(t.holes, totKey)) : '') + '</td>'; }).join('') + '</tr>';
+    }
+    return '<div class="card">' + (label ? '<div class="sc-lbl">' + label + '</div>' : '') + '<table class="sc">' + head +
+      row('Par', 'sub', function (h) { return '<td>' + esc(h.par) + '</td>'; }, 'par') +
+      row('Hcp', 'sub', function (h) { return '<td>' + esc(h.idx) + '</td>'; }, '') +
+      row('Gross', '', function (h) {
+        var s = n(h.s) || 0;
+        return '<td class="g">' + esc(h.g) + (s > 0 ? '<span class="dots">' + new Array(s + 1).join('•') + '</span>' : '') + '</td>';
+      }, 'g') +
+      row('Net', '', function (h) {
+        return '<td>' + (h.n !== '' ? '<span class="nb ' + netClass(h) + '">' + esc(h.n) + '</span>' : '') + '</td>';
+      }, 'n') +
+      row('Pts', '', function (h) { return '<td>' + esc(h.p) + '</td>'; }, 'p') +
+      (holes.some(function (h) { return n(h.pt) !== null; }) ? row('Putts', 'sub', function (h) { return '<td>' + esc(h.pt) + '</td>'; }, 'pt') : '') +
+      (holes.some(function (h) { return n(h.pen); }) ? row('Pen', 'sub', function (h) { return '<td>' + esc(h.pen) + '</td>'; }, 'pen') : '') +
+      (holes.some(function (h) { return n(h.m); }) ? row('Mull', 'sub', function (h) { return '<td>' + esc(h.m) + '</td>'; }, 'm') : '') +
+      '</table></div>';
+  }
+
+  function renderCard() {
+    var list = (data && data.cards) || [];
+    var sel = document.getElementById('cardwho');
+    var want = me();
+    var names = list.map(function (p) { return p.name; });
+    if (sel.dataset.opts !== names.join('|')) {
+      sel.innerHTML = '<option value="">Choose a player…</option>' + names.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
+      sel.dataset.opts = names.join('|');
+    }
+    sel.value = names.indexOf(want) >= 0 ? want : '';
+
+    var p = list.filter(function (x) { return x.name === sel.value; })[0];
+    var body = document.getElementById('cardbody');
+    if (!p) { body.innerHTML = '<div class="card empty">' + (names.length ? 'Pick a name to see their scorecard' : 'No players on tonight\'s card yet') + '</div>'; return; }
+
+    var front = p.holes.filter(function (h) { return h.hole <= 9; });
+    var back = p.holes.filter(function (h) { return h.hole >= 10; });
+    var played = p.holes.filter(function (h) { return h.g !== ''; }).length;
+    var done = p.holes.filter(function (h) { return h.g !== ''; });
+    var status = played >= p.holes.length && played > 0 ? 'F' : (done.length ? String(done[done.length - 1].hole) : '–');
+
+    var html = '<div class="card sc-sum">' +
+      '<div><div class="v">' + esc(sum(p.holes, 'g')) + '</div><div class="k">Gross</div></div>' +
+      '<div><div class="v">' + esc(sum(p.holes, 'n')) + '</div><div class="k">Net</div></div>' +
+      '<div><div class="v">' + esc(sum(p.holes, 'p')) + '</div><div class="k">Points</div></div>' +
+      '<div><div class="v">' + status + '</div><div class="k">Thru</div></div></div>' +
+      '<div class="sc-meta">' + esc(p.tees ? p.tees + ' tees' : '') + (p.hcp !== '' ? ' · Course handicap ' + esc(p.hcp) : '') + (sum(p.holes, 'pen') ? ' · Penalties ' + esc(sum(p.holes, 'pen')) : '') + (sum(p.holes, 'm') ? ' · Mulligans ' + esc(sum(p.holes, 'm')) : '') + '</div>';
+
+    if (front.length && back.length) {
+      html += cardTable('Front 9', front, [{ label: 'Out', holes: front }]) +
+              cardTable('Back 9', back, [{ label: 'In', holes: back }, { label: 'Tot', holes: p.holes }]);
+    } else {
+      html += cardTable('', p.holes, [{ label: front.length ? 'Out' : 'In', holes: p.holes }]);
+    }
+    html += '<div class="legend"><span><span class="nb eagle"></span>Eagle or better</span><span><span class="nb birdie"></span>Birdie</span>' +
+      '<span><span class="nb bogey"></span>Bogey</span><span><span class="nb double"></span>Double or worse</span><span>• stroke received</span></div>';
+    body.innerHTML = html;
+  }
+
+  // ---- Enter Score tab ----
+  var entry = { who: '', hole: null, val: null, putts: null };
+
+  function enPlayer() {
+    var list = (data && data.cards) || [];
+    return list.filter(function (x) { return x.name === entry.who; })[0];
+  }
+  function enHole(p) {
+    return p ? p.holes.filter(function (h) { return h.hole === entry.hole; })[0] : null;
+  }
+  function firstOpen(p) {
+    var open = p.holes.filter(function (h) { return h.g === ''; })[0];
+    return (open || p.holes[p.holes.length - 1] || {}).hole;
+  }
+  function startVal(h) { return h ? (n(h.g) !== null ? n(h.g) : (n(h.par) || 4)) : null; }
+  function startPutts(h) { return h ? (n(h.pt) !== null ? n(h.pt) : 2) : null; }
+  function setVals(h) { entry['val'] = startVal(h); entry.putts = startPutts(h); }
+
+  function pickPlayer(name) {
+    entry.who = name; meName = name || ''; store('me', meName);
+    var p = enPlayer();
+    entry.hole = p && p.holes.length ? firstOpen(p) : null;
+    setVals(enHole(p));
+    document.getElementById('enmsg').textContent = '';
+    renderEntry();
+  }
+  function pickHole(hole) {
+    entry.hole = hole;
+    setVals(enHole(enPlayer()));
+    document.getElementById('enmsg').textContent = '';
+    renderEntry();
+  }
+
+  document.getElementById('enwho').addEventListener('change', function () {
+    pickPlayer(this.value);
+    if (data) { renderSchedule(); renderCard(); renderHcp(); }
+  });
+  document.getElementById('enhole').addEventListener('change', function () { pickHole(Number(this.value)); });
+  document.getElementById('enminus').addEventListener('click', function () {
+    if (entry.val !== null && entry.val > 1) { entry.val--; renderEntry(); }
+  });
+  document.getElementById('enplus').addEventListener('click', function () {
+    if (entry.val !== null && entry.val < 20) { entry.val++; renderEntry(); }
+  });
+  document.getElementById('enpminus').addEventListener('click', function () {
+    if (entry.putts !== null && entry.putts > 0) { entry.putts--; renderEntry(); }
+  });
+  document.getElementById('enpplus').addEventListener('click', function () {
+    if (entry.putts !== null && entry.putts < 10) { entry.putts++; renderEntry(); }
+  });
+  document.getElementById('enholes').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-hole]');
+    if (b) pickHole(Number(b.dataset.hole));
+  });
+
+  // Saves happen in the background: the page moves on at once and confirms when the server replies.
+  var pending = {}, saveId = 0, refreshTimer = null;
+  function pkey(who, hole) { return who + '|' + hole; }
+  function applyPending(d, fetchedAt) {
+    ((d && d.cards) || []).forEach(function (c) {
+      c.holes.forEach(function (h) {
+        var k = pkey(c.name, h.hole), q = pending[k];
+        if (!q) return;
+        if (q.state === 'saved' && fetchedAt && fetchedAt > q.savedAt) { delete pending[k]; return; }
+        if (String(h.g) !== String(q.v)) { h.g = q.v === '' ? '' : String(q.v); h.n = ''; h.p = ''; }
+        if (q.pt !== undefined && q.pt !== null && String(h.pt) !== String(q.pt)) h.pt = q.pt;
+      });
+    });
+  }
+  function saving() { return Object.keys(pending).some(function (k) { return pending[k].state === 'saving'; }); }
+  function failed() { return Object.keys(pending).filter(function (k) { return pending[k].state === 'failed'; }); }
+  window.addEventListener('beforeunload', function (e) { if (saving()) { e.preventDefault(); e.returnValue = ''; } });
+  function scheduleRefresh() { clearTimeout(refreshTimer); refreshTimer = setTimeout(load, 1500); }
+  function saveMsg(text, err) {
+    var msg = document.getElementById('enmsg');
+    var bad = failed();
+    if (bad.length && !err) { text = 'Hole ' + bad.map(function (k) { return k.split('|')[1]; }).join(', ') + ' not saved. Tap it, then Save to try again.'; err = true; }
+    msg.className = 'en-msg' + (err ? ' err' : ''); msg.textContent = text;
+  }
+  function sendScore(value) {
+    var p = enPlayer();
+    if (!p || entry.hole === null) return;
+    var who = entry.who, hole = entry.hole, k = pkey(who, hole), id = ++saveId;
+    var pt = value === '' ? '' : entry.putts;
+    pending[k] = { v: value, pt: pt, state: 'saving', id: id };
+    applyPending(data, 0);
+    var p2 = enPlayer();
+    if (p2 && value !== '') {
+      var order = p2.holes.map(function (x) { return x.hole; });
+      var next = p2.holes.filter(function (h) { return h.hole !== hole && h.g === ''; });
+      var after = next.filter(function (h) { return order.indexOf(h.hole) > order.indexOf(hole); })[0] || next[0];
+      if (after) { entry.hole = after.hole; setVals(after); }
+    } else if (p2) { setVals(enHole(p2)); }
+    saveMsg(value === '' ? 'Clearing hole ' + hole + '…' : 'Hole ' + hole + ': ' + value + puttTxt(pt) + ' · saving…');
+    renderEntry(); renderCard();
+    doSave(k, id, who, hole, value, 0, pt);
+  }
+  function puttTxt(pt) { return (pt === '' || pt === null || pt === undefined) ? '' : ' (' + pt + (Number(pt) === 1 ? ' putt' : ' putts') + ')'; }
+  function doSave(k, id, who, hole, value, tries, pt) {
+    google.script.run.withSuccessHandler(function () {
+      var q = pending[k];
+      if (!q || q.id !== id) return; // a newer save for this hole replaced it
+      q.state = 'saved'; q.savedAt = Date.now();
+      if (!saving()) saveMsg(value === '' ? 'Cleared hole ' + hole + ' ✓' : 'Saved hole ' + hole + ': ' + value + puttTxt(pt) + ' ✓');
+      renderEntry();
+      scheduleRefresh();
+    }).withFailureHandler(function (err) {
+      var q = pending[k];
+      if (!q || q.id !== id) return;
+      var text = (err && err.message) || '';
+      if (tries < 2 && !/not on tonight|not part of tonight|whole number|sign in|own scores/i.test(text)) {
+        setTimeout(function () { doSave(k, id, who, hole, value, tries + 1, pt); }, 1500 * (tries + 1));
+        return;
+      }
+      q.state = 'failed';
+      saveMsg(text && /not on tonight|not part of tonight|whole number|sign in|own scores/i.test(text) ? text : '', false);
+      renderEntry(); renderCard();
+    }).saveScore(who, hole, value, pt);
+  }
+  document.getElementById('ensave').addEventListener('click', function () { sendScore(entry.val); });
+  document.getElementById('enclear').addEventListener('click', function () { sendScore(''); });
+
+  function renderEntry() {
+    var list = (data && data.cards) || [];
+    var names = list.map(function (x) { return x.name; }).filter(function (x) { return RL.canEdit(x); });
+    var sel = document.getElementById('enwho');
+    if (sel.dataset.opts !== names.join('|')) {
+      sel.innerHTML = '<option value="">Choose your name…</option>' + names.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
+      sel.dataset.opts = names.join('|');
+    }
+    var saved = RL.entryName(me());
+    if (saved !== entry.who) {
+      if (names.indexOf(saved) >= 0) { entry.who = saved; var p0 = enPlayer(); entry.hole = firstOpen(p0); setVals(enHole(p0)); }
+      else { entry.who = ''; entry.hole = null; entry.val = null; entry.putts = null; }
+      document.getElementById('enmsg').textContent = '';
+    }
+    if (entry.who && names.indexOf(entry.who) < 0) { entry.who = ''; entry.hole = null; entry.val = null; entry.putts = null; }
+    sel.value = entry.who;
+
+    var p = enPlayer();
+    var hs = document.getElementById('enhole');
+    var on = !!p && p.holes.length > 0;
+    ['enhole', 'enminus', 'enplus', 'enpminus', 'enpplus', 'ensave', 'enclear'].forEach(function (id) { document.getElementById(id).disabled = !on; });
+    if (!on) {
+      hs.innerHTML = ''; document.getElementById('eninfo').textContent = p ? 'No holes set for tonight yet' : RL.entryHint(names.length > 0);
+      document.getElementById('enval').textContent = '–'; document.getElementById('enpval').textContent = '–'; document.getElementById('enrel').textContent = '';
+      document.getElementById('enholes').innerHTML = '';
+      return;
+    }
+    if (!enHole(p)) { entry.hole = firstOpen(p); setVals(enHole(p)); }
+    hs.innerHTML = p.holes.map(function (h) {
+      return '<option value="' + h.hole + '"' + (h.hole === entry.hole ? ' selected' : '') + '>Hole ' + h.hole +
+        (h.g !== '' ? '  (' + esc(h.g) + ')' : '') + '</option>';
+    }).join('');
+    var h = enHole(p);
+    var s = n(h.s) || 0;
+    document.getElementById('eninfo').textContent = 'Par ' + h.par + ' · Hcp ' + h.idx +
+      (s ? ' · You get ' + s + (s === 1 ? ' stroke' : ' strokes') : '') + (h.g !== '' ? ' · Saved: ' + h.g + (h.pt !== '' && h.pt !== undefined ? ', ' + h.pt + (Number(h.pt) === 1 ? ' putt' : ' putts') : '') : '');
+    document.getElementById('enval').textContent = entry.val;
+    document.getElementById('enpval').textContent = entry.putts;
+    var diff = entry.val - n(h.par);
+    var names2 = { '-3': 'Albatross', '-2': 'Eagle', '-1': 'Birdie', '0': 'Par', '1': 'Bogey', '2': 'Double bogey', '3': 'Triple bogey' };
+    var rel = names2[String(diff)] || (diff > 0 ? '+' + diff : String(diff));
+    document.getElementById('enrel').textContent = rel + (s ? ' (net ' + (entry.val - s) + ')' : '');
+
+    document.getElementById('enholes').innerHTML = '<div class="sc-lbl">' + esc(p.name) + '\'s card · tap a hole</div><div class="en-grid">' +
+      p.holes.map(function (x) {
+        var q = pending[pkey(p.name, x.hole)];
+        return '<button type="button" data-hole="' + x.hole + '" class="' + (x.hole === entry.hole ? 'on ' : '') + (x.g === '' ? 'empty ' : '') + (q ? q.state : '') + '">' +
+          x.hole + '<b>' + (x.g !== '' ? esc(x.g) : '·') + '</b><i>' + (x.pt !== '' && x.pt !== undefined ? esc(x.pt) + 'p' : '') + '</i></button>';
+      }).join('') + '</div>';
+  }
+
+  document.getElementById('hcpwho').addEventListener('change', function () {
+    hcpSel = null; setMe(this.value);
+  });
+  var hcpSel = null;
+  // Golf shows handicaps below zero as plus handicaps: -1 -> +1, -0.4 -> +0.4.
+  function plus(v) { var s = String(v == null ? '' : v); return /^-/.test(s) && Number(s) !== 0 ? '+' + s.slice(1) : s; }
+  window.addEventListener('resize', function () { if (!document.getElementById('hcp').classList.contains('hide')) renderHcp(); });
+  function renderHcp() {
+    var h = (data && data.handicaps) || { players: [] };
+    var list = h.players || [];
+    var sel = document.getElementById('hcpwho');
+    var want = me();
+    var names = list.map(function (p) { return p.name; });
+    if (sel.dataset.opts !== names.join('|')) {
+      sel.innerHTML = '<option value="">Choose a player…</option>' + names.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
+      sel.dataset.opts = names.join('|');
+    }
+    sel.value = names.indexOf(want) >= 0 ? want : '';
+    var p = list.filter(function (x) { return x.name === sel.value; })[0];
+    var body = document.getElementById('hcpbody');
+    if (!p) { body.innerHTML = '<div class="card empty">Pick a name to see their handicap</div>'; return; }
+
+    var where = h.course ? esc(h.course) + (h.nine ? ' ' + esc(h.nine) + (h.nine === '18' ? ' holes' : ' 9') : '') : 'Tonight\'s course';
+    var html = '<div class="hc-tiles">' +
+      '<div class="hc-tile"><div class="v">' + esc(p.index === '' ? '–' : plus(p.index)) + '</div><div class="k">Handicap index</div>' +
+        '<div class="s">' + (p.source === 'Manual' ? 'Set manually' : (p.used ? 'Best ' + p.used + ' of ' + esc(p.rounds) + ' rounds' : 'Needs 3 rounds')) + '</div></div>' +
+      '<div class="hc-tile"><div class="k">Course handicap</div><div class="s" style="margin:2px 0 6px">' + where + '</div>' +
+        (p.chs || []).map(function (c) {
+          return '<div class="hc-tee' + (c.tee === p.tees ? ' mine' : '') + '"><span>' + esc(c.tee) + (c.tee === p.tees ? ' <em>(plays)</em>' : '') + '</span><b>' + esc(c.ch === '' ? '–' : plus(c.ch)) + '</b></div>';
+        }).join('') + '</div>' +
+      '</div>';
+
+    var ds = p.diffs.slice().reverse(); // oldest left, newest right
+    if (!ds.length) { body.innerHTML = html + '<div class="card empty">No rounds on record yet</div>'; return; }
+    var vals = ds.map(function (x) { return x.d; });
+    var showLine = p.source !== 'Manual' && ds.some(function (x) { return num(x.ix) !== null; });
+    if (showLine) ds.forEach(function (x) { if (num(x.ix) !== null) vals.push(num(x.ix)); });
+    var lo = Math.min(0, Math.min.apply(null, vals)), hi = Math.max(5, Math.max.apply(null, vals));
+    var step = (hi - lo) > 30 ? 10 : 5;
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+    function y(v) { return (hi - v) / (hi - lo) * 100; }
+    var grid = '';
+    for (var g = lo; g <= hi; g += step) grid += '<div class="hc-grid' + (g === 0 ? ' zero' : '') + '" style="top:' + y(g) + '%"><span>' + g + '</span></div>';
+    if (hcpSel === null || hcpSel >= ds.length) hcpSel = ds.length - 1;
+    var bars = ds.map(function (x, i) {
+      var top = y(Math.max(x.d, 0)), h0 = Math.abs(y(x.d) - y(0));
+      return '<div class="hc-col' + (i === hcpSel ? ' sel' : '') + '" data-i="' + i + '" title="' + esc(x.d) + '">' +
+        '<div class="hc-bar ' + (x.counts ? 'c ' : '') + (x.d < 0 ? 'neg' : 'pos') + '" style="top:' + top + '%;height:' + Math.max(h0, 0.8) + '%"></div>' +
+        '<div class="hc-val" style="top:' + (x.d < 0 ? 'calc(' + y(x.d) + '% + 2px)' : 'calc(' + top + '% - 12px)') + '">' + Number(x.d).toFixed(1) + '</div></div>';
+    }).join('');
+    html += '<div class="card hc-chart"><div class="hc-head"><div class="hc-title">Last ' + ds.length + ' differentials</div>' +
+      '<div class="hc-key"><span><i style="background:var(--green)"></i>Counts</span><span><i style="background:#cfd3cb"></i>Doesn\'t count</span>' + (showLine ? '<span><i style="height:0;width:14px;border-top:2px solid #b5651d;border-radius:0"></i>Index after each round</span>' : '') + '</div></div>' +
+      '<div class="hc-plot" id="hcplot">' + grid + '<div class="hc-bars">' + bars + '</div></div>' +
+      '<div class="hc-axis"><span>← Oldest</span><span>Newest →</span></div>' +
+      '<div class="hc-detail" id="hcdetail"></div></div>';
+    body.innerHTML = html;
+    if (showLine) {
+      var plot = document.getElementById('hcplot'), pr = plot.getBoundingClientRect();
+      var pts = [];
+      plot.querySelectorAll('.hc-col').forEach(function (c, i) {
+        var v = num(ds[i].ix); if (v === null) return;
+        var r = c.getBoundingClientRect();
+        pts.push([(r.left + r.width / 2 - pr.left).toFixed(1), (y(v) / 100 * pr.height).toFixed(1)]);
+      });
+      plot.insertAdjacentHTML('beforeend', '<svg class="hc-line" viewBox="0 0 ' + pr.width.toFixed(1) + ' ' + pr.height.toFixed(1) + '">' +
+        '<polyline points="' + pts.map(function (q) { return q.join(','); }).join(' ') + '" fill="none" stroke="#b5651d" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+        pts.map(function (q) { return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="3" fill="#b5651d" stroke="#fff" stroke-width="1.5"/>'; }).join('') + '</svg>');
+    }
+    function detail(i) {
+      var x = ds[i], n = ds.length - i;
+      var what = x.course ? esc(x.course) + (x.nine ? ' · ' + esc(x.nine) + (x.nine === '18' ? ' holes' : ' 9') : '') : 'Imported from the old sheet';
+      document.getElementById('hcdetail').innerHTML = '<b>' + Number(x.d).toFixed(1) + '</b> differential · ' + (x.counts ? 'counts toward the index' : 'doesn\'t count') + (showLine && x.ix !== '' && x.ix != null ? ' · index after: <b>' + esc(plus(x.ix)) + '</b>' : '') +
+        '<div class="muted">' + (n === 1 ? 'Most recent round' : (n - 1) + (n === 2 ? ' round' : ' rounds') + ' before the latest') + (x.date ? ' · ' + esc(x.date) : '') + ' · ' + what +
+        (x.gross !== '' && x.gross != null ? ' · Score ' + esc(x.gross) + (x.holes ? ' (' + esc(x.holes) + ' holes)' : '') : '') + '</div>';
+    }
+    detail(hcpSel);
+    body.querySelectorAll('.hc-col').forEach(function (c) {
+      c.addEventListener('click', function () {
+        hcpSel = Number(c.dataset.i);
+        body.querySelectorAll('.hc-col').forEach(function (o) { o.classList.toggle('sel', o === c); });
+        detail(hcpSel);
+      });
+    });
+  }
+
+  
+// ---- Team Leaderboard: list + tap-through team detail ----
+var teamSel = store('team') || '';
+function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function tdNum(s) { var x = parseFloat(s); return isNaN(x) ? null : x; }
+function tdFmt(x) { return Math.round(x * 10) / 10; }
+// Rank a list of {key, val}; returns map key -> {place, tied, gap}
+function tdRank(list, lowWins) {
+  var out = {};
+  if (!list.length) return out;
+  var best = list.reduce(function (b, x) { return lowWins ? Math.min(b, x.val) : Math.max(b, x.val); }, lowWins ? Infinity : -Infinity);
+  list.forEach(function (x) {
+    var better = list.filter(function (y) { return lowWins ? y.val < x.val : y.val > x.val; }).length;
+    var same = list.filter(function (y) { return y.val === x.val; }).length;
+    out[x.key] = { place: better + 1, tied: same > 1, gap: Math.abs(x.val - best), n: list.length,
+      lead: better === 0 && same === 1 && list.length > 1 ? Math.min.apply(null, list.filter(function (y) { return y !== x; }).map(function (y) { return Math.abs(y.val - x.val); })) : 0 };
+  });
+  return out;
+}
+function tdPlaceText(r) { return r ? (r.tied ? 'T' + r.place : ordinal(r.place)) : ''; }
+function tdGapText(r) {
+  if (!r || r.n < 2) return '';
+  if (r.place === 1) return r.tied ? 'tied' : 'by ' + tdFmt(r.lead);
+  return tdFmt(r.gap) + ' back';
+}
+function tdThruMap(d) {
+  var t = {};
+  (d.teams || []).forEach(function (x) { (x.members || []).forEach(function (p) { t[p.name] = p.thru; }); });
+  return t;
+}
+// Which player cells count on a hole, plus a short tag. vals: numbers (all present).
+function tdHoleUse(game, hole, vals, flipped, birdie) {
+  var idx = vals.map(function (v, i) { return i; });
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  var lowI = vals.indexOf(min), highI = vals.lastIndexOf(max);
+  if (highI === lowI) highI = idx.filter(function (i) { return i !== lowI; })[0];
+  var u = { use: {}, lo: null, hi: null, mid: null, tag: '' };
+  function all(val) { idx.forEach(function (i) { if (vals[i] === val) u.use[i] = true; }); }
+  switch (game) {
+    case 'Min': all(min); break;
+    case 'Max': all(max); break;
+    case 'Sum': case 'Avg': idx.forEach(function (i) { u.use[i] = true; }); break;
+    case 'Alt-Min-Max': all(hole % 2 === 0 ? min : max); u.tag = hole % 2 === 0 ? 'Low' : 'High'; break;
+    case 'Min-Max': all(hole % 2 === 0 ? max : min); u.tag = hole % 2 === 0 ? 'High' : 'Low'; break;
+    case 'Vegas': case 'Reverse Vegas': case 'Vegas Bird Flip':
+      u.lo = lowI; u.hi = highI; u.use[lowI] = u.use[highI] = true;
+      if (game === 'Reverse Vegas') u.tag = 'High-Low';
+      if (game === 'Vegas Bird Flip') u.tag = birdie ? '🐦 Birdie' : flipped ? 'Flipped' : '';
+      break;
+    case '3 Man Vegas':
+      var s = idx.slice().sort(function (a, b) { return vals[a] - vals[b] || a - b; });
+      u.lo = s[0]; u.hi = s[s.length - 1]; u.mid = s[s.length - 2];
+      [u.lo, u.mid, u.hi].forEach(function (i) { u.use[i] = true; });
+      break;
+  }
+  return u;
+}
+function tdOrder(td) {
+  var tot = td.teams.filter(function (t) { return t.eligible && tdNum(t.total) !== null; })
+    .map(function (t) { return { key: t.name, val: tdNum(t.total) }; });
+  var rank = tdRank(tot, td.lowWins);
+  var list = td.teams.slice().sort(function (a, b) {
+    var ra = rank[a.name], rb = rank[b.name];
+    if (ra && rb) return ra.place - rb.place;
+    if (ra) return -1; if (rb) return 1;
+    return (b.eligible ? 1 : 0) - (a.eligible ? 1 : 0);
+  });
+  return { list: list, rank: rank };
+}
+function renderTeams(d) {
+  var td = d.teamDetail, listEl = document.getElementById('teamlist'), det = document.getElementById('teamdetail');
+  var info = document.getElementById('gameinfo');
+  if (!td || !td.teams.length || !(d.teams || []).length) {
+    det.className = 'hide'; listEl.className = ''; info.className = '';
+    listEl.innerHTML = '<div class="card empty">No team game tonight</div>';
+    return;
+  }
+  var thru = tdThruMap(d), o = tdOrder(td);
+  var sel = td.teams.filter(function (t) { return t.name === teamSel; })[0];
+  if (!sel) {
+    det.className = 'hide'; listEl.className = ''; info.className = '';
+    var cnt = td.counted && td.counted !== 'Total' ? '<div class="tcount">Counting ' + esc(td.counted.toLowerCase()) + '</div>' : '';
+    listEl.innerHTML = cnt + o.list.map(function (t) {
+      var r = o.rank[t.name];
+      return '<div class="card team tap" data-team="' + esc(t.name) + '"><div class="row"><span class="tname">' +
+        (r ? '<span class="tpl">' + tdPlaceText(r) + '</span>' : '') + esc(t.name) + '</span><span class="score">' +
+        (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + ' players</span>') + '</span></div>' +
+        t.players.map(function (p) {
+          var th = thru[p.name] || '';
+          return '<div class="mem"><span>' + esc(p.name) + '</span><span class="th' + (th === 'F' ? ' f' : '') + '">' + esc(th) + '</span></div>';
+        }).join('') + '<div class="tmore">' + (r ? esc(tdGapText(r)) + ' · ' : '') + 'Tap for hole-by-hole ›</div></div>';
+    }).join('');
+    Array.prototype.forEach.call(listEl.querySelectorAll('[data-team]'), function (el) {
+      el.addEventListener('click', function () { openTeam(el.getAttribute('data-team')); });
+    });
+    return;
+  }
+  listEl.className = 'hide'; info.className = 'hide'; det.className = '';
+  det.innerHTML = teamDetailHtml(td, sel, o, thru);
+  det.querySelector('.tback').addEventListener('click', function () { openTeam(''); });
+  Array.prototype.forEach.call(det.querySelectorAll('[data-go]'), function (el) {
+    el.addEventListener('click', function () { openTeam(el.getAttribute('data-go')); });
+  });
+}
+function openTeam(name) {
+  teamSel = name; store('team', name);
+  if (data) renderTeams(data);
+  window.scrollTo(0, 0);
+}
+function teamDetailHtml(td, t, o, thru) {
+  var game = td.game, r = o.rank[t.name];
+  var pos = o.list.indexOf(t), prev = o.list[pos - 1], next = o.list[pos + 1];
+  var hs = td.holes.map(function (h, i) { return { h: h, i: i }; }).filter(function (x) { return x.h.counted; });
+  // Running standing: cumulative over counted holes, among eligible teams that have this hole
+  var run = {};
+  var elig = td.teams.filter(function (x) { return x.eligible; });
+  var cum = {};
+  hs.forEach(function (x) {
+    var lst = [];
+    elig.forEach(function (tm) {
+      var v = tdNum(tm.team[x.i]);
+      if (v === null) return;
+      cum[tm.name] = (cum[tm.name] || 0) + v;
+      lst.push({ key: tm.name, val: cum[tm.name] });
+    });
+    if (tdNum(t.team[x.i]) !== null) run[x.i] = tdRank(lst, td.lowWins)[t.name];
+  });
+  var minThru = t.players.map(function (p) { return thru[p.name] || ''; });
+  var head = '<div class="tnav"><button class="tback">‹ Teams</button><span>' +
+    (prev ? '<button data-go="' + esc(prev.name) + '">‹</button>' : '') +
+    (next ? '<button data-go="' + esc(next.name) + '">›</button>' : '') + '</span></div>' +
+    '<div class="card gamecard thead"><div class="row"><span class="gname">' + esc(t.name) + '</span><span class="tbig">' +
+    (t.eligible ? esc(t.total || '–') : '') + '</span></div>' +
+    '<div class="tsub">' + esc(game + ' · ' + td.scoring) + (td.counted !== 'Total' ? ' · ' + esc(td.counted) : '') +
+    (r ? ' · <b>' + tdPlaceText(r) + '</b> ' + esc(tdGapText(r)) : '') + '</div>' +
+    (td.desc ? '<div class="gdesc">' + esc(td.desc) + '</div>' : '') +
+    '<div class="tplayers">' + t.players.map(function (p, i) {
+      return esc(p.name) + (minThru[i] ? ' <span class="th' + (minThru[i] === 'F' ? ' f' : '') + '">' + esc(minThru[i] === 'F' ? 'F' : 'Thru ' + minThru[i]) + '</span>' : '');
+    }).join(' · ') + '</div>' +
+    (t.eligible ? '' : '<div class="inel">Not eligible: ' + esc(game) + ' needs at least ' + td.minPlayers + ' players</div>') + '</div>';
+  var short = function (n) { var sn = ((data && data.shortNames) || {})[n]; if (sn) return sn; return n.length > 7 ? n.slice(0, 6) + '…' : n; };
+  var rows = hs.map(function (x) {
+    var h = x.h, raw = t.players.map(function (p) { return p.scores[x.i]; });
+    var vals = raw.map(tdNum), done = vals.every(function (v) { return v !== null; });
+    var teamV = t.team[x.i], flipped = game === 'Vegas Bird Flip' && done && !t.birdie[x.i] &&
+      td.teams.some(function (o2) { return o2 !== t && o2.birdie[x.i]; });
+    var u = done && t.eligible ? tdHoleUse(game, h.hole, vals, flipped, t.birdie[x.i]) : null;
+    var cells = raw.map(function (s, i) {
+      var cls = '', mark = '';
+      if (u) {
+        if (u.use[i]) cls = 'use';
+        else if (/Vegas|Min|Max/.test(game)) cls = 'out';
+        if (i === u.lo) mark = 'L'; else if (i === u.hi) mark = 'H'; else if (i === u.mid) mark = 'M';
+      }
+      return '<td class="n ' + cls + '">' + (s === '' ? '<span class="dash">·</span>' : esc(s)) + (mark ? '<sup>' + mark + '</sup>' : '') + '</td>';
+    }).join('');
+    var rr = run[x.i];
+    return '<tr><td class="n hn">' + h.hole + '</td><td class="n par">' + esc(h.par) + '</td>' + cells +
+      '<td class="n tv">' + esc(teamV) + (u && u.tag ? '<div class="ttag' + (u.tag === 'Flipped' ? ' flip' : '') + '">' + esc(u.tag) + '</div>' : '') + '</td>' +
+      '<td class="n pos">' + (rr ? '<b>' + tdPlaceText(rr) + '</b><div>' + esc(tdGapText(rr)) + '</div>' : '') + '</td></tr>';
+  }).join('');
+  var ptot = t.players.map(function (p) {
+    var s = 0, any = false;
+    hs.forEach(function (x) { var v = tdNum(p.scores[x.i]); if (v !== null) { s += v; any = true; } });
+    return '<td class="n">' + (any ? tdFmt(s) : '') + '</td>';
+  }).join('');
+  var table = '<div class="card"><table class="tdt"><tr><th class="n">Hole</th><th class="n">Par</th>' +
+    t.players.map(function (p) { return '<th class="n" title="' + esc(p.name) + '">' + esc(short(p.name)) + '</th>'; }).join('') +
+    '<th class="n">Team</th><th class="n">Pos</th></tr>' + rows +
+    '<tr class="tot"><td colspan="2">Total</td>' + ptot + '<td class="n tv">' + esc(t.eligible ? t.total : '') + '</td><td></td></tr></table></div>';
+  var legend = '<div class="tleg"><span class="sw use"></span> counts for the team' +
+    (/Vegas/.test(game) ? ' · <b>L</b> low, <b>H</b> high' + (game === '3 Man Vegas' ? ', <b>M</b> middle' : '') : '') +
+    ' · Team score shows once every player has finished the hole</div>';
+  return head + table + legend;
+}
+
+function renderField() {
+    var list = (data && data.field) || [];
+    var sel = document.getElementById('fieldsort');
+    var by = sel.value || 'net';
+    var rows = list.map(function (x, i) { return { x: x, i: i }; });
+    rows.sort(function (a, b) {
+      var va = num(a.x[by]), vb = num(b.x[by]);
+      if (va === null && vb === null) return a.i - b.i;
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      var d = by === 'pts' ? vb - va : va - vb;
+      return d || a.i - b.i;
+    });
+    function th(key, label) { return '<th class="n' + (by === key ? ' sorted' : '') + '">' + label + '</th>'; }
+    document.getElementById('field').innerHTML = list.length ?
+      '<table><tr><th>Player</th><th class="n">Thru</th>' + th('net', 'Net') + th('pts', 'Pts') + th('putts', 'Putts') + '</tr>' +
+      rows.map(function (r) {
+        var x = r.x;
+        return '<tr><td>' + esc(x.player) + '</td><td class="n">' + esc(x.thru) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + esc(x.net) +
+          '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + esc(x.pts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + esc(x.putts) + '</td></tr>';
+      }).join('') + '</table>' : '<div class="empty">No scores yet</div>';
+  }
+  (function () {
+    var sel = document.getElementById('fieldsort');
+    var saved = store('fieldSort');
+    if (saved === 'net' || saved === 'pts' || saved === 'putts') sel.value = saved;
+    sel.addEventListener('change', function () { store('fieldSort', sel.value); renderField(); });
+  })();
+  function render(d) {
+    data = d;
+    document.getElementById('title').textContent = d.title || '';
+    document.getElementById('updated').textContent = d.updated;
+
+    var m = d.matches.map(function (x) {
+      var a = num(x.ap), b = num(x.bp);
+      var la = a !== null && b !== null && a > b, lb = a !== null && b !== null && b > a;
+      return '<div class="card match">' +
+        '<div class="name">' + esc(x.a) + thr(x.aThru) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
+        '<div class="mid"><div class="scores">' +
+        '<div class="pts' + (la ? ' lead' : '') + '">' + esc(x.ap || '–') + '</div>' +
+        '<div class="vs">vs</div>' +
+        '<div class="pts' + (lb ? ' lead' : '') + '">' + esc(x.bp || '–') + '</div>' +
+        '</div>' + (x.oneWay ? '<div class="ow">One Way →</div>' : '') + '</div>' +
+        '<div class="name r">' + esc(x.b) + thr(x.bThru) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
+        (x.even ? '<div class="thru">Even: no strokes</div>' : '') +
+        '</div>';
+    }).join('');
+    document.getElementById('matches').innerHTML = m || '<div class="card empty">No matches tonight</div>';
+    document.getElementById('matchwrap').classList.toggle('hide', d.roundType === 'Casual');
+
+    renderField();
+
+    var st = d.agentStats || { players: [] };
+    document.getElementById('statswrap').classList.toggle('hide', !st.players.length);
+    var holeList = function (l) { return l.map(function (h) { return h.hole + (h.n > 1 ? ' (' + h.n + ')' : ''); }).join(', '); };
+    document.getElementById('stats').innerHTML = st.players.length ?
+      '<table class="stt"><tr><th>Player</th><th class="n">FW</th><th class="n">GIR</th><th class="n">Sand</th><th class="n">Drive</th><th class="n">Pen</th><th class="n">Mull</th></tr>' +
+      st.players.map(function (s) {
+        var lng = s.drive !== '' && s.drive === st.longest;
+        return '<tr><td title="' + esc(s.player) + '">' + esc(s.player) + '</td><td class="n">' + (s.fwn ? s.fw + '/' + s.fwn : '–') + '</td><td class="n">' + s.gir + '/' + s.holes +
+          '</td><td class="n">' + (s.sandC ? s.sandS + '/' + s.sandC : '–') + '</td><td class="n' + (lng ? ' b' : '') + '">' + (s.drive !== '' ? Math.round(s.drive) + (lng ? '★' : '') : '–') +
+          '</td><td class="n">' + (s.pen || '') + '</td><td class="n">' + (s.mull || '') + '</td></tr>';
+      }).join('') + '</table>' +
+      st.players.filter(function (s) { return s.pen || s.mull; }).map(function (s) {
+        return '<div style="font-size:13px;padding:6px 10px 0"><b>' + esc(s.player) + '</b>' +
+          (s.pen ? ' · Penalties on ' + holeList(s.penHoles) : '') + (s.mull ? ' · Mulligans on ' + holeList(s.mullHoles) : '') + '</div>';
+      }).join('') +
+      '<div style="height:8px"></div>' : '';
+
+    renderTeams(d);
+
+    var g = d.teamGame || {};
+    document.getElementById('gameinfo').innerHTML = (d.teams.length && g.game) ?
+      '<div class="card gamecard"><div class="gname">' + esc((g.scoring ? g.scoring + ' ' : '') + g.game) + '</div>' +
+      (g.desc ? '<div class="gdesc">' + esc(g.desc) + '</div>' : '') + '</div>' : '';
+
+    document.getElementById('table').innerHTML =
+      '<table><tr><th class="n">#</th><th>Player</th><th class="n">W-T-L</th><th class="n">Pts</th></tr>' +
+      d.standings.map(function (x) {
+        return '<tr class="' + (num(x.seed) !== null && num(x.seed) <= 4 ? 'top' : '') + '"><td class="n">' + esc(x.seed) +
+          '</td><td>' + esc(x.player) + (x.note ? ' <span class="note">' + esc(x.note) + '</span>' : '') +
+          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
+      }).join('') + '</table>';
+
+    renderSchedule();
+    renderHcp();
+    renderCard();
+    renderEntry();
+  }
+
+  function load() {
+    var fetchedAt = Date.now();
+    google.script.run.withSuccessHandler(function (d) { applyPending(d, fetchedAt); render(d); }).withFailureHandler(function () {
+      document.getElementById('updated').textContent = 'just now (could not refresh)';
+    }).getBoardData();
+  }
+  load();
+  setInterval(load, 60000);
+</script>
+</body>
+</html>
