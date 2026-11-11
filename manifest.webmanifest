@@ -1,6 +1,6 @@
 {
   "name": "Roost Links",
-  "short_name": "Roost Links",
+  "short_name": "Roost",
   "description": "Indoor golf league: live leaderboard, team game, standings, scorecards and score entry.",
   "start_url": "./",
   "scope": "./",
