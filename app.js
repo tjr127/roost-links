@@ -57,6 +57,8 @@
 
   // ---- What the page asks about the signed-in player ----
   window.RL = {
+    user: getAuth,
+    post: apiPost,
     canEdit: function (name) { var a = getAuth(); return !!a && (a.admin || a.name === name); },
     // Enter Score follows your own name; admins can pick anyone.
     entryName: function (picked) { var a = getAuth(); return !a ? '' : a.admin ? picked : a.name; },

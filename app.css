@@ -37,3 +37,40 @@ body.rl-lock { overflow: hidden; }
 .rl-tip .rl-btn { background: var(--green); color: #fff; }
 .rl-x { border: 0; background: none; font-size: 18px; color: var(--muted); padding: 4px 6px; }
 .rl-share { display: inline-block; width: 14px; height: 17px; vertical-align: -3px; background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 15V2M5 7l5-5 5 5M4 11H2v11h16V11h-2'/%3E%3C/svg%3E"); }
+
+/* Tee times card (Schedule tab) */
+.tt { padding: 12px 14px 14px; border-left: 5px solid var(--green); }
+.tt-title { font-size: 17px; font-weight: 700; color: var(--green); }
+.tt-status { font-size: 13px; color: var(--muted); margin-top: 2px; font-weight: 600; }
+.tt-status.done { color: var(--green); }
+.tt-pick { margin-top: 12px; }
+.tt-you, .tt-for { display: block; font-size: 12px; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+.tt-for select { margin-left: 6px; font-size: 15px; padding: 4px 8px; border-radius: 8px; border: 1px solid #ccd; background: #fff; text-transform: none; font-weight: 600; color: var(--ink); }
+.tt-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.tt-btns button { border: 1px solid #d5d8d0; background: #fff; border-radius: 10px; padding: 10px 2px; font-size: 15px; font-weight: 700; color: var(--green); line-height: 1.15; }
+.tt-btns button small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+.tt-btns button.on { background: var(--green); border-color: var(--green); color: #fff; }
+.tt-btns button.on small { color: #d9ead3; }
+.tt-btns button.out { color: #8b1a1a; }
+.tt-btns button.out.on { background: #8b1a1a; border-color: #8b1a1a; color: #fff; }
+.tt-msg { font-size: 13px; font-weight: 600; color: var(--green); margin-top: 8px; text-align: center; }
+.tt-msg.err { color: #b3261e; }
+.tt-sum { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 14px; font-size: 14px; }
+.tt-col { background: #f7f8f5; border-radius: 8px; padding: 7px 9px; min-height: 48px; }
+.tt-col .tt-names { line-height: 1.35; }
+.tt-k { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); margin-bottom: 3px; }
+.tt-col.out .tt-k { color: #8b1a1a; }
+.tt-n { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--mid); color: var(--green); font-size: 11px; font-weight: 700; text-align: center; }
+.tt-noreply { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.tt-groups { margin-top: 14px; border-top: 1px solid #eee; padding-top: 10px; }
+.tt-gtitle { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; }
+.tt-gsub { font-size: 12px; color: var(--muted); margin: 2px 0 6px; }
+.tt-g { margin-top: 8px; font-size: 15px; }
+.tt-g > div { margin-top: 3px; }
+.tt-none { color: #bbb; }
+.tt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tt-chip { border: 1px solid #cfd8c9; background: var(--light); color: var(--green); border-radius: 16px; padding: 6px 11px; font-size: 14px; font-weight: 600; }
+.tt-chip i { font-style: normal; font-size: 11px; color: var(--muted); font-weight: 500; }
+.tt-warn { font-size: 13px; color: #8a4b00; background: #fff3e0; border-radius: 8px; padding: 6px 8px; margin-top: 8px; }
+.tt-confirm { margin-top: 12px; }
+.tt-small { display: block; margin: 8px auto 0; font-size: 13px; color: var(--muted); }

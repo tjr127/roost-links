@@ -1,8 +1,8 @@
 // Roost Links service worker: always try the network first so players get updates
 // as soon as they open the app; fall back to the saved copy only when offline.
 // League data comes from Google and is never cached here.
-var CACHE = 'roost-links-v1';
-var SHELL = ['./', 'index.html', 'app.js', 'app.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
+var CACHE = 'roost-links-v2';
+var SHELL = ['./', 'index.html', 'app.js', 'tee.js', 'app.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

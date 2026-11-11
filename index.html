@@ -250,6 +250,7 @@
   <section id="teams" class="hide"><h2>Team game</h2><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
   <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div></section>
   <section id="schedule" class="hide">
+    <div id="teecard"></div>
     <h2>Schedule</h2>
     <div class="card picker"><label for="who">Player</label><select id="who"></select></div>
     <div class="summary" id="schedsum"></div>
@@ -977,5 +978,6 @@ function renderField() {
   load();
   setInterval(load, 60000);
 </script>
+<script src="tee.js"></script>
 </body>
 </html>
