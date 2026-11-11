@@ -589,11 +589,12 @@
     var on = !!p && p.holes.length > 0;
     ['enhole', 'enminus', 'enplus', 'enpminus', 'enpplus', 'ensave', 'enclear'].forEach(function (id) { document.getElementById(id).disabled = !on; });
     if (!on) {
-      hs.innerHTML = ''; document.getElementById('eninfo').textContent = p ? 'No holes set for tonight yet' : RL.entryHint(names.length > 0);
+      hs.innerHTML = ''; document.getElementById('eninfo').textContent = p ? 'No holes set for tonight yet' : RL.entryHint(names.length > 0); document.getElementById('eninfo').classList.toggle('big', !p);
       document.getElementById('enval').textContent = '–'; document.getElementById('enpval').textContent = '–'; document.getElementById('enrel').textContent = '';
       document.getElementById('enholes').innerHTML = '';
       return;
     }
+    document.getElementById('eninfo').classList.remove('big');
     if (!enHole(p)) { entry.hole = firstOpen(p); setVals(enHole(p)); }
     hs.innerHTML = p.holes.map(function (h) {
       return '<option value="' + h.hole + '"' + (h.hole === entry.hole ? ' selected' : '') + '>Hole ' + h.hole +

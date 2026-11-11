@@ -79,3 +79,4 @@ body.rl-lock { overflow: hidden; }
 /* Keep clear of hosting badges in the bottom corner */
 main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .rl-tip { bottom: calc(84px + env(safe-area-inset-bottom)); }
+#eninfo.big { font-size: 21px; font-weight: 600; color: var(--ink); line-height: 1.3; }

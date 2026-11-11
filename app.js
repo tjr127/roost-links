@@ -65,7 +65,7 @@
     entryHint: function (hasCard) {
       var a = getAuth();
       if (!a) return 'Sign in to enter scores';
-      if (!a.admin && !hasCard) return a.name + ' isn\'t on tonight\'s card, so there are no holes to enter. Ty adds players on the Tonight tab.';
+      if (!a.admin && !hasCard) return a.name + ' isn\'t on tonight\'s card, so there are no holes to enter';
       return 'Pick your name to enter scores';
     },
     signIn: function () { showLogin(); },
