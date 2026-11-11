@@ -28,6 +28,27 @@
     if (!Object.keys(s).length) tt.players.forEach(function (p) { s[p.name] = true; });
     return s;
   }
+  function localDraft(night) { try { return JSON.parse(localStorage.getItem('teeDraft:' + night) || 'null'); } catch (x) { return null; } }
+  function setLocalDraft(night, g) { try { if (g) localStorage.setItem('teeDraft:' + night, JSON.stringify({ early: g.early, late: g.late })); else localStorage.removeItem('teeDraft:' + night); } catch (x) {} }
+  // Ty's saved arrangement (sheet first, this phone as a backup), or null.
+  function savedDraft(tt) { return tt.draft || localDraft(tt.night); }
+  // Keep a set of groups in step with current picks: drop players no longer playing, add new pickers to their side.
+  function normalize(tt, g) {
+    var playing = tt.players.map(function (p) { return p.name; }).filter(function (n) { var c = choiceOf(tt, n); return c === 'Early' || c === 'Late' || c === 'Either'; });
+    var early = (g.early || []).filter(function (n) { return playing.indexOf(n) >= 0; });
+    var late = (g.late || []).filter(function (n) { return playing.indexOf(n) >= 0 && early.indexOf(n) < 0; });
+    playing.forEach(function (n) {
+      if (early.indexOf(n) >= 0 || late.indexOf(n) >= 0) return;
+      var c = choiceOf(tt, n), s = tt.suggested;
+      (c === 'Late' || (c === 'Either' && s.late.indexOf(n) >= 0) ? late : early).push(n);
+    });
+    return { night: tt.night, early: early, late: late };
+  }
+  function saveDraft(tt, g) {
+    setLocalDraft(tt.night, g);
+    tt.draft = g ? { early: g.early, late: g.late } : null;
+    post(g ? { action: 'teeDraft', night: tt.night, early: g.early, late: g.late } : { action: 'teeDraft', night: tt.night, clear: true }).catch(function () {});
+  }
   function names(list) { return list.length ? list.map(e).join(', ') : '<span class="tt-none">—</span>'; }
   function splitPairs(tt, early, late) {
     return tt.pairs.filter(function (p) {
@@ -104,13 +125,9 @@
       if (admin) html += '<button type="button" class="rl-link tt-small" id="ttreopen">Reopen sign-up</button>';
     } else if (by.Early.length + by.Late.length + by.Either.length) {
       if (admin) {
-        var g = edit || { night: tt.night, early: tt.suggested.early.slice(), late: tt.suggested.late.slice() };
-        // keep the editor in step with picks that changed since Ty started editing
-        var playing = league.filter(function (n) { var c = choiceOf(tt, n); return c === 'Early' || c === 'Late' || c === 'Either'; });
-        g.early = g.early.filter(function (n) { return playing.indexOf(n) >= 0; });
-        g.late = g.late.filter(function (n) { return playing.indexOf(n) >= 0 && g.early.indexOf(n) < 0; });
-        playing.forEach(function (n) { if (g.early.indexOf(n) < 0 && g.late.indexOf(n) < 0) (choiceOf(tt, n) === 'Late' ? g.late : g.early).push(n); });
-        if (edit) edit = g;
+        var sd = edit || savedDraft(tt);
+        var g = normalize(tt, sd || tt.suggested);
+        if (sd) edit = g;
         var chip = function (n, to) { return '<button type="button" class="tt-chip" data-move="' + e(n) + '" data-to="' + to + '">' + e(n) + (choiceOf(tt, n) === 'Either' ? ' <i>either</i>' : '') + '</button>'; };
         var split = splitPairs(tt, g.early, g.late);
         html += '<div class="tt-groups"><div class="tt-gtitle">' + (edit ? 'Your groups' : 'Suggested groups') + '</div><div class="tt-gsub">Tap a name to move it to the other group.</div>' +
@@ -122,7 +139,9 @@
           '<div class="tt-gsub">Confirming locks everyone\'s pick.</div></div>';
         el.dataset.groups = JSON.stringify(g);
       } else {
-        html += groupBlock(tt, tt.suggested.early, tt.suggested.late, 'Suggested groups', 'Ty confirms the final groups.');
+        var dr = tt.draft ? normalize(tt, tt.draft) : null;
+        html += dr ? groupBlock(tt, dr.early, dr.late, 'Groups so far', 'Ty hasn\'t confirmed these yet.')
+          : groupBlock(tt, tt.suggested.early, tt.suggested.late, 'Suggested groups', 'Ty confirms the final groups.');
       }
     }
     html += '</div>';
@@ -167,10 +186,11 @@
       g.late = g.late.filter(function (x) { return x !== n; });
       g[to].push(n);
       edit = g;
+      saveDraft(tt, g);
       renderTee();
       return;
     }
-    if (ev.target.id === 'ttreset') { edit = null; renderTee(); return; }
+    if (ev.target.id === 'ttreset') { edit = null; saveDraft(tt, null); renderTee(); return; }
     if (ev.target.id === 'ttsignin') { RL.signIn(); return; }
     if (ev.target.id === 'ttconfirm') {
       var gg = JSON.parse(document.getElementById('teecard').dataset.groups || '{}');
@@ -178,7 +198,7 @@
       setNote('Confirming groups…');
       post({ action: 'teeConfirm', night: tt.night, early: gg.early, late: gg.late }).then(function () {
         tt.confirmed = { early: gg.early, late: gg.late, by: RL.user().name, at: 'just now' };
-        edit = null; setNote('Groups confirmed ✓'); load();
+        edit = null; setLocalDraft(tt.night, null); tt.draft = null; setNote('Groups confirmed ✓'); load();
       }, function (er) { setNote(er.message || 'Couldn\'t confirm. Try again.', true); });
       return;
     }
