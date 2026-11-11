@@ -74,3 +74,4 @@ body.rl-lock { overflow: hidden; }
 .tt-warn { font-size: 13px; color: #8a4b00; background: #fff3e0; border-radius: 8px; padding: 6px 8px; margin-top: 8px; }
 .tt-confirm { margin-top: 12px; }
 .tt-small { display: block; margin: 8px auto 0; font-size: 13px; color: var(--muted); }
+.tt-byenote { font-size: 12px; color: var(--muted); margin-top: 6px; text-align: center; }

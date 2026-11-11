@@ -20,6 +20,14 @@
     var p = tt.players.filter(function (x) { return x.name === n; })[0];
     return p ? p.choice : '';
   }
+  // Players with a match that night (regular, one-way, or a makeup moved to that night). Everyone else has a bye.
+  // Nights with no matches on the Matches tab (tiebreaker, playoffs) treat every member as scheduled.
+  function scheduled(tt) {
+    var s = {};
+    tt.pairs.forEach(function (p) { s[p[0]] = true; s[p[1]] = true; });
+    if (!Object.keys(s).length) tt.players.forEach(function (p) { s[p.name] = true; });
+    return s;
+  }
   function names(list) { return list.length ? list.map(e).join(', ') : '<span class="tt-none">—</span>'; }
   function splitPairs(tt, early, late) {
     return tt.pairs.filter(function (p) {
@@ -44,6 +52,7 @@
     if (!tt) { el.innerHTML = ''; return; }
     var a = RL.user(), admin = !!(a && a.admin), me = a ? a.name : '';
     var league = tt.players.map(function (p) { return p.name; });
+    var sched = scheduled(tt);
     var conf = tt.confirmed;
     if (edit && edit.night !== tt.night) edit = null;
     if (conf) edit = null;
@@ -61,12 +70,14 @@
     if (canPick) {
       html += '<div class="tt-pick">' +
         (admin ? '<label class="tt-for">Pick for <select id="ttfor">' + league.map(function (n) {
-          return '<option' + (n === who ? ' selected' : '') + '>' + e(n) + '</option>';
+          return '<option value="' + e(n) + '"' + (n === who ? ' selected' : '') + '>' + e(n) + (sched[n] ? '' : ' (bye)') + '</option>';
         }).join('') + '</select></label>' : '<div class="tt-you">Your pick</div>') +
         '<div class="tt-btns">' + ORDER.map(function (c) {
           return '<button type="button" data-tee="' + c + '" class="' + (choiceOf(tt, who) === c ? 'on ' : '') + (c === 'Out' ? 'out' : '') + '">' +
             LABEL[c] + (tt.times[c] ? '<small>' + e(tt.times[c]) + '</small>' : '') + '</button>';
-        }).join('') + '</div></div>';
+        }).join('') + '</div>' +
+        (!sched[who] ? '<div class="tt-byenote">' + (who === me ? 'You have' : e(who) + ' has') + ' a bye this week. Pick a time only if ' + (who === me ? 'you\'re' : e(who) + ' is') + ' coming to play.</div>' : '') +
+        '</div>';
     } else if (!a && !conf && tt.state === 'open') {
       html += '<div class="tt-pick"><button type="button" class="rl-link tt-signin" id="ttsignin">Sign in to pick your time</button></div>';
     }
@@ -74,12 +85,18 @@
 
     // Summary by choice
     var by = { Early: [], Late: [], Either: [], Out: [] }, none = [];
-    league.forEach(function (n) { var c = choiceOf(tt, n); if (by[c]) by[c].push(n); else none.push(n); });
+    var byes = [];
+    league.forEach(function (n) {
+      var c = choiceOf(tt, n);
+      if (by[c]) by[c].push(n); else if (sched[n]) none.push(n);
+      if (!sched[n]) byes.push(n + (c ? ' (' + LABEL[c].toLowerCase() + ')' : ''));
+    });
     html += '<div class="tt-sum">' + ORDER.map(function (c) {
       return '<div class="tt-col ' + c.toLowerCase() + '"><div class="tt-k">' + LABEL[c] + ' <span class="tt-n">' + by[c].length + '</span></div>' +
         '<div class="tt-names">' + (by[c].length ? by[c].map(e).join(', ') : '<span class="tt-none">—</span>') + '</div></div>';
     }).join('') + '</div>' +
-      (none.length && !conf ? '<div class="tt-noreply"><b>No reply yet:</b> ' + none.map(e).join(', ') + '</div>' : '');
+      (none.length && !conf ? '<div class="tt-noreply"><b>No reply yet:</b> ' + none.map(e).join(', ') + '</div>' : '') +
+      (byes.length ? '<div class="tt-noreply"><b>Bye this week:</b> ' + byes.map(e).join(', ') + '</div>' : '');
 
     // Groups
     if (conf) {
