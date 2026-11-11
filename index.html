@@ -646,7 +646,7 @@
         '<div class="s">' + (p.source === 'Manual' ? 'Set manually' : (p.used ? 'Best ' + p.used + ' of ' + esc(p.rounds) + ' rounds' : 'Needs 3 rounds')) + '</div></div>' +
       '<div class="hc-tile"><div class="k">Course handicap</div><div class="s" style="margin:2px 0 6px">' + where + '</div>' +
         (p.chs || []).map(function (c) {
-          return '<div class="hc-tee' + (c.tee === p.tees ? ' mine' : '') + '"><span>' + esc(c.tee) + (c.tee === p.tees ? ' <em>(plays)</em>' : '') + '</span><b>' + esc(c.ch === '' ? '–' : plus(c.ch)) + '</b></div>';
+          return '<div class="hc-tee' + (c.tee === p.tees ? ' mine' : '') + '"><span>' + esc(c.tee) + (c.tee === p.tees ? ' <em>(active)</em>' : '') + '</span><b>' + esc(c.ch === '' ? '–' : plus(c.ch)) + '</b></div>';
         }).join('') + '</div>' +
       '</div>';
 
