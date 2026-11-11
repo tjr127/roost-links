@@ -141,7 +141,8 @@ function teeTimes_(ss) {
     closes: Utilities.formatDate(night.closes, tz, "EEE 'at' h:mm a"),
     times: TEE_TIMES_, players: players, pairs: pairs,
     suggested: teeSuggest_(choices, pairs),
-    confirmed: conf ? JSON.parse(conf) : null
+    confirmed: conf ? JSON.parse(conf) : null,
+    draft: (function (d) { return d ? JSON.parse(d) : null; })(apiProps_().getProperty('teeDraft:' + night.key))
   };
 }
 
@@ -190,6 +191,7 @@ function apiTeeConfirm_(req) {
       if (r) sh.getRange(r.row, 6).setValue(g);
       else if (g) sh.getRange(sh.getLastRow() + 1, 1, 1, 6).setValues([[night.key, n, '', new Date(), user.name, g]]);
     });
+    apiProps_().deleteProperty('teeDraft:' + night.key);
     apiProps_().setProperty('teeConf:' + night.key, JSON.stringify({
       early: early, late: late, by: user.name,
       at: Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), "EEE h:mm a")
@@ -203,5 +205,15 @@ function apiTeeReopen_(req) {
   var user = apiUser_(req.token);
   if (!user || !user.admin) return { ok: false, code: 'denied', error: 'Only Ty can reopen sign-up.' };
   apiProps_().deleteProperty('teeConf:' + String(req.night || ''));
+  return { ok: true };
+}
+
+/** App (admin): save Ty's in-progress groups (before confirming) so moves survive a refresh. clear: true goes back to the suggestion. */
+function apiTeeDraft_(req) {
+  var user = apiUser_(req.token);
+  if (!user || !user.admin) return { ok: false, code: 'denied', error: 'Only Ty can arrange the groups.' };
+  var key = 'teeDraft:' + String(req.night || '');
+  if (req.clear) { apiProps_().deleteProperty(key); return { ok: true }; }
+  apiProps_().setProperty(key, JSON.stringify({ early: (req.early || []).map(String), late: (req.late || []).map(String) }));
   return { ok: true };
 }
