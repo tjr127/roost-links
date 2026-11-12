@@ -305,6 +305,7 @@
   }
   function yds(n) { return n === '' || n == null ? '' : Number(n).toLocaleString('en-US'); }
   function renderTeeStrip() {
+    var el0 = document.getElementById('teestrip'); if (el0) { el0.classList.add('hide'); el0.innerHTML = ''; } return;   // removed from the Board (Nov 12)
     var el = document.getElementById('teestrip'), ti = data && data.teeInfo;
     var tees = ti ? ti.tees.filter(function (x) { return x.yards || x.color; }) : [];
     el.classList.toggle('hide', !tees.length);
@@ -669,7 +670,7 @@
     var pend = tpPend[p.name];
     var playing = pend || me0.pick || me0.def;
     var a = RL.user(), admin = !!(a && a.admin), mine = RL.canEdit(p.name);
-    var can = mine && (!tp.locked || admin);
+    var can = mine && tp.casual && (!tp.teedOff || admin);
     var nine = tp.nine === 'Front' || tp.nine === 'Back' ? tp.nine + ' 9' : tp.holes === 18 && tp.nine === '18' ? '18 holes' : '18 holes (front or back not set yet)';
     var rows = tp.tees.filter(function (t) { return t.ok; }).map(function (t) {
       var ch = me0.chs[t.tee], on = t.tee === playing;
@@ -681,16 +682,25 @@
     }).join('');
     var lockTime = tp.lockText.replace(/^.* at /, '');
     var note;
-    if (tp.casual) note = 'Casual round: tees can be changed any time.';
-    else if (tp.locked) note = admin ? 'Locked for players at ' + lockTime + '. You can still change anyone\'s tees.' : 'Locked at ' + lockTime + '. Playing ' + playing + ' tees.';
-    else note = 'Pick your tees by ' + tp.lockText + '. Tee choice locks then.';
-    if (!mine && !tp.locked && !tp.casual) note += a ? '' : ' Sign in to pick yours.';
+    var lockd = false, tt0 = data.teeTimes, link = '';
+    if (tp.casual) {
+      lockd = !!tp.teedOff;
+      note = tp.teedOff ? (admin ? 'Somebody has teed off, so tees are locked for players. You can still change anyone\'s.' : 'Somebody has teed off, so tees are locked. Playing ' + playing + ' tees.')
+        : 'Casual round: change your tees any time until the first group tees off.';
+      if (!mine && !tp.teedOff && !a) note += ' Sign in to pick yours.';
+    } else {
+      lockd = !!(tt0 && tt0.night === tp.night && tt0.confirmed);
+      note = lockd ? 'Groups and tees are set. Playing ' + playing + ' tees.' : 'League night: pick your tees with your tee time on the Schedule tab.';
+      if (!lockd) link = '<button type="button" class="rl-link tp-go" data-gotab="schedule">Go to tee times ›</button>';
+    }
     var msg = tpNote.name === p.name && tpNote.text ? '<div class="tp-msg' + (tpNote.err ? ' err' : '') + '">' + esc(tpNote.text) + '</div>' : '';
     return '<div class="hc-tile tp"><div class="tp-head"><div class="k">Course handicap</div>' +
       '<div class="s">' + esc(tp.course) + ' · ' + esc(nine) + ' · ' + esc(tp.label.replace(/^(\w{3})\w*/, '$1')) + '</div></div>' +
-      '<div class="tp-grid">' + rows + '</div>' + '<div class="tp-note' + (tp.locked && !tp.casual ? ' locked' : '') + '">' + (tp.locked && !tp.casual ? '🔒 ' : '') + esc(note) + '</div>' + msg + '</div>';
+      '<div class="tp-grid">' + rows + '</div>' + '<div class="tp-note' + (lockd ? ' locked' : '') + '">' + (lockd ? '🔒 ' : '') + esc(note) + '</div>' + link + msg + '</div>';
   }
   document.addEventListener('click', function (ev) {
+    var go = ev.target.closest && ev.target.closest('[data-gotab]');
+    if (go) { var nb = document.querySelector('nav.tabbar [data-tab="' + go.getAttribute('data-gotab') + '"]'); if (nb) nb.click(); window.scrollTo(0, 0); return; }
     var b = ev.target.closest && ev.target.closest('[data-tpick]');
     if (!b) return;
     var tp = data && data.teePick, name = document.getElementById('hcpwho').value;

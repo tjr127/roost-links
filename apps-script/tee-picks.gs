@@ -1,9 +1,9 @@
 
 // ===================================================================
 // Weekly tee choice and hole yardages (added Nov 12, 2026).
-// Players pick Tips, Long, Medium or Short for the coming night on Scores > Handicaps.
-// League nights lock at 3 PM that day; Ty (admin) can still change anyone's after that.
-// Casual nights never lock. Picks live on the "Tee Choices" tab (one row per night + player);
+// Casual rounds: players pick Tips, Long, Medium or Short on Scores > Handicaps until the first score goes in
+// (Ty can still change after that). League nights: picked with the tee time on the Schedule tab (league-tees.gs);
+// the Handicaps card is read-only. Picks live on the "Tee Choices" tab (one row per night + player);
 // Tonight column B reads them, and a player with no pick plays their tees from the Players tab.
 // Hole-by-hole yardages for every tee live on the "Hole Yards" tab.
 // ===================================================================
@@ -51,7 +51,8 @@ function tpNight_(ss) {
   if (!night.nine && tCourse && tCourse === night.course) night.nine = tNine;
   var off = Utilities.formatDate(night.date, tz, 'Z');  // e.g. -0500
   night.lockAt = new Date(night.key + 'T' + ('0' + TP_LOCK_HOUR_).slice(-2) + ':00:00' + off.slice(0, 3) + ':' + off.slice(3));
-  night.locked = !night.casual && new Date() >= night.lockAt;
+  night.teedOff = night.casual ? tpTeedOff_(ss) : false;
+  night.locked = night.casual ? night.teedOff : true;   // league tees are picked on the Schedule tab (tee times card)
   night.label = Utilities.formatDate(night.date, tz, 'EEEE, MMM d');
   night.lockText = Utilities.formatDate(night.lockAt, tz, "EEEE 'at' h:mm a");
   return night;
@@ -79,9 +80,31 @@ function tpRows_(ss, nightKey) {
   return out;
 }
 
+/** Any score on Tonight yet (first group has teed off)? */
+function tpTeedOff_(ss) {
+  return ss.getSheetByName('Tonight').getRange('E10:V25').getValues().some(function (r) { return r.some(function (v) { return v !== '' && v !== null; }); });
+}
+
 /** Everything the Handicaps card needs to show and change each player's tees for the coming night. */
 function teePick_(ss) {
-  var night = tpNight_(ss);
+  return tpBuild_(ss, tpNight_(ss));
+}
+
+/** Tees for the next league night (Season tab), for the tee times card on the Schedule tab. */
+function tpLeague_(ss) {
+  var n = teeNight_(ss);
+  if (!n) return null;
+  var tz = ss.getSpreadsheetTimeZone(), nine = '';
+  ss.getSheetByName('Season').getRange('A2:E60').getValues().forEach(function (r) {
+    if (r[1] instanceof Date && Utilities.formatDate(r[1], tz, 'yyyy-MM-dd') === n.key) nine = String(r[3] || '');
+  });
+  var top = ss.getSheetByName('Tonight').getRange('B2:B3').getDisplayValues();
+  if (!nine && top[0][0] === n.course) nine = top[1][0];
+  return tpBuild_(ss, { key: n.key, date: n.date, course: n.course, nine: nine, casual: false, locked: false,
+    label: n.label, lockText: Utilities.formatDate(n.closes, tz, "EEEE 'at' h:mm a"), teedOff: false });
+}
+
+function tpBuild_(ss, night) {
   if (!night) return null;
   var cs = ss.getSheetByName('Courses');
   var head = cs.getRange(1, 1, 1, cs.getLastColumn()).getDisplayValues()[0];
@@ -114,7 +137,7 @@ function teePick_(ss) {
   });
   return {
     night: night.key, label: night.label, course: night.course, nine: night.nine, holes: holes.length,
-    casual: night.casual, locked: night.locked, lockText: night.lockText,
+    casual: night.casual, locked: night.locked, teedOff: !!night.teedOff, lockText: night.lockText,
     tees: tees.map(function (t) { return { tee: t.tee, color: t.color, yards: t.yards, ok: t.rating !== null && t.slope !== null, rating: t.rating, slope: t.slope }; }),
     par: par, exp: ss.getSheetByName('Settings').getRange('B43:B44').getValues().map(function (r) { return Number(r[0]) || 0; }),
     tbl: (function () { var o = {}; ss.getSheetByName('Settings').getRange('A20:C37').getValues().forEach(function (r) { if (r[0] !== '') o[Number(r[0])] = [Number(r[1]) || 0, Number(r[2]) || 0]; }); return o; })(),
@@ -136,14 +159,20 @@ function apiTeePick_(req) {
   if (req.night && String(req.night) !== night.key) return { ok: false, code: 'stale', error: 'The night changed. Refresh and try again.' };
   var known = ss.getSheetByName('Players').getRange('A2:C40').getDisplayValues().some(function (r) { return r[0] === name && r[2] === 'TRUE'; });
   if (!known) return { ok: false, error: name + ' is not an active player.' };
-  if (night.locked && !user.admin) return { ok: false, code: 'locked', error: 'Tees locked at 3:00 PM. Ask Ty if you need to change.' };
+  if (!night.casual) return { ok: false, code: 'league', error: 'League night: pick your tees with your tee time on the Schedule tab.' };
+  if (night.teedOff && !user.admin) return { ok: false, code: 'locked', error: 'Somebody has teed off, so tees are locked. Ask Ty if you need to change.' };
+  tpWrite_(ss, night.key, name, tees, user.name === name ? 'Player' : user.name);
+  return { ok: true, night: night.key, name: name, tees: tees };
+}
+
+/** Save one player's tees for a night (one row per night + player on Tee Choices). */
+function tpWrite_(ss, nightKey, name, tees, by) {
   var lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {
-    var sh = tpSheet_(ss), r = tpRows_(ss, night.key)[name];
-    var vals = [[night.key, name, tees, new Date(), user.name === name ? 'Player' : user.name]];
+    var sh = tpSheet_(ss), r = tpRows_(ss, nightKey)[name];
+    var vals = [[nightKey, name, tees, new Date(), by]];
     if (r) sh.getRange(r.row, 1, 1, 5).setValues(vals);
     else sh.getRange(sh.getLastRow() + 1, 1, 1, 5).setValues(vals);
   } finally { lock.releaseLock(); }
-  return { ok: true, night: night.key, name: name, tees: tees };
 }
