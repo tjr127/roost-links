@@ -382,7 +382,7 @@
         '<div class="what"><div class="opp">' + (bye ? 'Bye' : 'vs ' + esc(x.opp)) + '</div>' +
           '<div class="course">' + esc(x.course) + '</div></div>' +
         '<div class="res">' + (label[x.status] ? '<span class="chip ' + x.status + '">' + label[x.status] + '</span>' : '') +
-          (x.score ? '<div class="score">' + esc(x.score) + ' pts</div>' : '') + '</div>' +
+          (x.score ? '<div class="score">' + esc(x.score) + ' STBF</div>' : '') + '</div>' +
       '</div>';
     }).join('');
   }
@@ -421,7 +421,7 @@
       row('Net', '', function (h) {
         return '<td>' + (h.n !== '' ? '<span class="nb ' + netClass(h) + '">' + esc(h.n) + '</span>' : '') + '</td>';
       }, 'n') +
-      row('Pts', '', function (h) { return '<td>' + esc(h.p) + '</td>'; }, 'p') +
+      row('STBF', '', function (h) { return '<td>' + esc(h.p) + '</td>'; }, 'p') +
       row('Putts', 'putts', function (h) { return '<td>' + esc(h.pt) + '</td>'; }, 'pt') +
       (holes.some(function (h) { return n(h.pen); }) ? row('Pen', 'sub', function (h) { return '<td>' + esc(h.pen) + '</td>'; }, 'pen') : '') +
       (holes.some(function (h) { return n(h.m); }) ? row('Mull', 'sub', function (h) { return '<td>' + esc(h.m) + '</td>'; }, 'm') : '') +
@@ -452,7 +452,7 @@
     var html = '<div class="card sc-sum">' +
       '<div><div class="v">' + esc(sum(p.holes, 'g')) + '</div><div class="k">Gross</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'n')) + '</div><div class="k">Net</div></div>' +
-      '<div><div class="v">' + esc(sum(p.holes, 'p')) + '</div><div class="k">Points</div></div>' +
+      '<div><div class="v">' + esc(sum(p.holes, 'p')) + '</div><div class="k">Stableford</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'pt')) + '</div><div class="k">Putts</div></div>' +
       '<div><div class="v">' + status + '</div><div class="k">Thru</div></div></div>' +
       '<div class="sc-meta">' + (p.tees ? esc(p.tees) + ' tees' + (function (t) { return t ? (t.color ? ' (' + esc(t.color) + ')' : '') + (t.yards ? ' · ' + yds(t.yards) + ' yds' : '') : ''; })(teeOf(p.tees)) : '') + (p.hcp !== '' ? ' · Course handicap ' + esc(p.hcp) : '') + (sum(p.holes, 'pen') ? ' · Penalties ' + esc(sum(p.holes, 'pen')) : '') + (sum(p.holes, 'm') ? ' · Mulligans ' + esc(sum(p.holes, 'm')) : '') + '</div>';
@@ -1031,7 +1031,7 @@ function renderField() {
     });
     function th(key, label) { return '<th class="n' + (by === key ? ' sorted' : '') + '">' + label + '</th>'; }
     document.getElementById('field').innerHTML = list.length ?
-      '<table><tr><th>Player</th><th class="n">Thru</th>' + th('net', 'Net') + th('pts', 'Pts') + th('putts', 'Putts') + '</tr>' +
+      '<table><tr><th>Player</th><th class="n">Thru</th>' + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r) {
         var x = r.x;
         return '<tr><td>' + esc(x.player) + '</td><td class="n">' + esc(x.thru) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + esc(x.net) +
