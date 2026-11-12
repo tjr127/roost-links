@@ -52,6 +52,7 @@ function notifyOpen_(ss) {
   if (!night) return;
   var now = new Date();
   if (now < night.opens || now >= night.closes) return;
+  if (apiProps_().getProperty('teeConf:' + night.key)) return;   // groups already set: no point asking
   notifyOnce_('open:' + night.key, 'Roost Golf', 'Request Your Early or Late Tee Time for Thursday Night League Now!', teeLeague_(ss));
 }
 
