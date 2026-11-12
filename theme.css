@@ -1,0 +1,198 @@
+/* ===== Pub Night theme (Nov 11, 2026) =====
+   Dark charcoal, amber accent, Space Grotesk numbers, golf-ball dimple texture, bottom tab bar.
+   Loaded after the page's own styles and app.css, so it only restyles; markup and logic are unchanged. */
+:root {
+  --green: #F5B13C;          /* the accent (was green) */
+  --light: rgba(245,177,60,.08);
+  --mid: rgba(245,177,60,.18);
+  --ink: #EDEFEA;
+  --muted: #9BA59E;
+  --bg: #101412; --card: #181E1A; --card2: #1F2621; --line: #252D28; --line2: #2E3731;
+  --amber: #F5B13C; --amber-ink: #101412; --win: #8FD19E; --loss: #F28B7C;
+  --num: 'Space Grotesk', Inter, system-ui, sans-serif;
+}
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--ink); font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; left: 0; right: 0; top: 0; height: 340px; pointer-events: none; z-index: 0;
+  background: radial-gradient(120% 80% at 85% 0%, rgba(245,177,60,.22) 0%, rgba(245,177,60,0) 60%); }
+body::after { content: ""; position: fixed; left: 0; right: 0; top: 0; height: 240px; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(rgba(255,255,255,.06) 1.2px, transparent 1.6px); background-size: 14px 14px;
+  -webkit-mask-image: linear-gradient(#000, transparent); mask-image: linear-gradient(#000, transparent); }
+main, header { position: relative; z-index: 1; }
+
+/* Header */
+header { background: rgba(16,20,18,.72); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: var(--ink);
+  padding: calc(14px + env(safe-area-inset-top)) 18px 12px; border-bottom: 1px solid rgba(255,255,255,.04); }
+header .brand { display: flex; align-items: center; gap: 12px; }
+header .brand img { width: 40px; height: 40px; border-radius: 11px; flex: none; }
+header h1 { font-family: var(--num); font-size: 22px; font-weight: 700; letter-spacing: -.3px; margin: 0; line-height: 1.1; }
+header .sub { font-size: 13px; color: var(--muted); opacity: 1; margin-top: 2px; }
+.menubtn, .curtab, header.open nav { display: none !important; }
+@media (max-width: 600px) { header { padding-right: 18px; } }
+
+/* Bottom tab bar */
+nav.tabbar { position: fixed; z-index: 30; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+  max-width: 536px; margin: 0 auto; display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px;
+  background: rgba(24,30,26,.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid var(--line); border-radius: 24px; padding: 7px 6px; box-shadow: 0 10px 30px rgba(0,0,0,.4); flex-direction: row; }
+nav.tabbar button { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-height: 48px; border-radius: 16px; color: var(--muted); font: 500 11px Inter, sans-serif; cursor: pointer; text-align: center; }
+nav.tabbar button svg { width: 22px; height: 22px; }
+nav.tabbar button.on { background: var(--amber); color: var(--amber-ink); font-weight: 700; }
+nav.tabbar button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+main { padding: 14px 14px calc(110px + env(safe-area-inset-bottom)); }
+
+/* Scores sub-tabs (Enter · Cards · Handicaps) */
+nav.subnav { display: flex !important; gap: 4px; margin: 4px 0 6px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px; flex-direction: row; }
+nav.subnav.hide { display: none !important; }
+nav.subnav button { all: unset; box-sizing: border-box; flex: 1; text-align: center; min-height: 38px; line-height: 38px; border-radius: 999px; color: var(--muted); font: 600 13px Inter, sans-serif; cursor: pointer; }
+nav.subnav button.on { background: var(--card2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2); }
+
+/* Section labels and cards */
+h2 { color: var(--muted); font: 600 12px Inter, sans-serif; letter-spacing: 1.4px; margin: 18px 4px 8px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: none; }
+.empty { color: var(--muted); }
+.note { color: var(--muted); }
+footer { color: var(--muted); }
+select, .picker select, .fhead select, .tt-for select { background: var(--card2) !important; color: var(--ink) !important; border: 1px solid var(--line2) !important; border-radius: 12px !important; color-scheme: dark; }
+.picker label, .fsort { color: var(--muted); }
+
+/* Match cards */
+.match { padding: 14px 16px; }
+.match .name { font-size: 16px; }
+.match .thr { color: var(--muted); }
+.match .thr.f { color: var(--win); }
+.match .stk { color: var(--muted); }
+.match .pts { font-family: var(--num); font-size: 28px; color: var(--muted); background: none !important; padding: 0 2px; }
+.match .pts.lead { color: var(--amber); }
+.match .vs { color: #4E5852; font-size: 0; }
+.match .vs::after { content: "–"; font-size: 18px; font-weight: 700; }
+.match .ow { color: var(--amber); }
+.match .thru { color: var(--muted); }
+
+/* Tables */
+table { color: var(--ink); }
+th { color: var(--muted); }
+td { border-top: 1px solid var(--line); }
+tr.top td { background: rgba(245,177,60,.07); }
+td.b { font-family: var(--num); font-size: 17px; }
+th.sorted { color: var(--amber); }
+
+/* Team game */
+.team .score, .gamecard .gname, .thead .tbig { color: var(--amber); font-family: var(--num); }
+.gamecard { border-left: 0; background: linear-gradient(160deg, #2A2210 0%, var(--card) 70%); border: 1px solid #3A3018; }
+.gamecard .gdesc, .team .meta, .team .mem .th, .thead .th, .tcount, .tleg { color: var(--muted); }
+.team .mem .th.f, .thead .th.f { color: var(--win); }
+.team .tpl { background: var(--mid); color: var(--amber); }
+.team .tmore { color: var(--amber); }
+.inel { color: var(--loss); }
+.tnav button { background: var(--amber); color: var(--amber-ink); }
+.tnav .tback { background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.tdt th { background: var(--card2); color: var(--muted); }
+.tdt td { border-bottom: 1px solid var(--line); }
+.tdt td.use { background: rgba(245,177,60,.16); color: var(--amber); }
+.tdt td.out { color: #5C6660; }
+.tdt td sup { color: var(--amber); }
+.tdt td.tv { background: rgba(245,177,60,.07); }
+.tdt .ttag.flip { color: var(--loss); }
+.tdt tr.tot td { border-top: 2px solid var(--amber); }
+.tdt .dash { color: #4E5852; }
+.tleg .sw { background: rgba(245,177,60,.4); }
+
+/* Schedule */
+.wk { border-top: 1px solid var(--line); }
+.wk.next { background: rgba(245,177,60,.06); }
+.wk .date { font-family: var(--num); }
+.wk .tag { color: var(--amber); }
+.wk .course, .wk .score, .summary { color: var(--muted); }
+.chip.W { background: rgba(143,209,158,.16); color: var(--win); }
+.chip.L { background: rgba(242,139,124,.16); color: var(--loss); }
+.chip.T { background: rgba(245,177,60,.16); color: var(--amber); }
+.chip.bye { background: #222A25; color: var(--muted); }
+.chip.makeup, .chip.pending { background: rgba(245,177,60,.16); color: #FFC861; }
+
+/* Scorecards */
+.sc-sum .v { color: var(--amber); font-family: var(--num); font-size: 24px; }
+.sc-sum .k, .sc-meta, .sc-lbl, .legend { color: var(--muted); }
+table.sc th, table.sc td { border-top: 1px solid var(--line); }
+table.sc .tot { background: var(--card2); }
+table.sc tr.hole td { color: var(--amber); }
+table.sc tr.sub td, table.sc .rl { color: var(--muted); }
+table.sc .dots { color: var(--amber); }
+
+/* Enter score */
+.en-info, .en-rel, .en-plbl { color: var(--muted); }
+.pill { background: #141916; border: 1px solid var(--line); }
+.pill button { background: var(--card2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2); }
+.pill button:active { background: var(--amber); color: var(--amber-ink); }
+.pill-lbl { color: var(--muted); font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; }
+.pill-val { color: var(--ink); font-family: var(--num); }
+.en-save { background: var(--amber); color: var(--amber-ink); border-radius: 16px; font-family: var(--num); min-height: 54px; }
+.en-msg { color: var(--win); }
+.en-msg.err { color: var(--loss); }
+.en-clear { color: var(--muted); }
+.en-grid button { background: #171C19; border: 1px solid var(--line); color: var(--muted); border-radius: 12px; }
+.en-grid button b { color: var(--ink); font-family: var(--num); }
+.en-grid button.on { border: 2px solid var(--amber); background: rgba(245,177,60,.12); color: var(--amber); }
+.en-grid button.empty b { color: #4E5852; }
+.en-grid button.failed { border-color: var(--loss); background: rgba(242,139,124,.12); }
+.en-grid button.failed b { color: var(--loss); }
+#eninfo.big { color: var(--ink); }
+
+/* Handicaps */
+.hc-tile { background: var(--card); border: 1px solid var(--line); box-shadow: none; border-radius: 20px; }
+.hc-tile .v { color: var(--amber); font-family: var(--num); }
+.hc-tile .k, .hc-tile .s, .hc-tee, .hc-key, .hc-axis, .hc-grid span, .hc-val { color: var(--muted); }
+.hc-tee b, .hc-title { color: var(--ink); }
+.hc-tee.mine { background: rgba(245,177,60,.1); color: var(--amber); }
+.hc-tee.mine b { color: var(--amber); }
+.hc-plot { border-left-color: var(--line2); }
+.hc-grid { border-top-color: var(--line); }
+.hc-grid.zero { border-top-color: #4E5852; }
+.hc-bar { background: #39433D; }
+.hc-bar.c { background: var(--amber); }
+.hc-col.sel .hc-val { color: var(--ink); }
+.hc-col.sel .hc-bar { outline-color: #fff; }
+.hc-detail { background: #141916; }
+.hc-detail b { color: var(--amber); }
+
+/* Tee times card */
+.tt { border-left: 0; border: 1px solid #3A3018; background: radial-gradient(120px 120px at 100% 0%, rgba(245,177,60,.2), transparent 70%), var(--card); }
+.tt-title { color: var(--ink); font-family: var(--num); font-size: 19px; }
+.tt-status { color: var(--muted); }
+.tt-status.done { color: var(--win); }
+.tt-btns button { background: var(--card2); border: 1px solid var(--line2); color: var(--ink); border-radius: 14px; font-family: var(--num); min-height: 52px; }
+.tt-btns button small { color: var(--muted); font-family: Inter, sans-serif; }
+.tt-btns button.on { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+.tt-btns button.on small { color: #3D2C08; }
+.tt-btns button.out { color: var(--loss); }
+.tt-btns button.out.on { background: var(--loss); border-color: var(--loss); color: #2A0F0B; }
+.tt-col { background: #141916; }
+.tt-col.out .tt-k { color: var(--loss); }
+.tt-n { background: var(--mid); color: var(--amber); }
+.tt-noreply, .tt-gsub, .tt-gtitle, .tt-byenote { color: var(--muted); }
+.tt-groups { border-top: 1px solid var(--line); }
+.tt-chip { background: var(--card2); border: 1px solid var(--line2); color: var(--ink); }
+.tt-warn { background: rgba(245,177,60,.12); color: #FFC861; }
+.tt-msg { color: var(--win); }
+
+/* Sign-in screen, banners */
+.rl-ov { background: var(--bg); }
+.rl-ov::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 340px; pointer-events: none;
+  background: radial-gradient(120% 80% at 85% 0%, rgba(245,177,60,.25) 0%, rgba(245,177,60,0) 60%); }
+.rl-box { position: relative; }
+.rl-title { font-family: var(--num); }
+.rl-grid button { background: var(--card); color: var(--ink); border: 1px solid var(--line); font-family: Inter, sans-serif; }
+.rl-grid button:active { background: var(--amber); color: var(--amber-ink); }
+.rl-pad button { background: var(--card); border: 1px solid var(--line); font-family: var(--num); }
+.rl-pad button:active { background: var(--amber); color: var(--amber-ink); }
+.rl-dots i { border-color: var(--amber); }
+.rl-dots i.on { background: var(--amber); }
+.rl-msg.err { color: var(--loss); }
+.rl-btn { background: var(--amber); color: var(--amber-ink); }
+.rl-who .rl-link { color: var(--amber); }
+.rl-tip { background: var(--card); color: var(--ink); border: 1px solid var(--line); bottom: calc(96px + env(safe-area-inset-bottom)); }
+.rl-tip .rl-btn { background: var(--amber); color: var(--amber-ink); }
+.rl-pushbar { border-left: 0; border: 1px solid #3A3018; background: linear-gradient(160deg, #2A2210 0%, var(--card) 70%); }
+.rl-pushbar .rl-btn { background: var(--amber); color: var(--amber-ink); }
+.rl-x { color: var(--muted); }

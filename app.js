@@ -82,7 +82,7 @@
     if (ov) return;
     ov = document.createElement('div');
     ov.className = 'rl-ov hide';
-    ov.innerHTML = '<div class="rl-box"><img class="rl-logo" src="icons/icon-192.png" alt=""><div class="rl-title">Roost Links</div><div id="rl-step"></div></div>';
+    ov.innerHTML = '<div class="rl-box"><img class="rl-logo" src="icons/icon-192.png" alt=""><div class="rl-title">Roost Golf</div><div id="rl-step"></div></div>';
     document.body.appendChild(ov);
     box = ov.querySelector('#rl-step');
   }
