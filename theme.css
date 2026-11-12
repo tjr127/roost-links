@@ -279,3 +279,16 @@ table.sc tr.yds td { font-size: 11px; }
 .en-grid button.on i { color: var(--amber); }
 table.sc tr.putts td { color: var(--muted); }
 table.sc tr.putts td.tot { color: var(--ink); }
+
+/* Head-to-head match summaries (Nov 12) */
+.match .mstory { grid-column: 1 / -1; font-size: 13px; line-height: 1.4; color: var(--muted); border-top: 1px solid var(--line); padding-top: 9px; margin-top: 4px; }
+.match .mstory b { color: var(--ink); font-weight: 600; }
+.match .mstory.tap { cursor: pointer; }
+.match .mmore { display: block; margin-top: 5px; font-size: 12px; font-weight: 600; color: var(--amber); }
+.match .mtarget { grid-column: 1 / -1; }
+.match .mnote { font-size: 12px; color: var(--muted); margin: 2px 0 6px; }
+table.mplan { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.mplan th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 700; padding: 4px 2px; text-align: center; }
+table.mplan td { text-align: center; padding: 5px 2px; border-top: 1px solid var(--line); color: var(--muted); }
+table.mplan td.b { color: var(--amber); font: 700 13px Inter, sans-serif; }
+table.mplan .mdots { color: var(--amber); letter-spacing: 1px; }

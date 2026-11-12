@@ -1062,6 +1062,7 @@ function renderField() {
         '</div>' + (x.oneWay ? '<div class="ow">One Way →</div>' : '') + '</div>' +
         '<div class="name r">' + esc(x.b) + thr(x.bThru) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
         (x.even ? '<div class="thru">Even: no strokes</div>' : '') +
+        (window.matchStory ? window.matchStory(x) : '') +
         '</div>';
     }).join('');
     document.getElementById('matches').innerHTML = m || '<div class="card empty">No matches tonight</div>';
@@ -1129,5 +1130,6 @@ function renderField() {
 </script>
 <script src="tee.js"></script>
 <script src="flip.js"></script>
+<script src="match.js"></script>
 </body>
 </html>
