@@ -72,7 +72,7 @@
     signOut: function () {
       var a = getAuth();
       if (a) apiPost({ action: 'logout', token: a.token }).catch(function () {});
-      setAuth(null); updateWho(); showLogin();
+      setAuth(null); updateWho(); pushLogout(); updatePush(); showLogin();
     }
   };
 
@@ -163,7 +163,7 @@
       setAuth({ name: j.name, token: j.token, admin: !!j.admin });
       ls(BROWSE_KEY, null);
       ls('me', j.name);
-      hideLogin(); updateWho();
+      hideLogin(); updateWho(); pushLogin(j.name); updatePush();
       if (typeof window.setMe === 'function') window.setMe(j.name);
     }, function (e) {
       step.busy = false; step.pin = '';
@@ -185,6 +185,79 @@
     b.addEventListener('click', a ? window.RL.signOut : window.RL.signIn);
     if (typeof window.renderEntry === 'function' && window.data) window.renderEntry();
   }
+
+  // ---- Push notifications (OneSignal) ----
+  // Each phone is linked to the player's sheet name, so the league sheet can send alerts by name.
+  var ONESIGNAL_APP_ID = '922b7773-264b-4ac8-b72b-0b0b9f108769', PUSH_DISMISS = 'roostPushLater';
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  var OS = null;
+  OneSignalDeferred.push(function (OneSignal) {
+    return OneSignal.init({
+      appId: ONESIGNAL_APP_ID,
+      serviceWorkerPath: 'roost-links/sw.js', serviceWorkerParam: { scope: '/roost-links/' },
+      notifyButton: { enable: false }
+    }).then(function () {
+      OS = OneSignal;
+      var a = getAuth();
+      if (a) pushLogin(a.name);
+      OneSignal.Notifications.addEventListener('permissionChange', function () { updatePush(); });
+      updatePush();
+    }).catch(function () { updatePush(); });
+  });
+  function pushLogin(name) { if (OS && name) OS.login(name).catch(function () {}); }
+  function pushLogout() { if (OS) OS.logout().catch(function () {}); }
+  function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function pushState() {
+    if (!getAuth()) return 'signedout';
+    if (isIOS() && !standalone()) return 'install';
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return 'unsupported';
+    if (Notification.permission === 'denied') return 'blocked';
+    if (Notification.permission === 'granted' && OS && OS.User.PushSubscription.optedIn !== false) return 'on';
+    return OS ? 'off' : 'loading';
+  }
+  function turnOnPush() {
+    if (!OS) return;
+    OS.Notifications.requestPermission().then(function () {
+      var a = getAuth();
+      if (a) pushLogin(a.name);
+      if (Notification.permission === 'granted') OS.User.PushSubscription.optIn().catch(function () {});
+      ls(PUSH_DISMISS, null);
+      updatePush();
+    });
+  }
+  function updatePush() {
+    var s = pushState();
+    // Footer line
+    var el = document.getElementById('rl-push');
+    if (el) {
+      el.innerHTML = s === 'on' ? 'Alerts are on 🔔'
+        : s === 'off' ? '<button type="button" class="rl-link" data-push="on">Turn on alerts</button>'
+        : s === 'blocked' ? 'Alerts are blocked in your phone\'s settings for this site'
+        : s === 'install' ? 'Add the app to your home screen to get alerts'
+        : '';
+    }
+    // Banner at the top of the page (signed in, not on yet, not dismissed)
+    var bn = document.getElementById('rl-pushbar');
+    var show = (s === 'off' || s === 'install') && !ls(PUSH_DISMISS);
+    if (!show) { if (bn) bn.remove(); return; }
+    if (!bn) {
+      bn = document.createElement('div');
+      bn.id = 'rl-pushbar'; bn.className = 'card rl-pushbar';
+      var main = document.querySelector('main');
+      if (main) main.insertBefore(bn, main.firstChild);
+    }
+    bn.innerHTML = '<div class="rl-pb-text"><b>🔔 Get league alerts</b><br>' +
+      (s === 'install' ? 'Tee-time sign-up, confirmed groups and tee-offs. On iPhone, add the app to your home screen first (Share → Add to Home Screen), then open it from there.'
+        : 'Tee-time sign-up, confirmed groups and tee-offs.') + '</div>' +
+      (s === 'off' ? '<button type="button" class="rl-btn rl-pb-on" data-push="on">Turn on</button>' : '') +
+      '<button type="button" class="rl-x" data-push="later" aria-label="Not now">✕</button>';
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-push]');
+    if (!b) return;
+    if (b.getAttribute('data-push') === 'on') turnOnPush();
+    else { ls(PUSH_DISMISS, '1'); updatePush(); }
+  });
 
   // ---- Install: Android prompt and iPhone tip ----
   var deferred = null;
@@ -210,8 +283,8 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     var footer = document.querySelector('footer');
-    if (footer) footer.insertAdjacentHTML('beforeend', '<div id="rl-who" class="rl-who"></div>');
-    updateWho();
+    if (footer) footer.insertAdjacentHTML('beforeend', '<div id="rl-who" class="rl-who"></div><div id="rl-push" class="rl-who"></div>');
+    updateWho(); updatePush();
     if (!getAuth() && !ls(BROWSE_KEY)) showLogin();
     var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (ios) setTimeout(function () { showTip('ios'); }, 1500);
