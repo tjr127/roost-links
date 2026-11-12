@@ -35,13 +35,22 @@
   }
 
   // ---- google.script.run stand-in (only the two calls the page makes) ----
+  var memo = {};
   function runner(ok, fail) {
     function done(f) { return function (x) { if (f) f(x); }; }
     return {
       withSuccessHandler: function (f) { return runner(f, fail); },
       withFailureHandler: function (f) { return runner(ok, f); },
+      // Handicap history and schedule are only sent when they change: the phone keeps the last copy
+      // and tells the server which versions it has.
       getBoardData: function () {
-        apiGet('data').then(function (j) { done(ok)(j.data); }, done(fail));
+        var have = Object.keys(memo).map(function (k) { return k + ':' + memo[k].h; }).join(',');
+        apiGet('data', have ? '&have=' + encodeURIComponent(have) : '').then(function (j) {
+          var d = j.data;
+          (d.same || []).forEach(function (k) { if (memo[k]) d[k] = memo[k].v; });
+          Object.keys(d._h || {}).forEach(function (k) { if (d[k] !== undefined) memo[k] = { h: d._h[k], v: d[k] }; });
+          done(ok)(d);
+        }, done(fail));
       },
       saveScore: function (name, hole, gross, putts) {
         var a = getAuth();

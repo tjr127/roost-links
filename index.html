@@ -1107,14 +1107,25 @@ function renderField() {
     renderEntry();
   }
 
+  var lastLoad = 0;
   function load() {
     var fetchedAt = Date.now();
+    lastLoad = fetchedAt;
     google.script.run.withSuccessHandler(function (d) { applyPending(d, fetchedAt); render(d); }).withFailureHandler(function () {
       document.getElementById('updated').textContent = 'just now (could not refresh)';
     }).getBoardData();
   }
   load();
-  setInterval(load, 60000);
+  // Refresh every minute on a night with a round (Tonight's date is today), every 5 minutes otherwise,
+  // and not at all while the app is in the background. Coming back refreshes straight away.
+  setInterval(function () {
+    if (document.hidden) return;
+    var every = data && data.live === false ? 300000 : 60000;
+    if (Date.now() - lastLoad >= every) load();
+  }, 15000);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && Date.now() - lastLoad > 15000) load();
+  });
 </script>
 <script src="tee.js"></script>
 <script src="flip.js"></script>
