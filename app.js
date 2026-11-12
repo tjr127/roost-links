@@ -289,12 +289,22 @@
     var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (ios) setTimeout(function () { showTip('ios'); }, 1500);
     if ('serviceWorker' in navigator) {
-      // When a new version takes over, reload once so the phone shows it straight away.
-      var hadController = !!navigator.serviceWorker.controller, reloaded = false;
+      // OneSignal registers sw.js (which also holds the offline cache), so the app doesn't register it a second time:
+      // two registrations with different addresses kept replacing each other and reloading the page.
+      // Fallback: if OneSignal hasn't registered anything after 15 s (blocked or offline), register it ourselves.
+      setTimeout(function () {
+        navigator.serviceWorker.getRegistration('./').then(function (reg) {
+          if (!reg) navigator.serviceWorker.register('sw.js').catch(function () {});
+        });
+      }, 15000);
+      // When a new version takes over, reload once so the phone shows it, but never more than once a minute.
+      var hadController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange', function () {
-        if (hadController && !reloaded) { reloaded = true; location.reload(); }
+        var last = Number(sessionStorage.getItem('rlReloadAt') || 0);
+        if (!hadController || Date.now() - last < 60000) return;
+        sessionStorage.setItem('rlReloadAt', String(Date.now()));
+        location.reload();
       });
-      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) { reg.update(); }).catch(function () {});
     }
   });
 })();
