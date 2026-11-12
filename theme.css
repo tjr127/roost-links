@@ -218,3 +218,21 @@ table.sc .dots { color: var(--amber); }
 .teestrip .tn i { display: block; font-style: normal; font-weight: 500; font-size: 11px; opacity: .8; }
 .hc-tee { align-items: center; }
 .hc-tee small { display: block; font-size: 11px; font-weight: 500; opacity: .8; margin-top: 1px; }
+
+/* Weekly tee choice on the Handicaps card (Nov 12) */
+.hc-tee.tp-row { all: unset; box-sizing: border-box; display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 6px;
+  padding: 6px 8px; margin: 3px 0; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); font: 600 14px Inter, sans-serif; cursor: pointer; }
+.hc-tee.tp-row b { font: 700 20px var(--num, 'Space Grotesk'), sans-serif; color: var(--ink); }
+.hc-tee.tp-row em { font-style: normal; font-size: 11px; font-weight: 500; }
+.hc-tee.tp-row.mine { border-color: rgba(245,177,60,.55); background: rgba(245,177,60,.12); color: var(--amber); }
+.hc-tee.tp-row.mine b { color: var(--amber); }
+.hc-tee.tp-row.ro { cursor: default; }
+.hc-tee.tp-row:not(.ro):active { transform: scale(.98); }
+.tp-note { font-size: 11.5px; line-height: 1.35; color: var(--muted); margin-top: 6px; }
+.tp-note.locked { color: var(--amber); }
+.tp-msg { font-size: 12px; margin-top: 4px; color: #8FD19E; }
+.tp-msg.err { color: #F28B7C; }
+table.sc tr.yds td { font-size: 11px; }
+.teestrip { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.teestrip .ts { padding: 7px 8px; gap: 6px; }
+@media (max-width: 420px) { .teestrip { grid-template-columns: repeat(2, 1fr); } }
