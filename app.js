@@ -215,6 +215,13 @@
     if (!getAuth() && !ls(BROWSE_KEY)) showLogin();
     var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (ios) setTimeout(function () { showTip('ios'); }, 1500);
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+    if ('serviceWorker' in navigator) {
+      // When a new version takes over, reload once so the phone shows it straight away.
+      var hadController = !!navigator.serviceWorker.controller, reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (hadController && !reloaded) { reloaded = true; location.reload(); }
+      });
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) { reg.update(); }).catch(function () {});
+    }
   });
 })();

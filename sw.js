@@ -1,7 +1,7 @@
 // Roost Links service worker: always try the network first so players get updates
 // as soon as they open the app; fall back to the saved copy only when offline.
 // League data comes from Google and is never cached here.
-var CACHE = 'roost-links-v9';
+var CACHE = 'roost-links-v10';
 var SHELL = ['./', 'index.html', 'app.js', 'tee.js', 'app.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
@@ -17,7 +17,10 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  e.respondWith(fetch(req, { cache: 'no-cache' }).then(function (res) {
+  // A page navigation can't be re-fetched with new options (the browser throws), which made every
+  // open fall back to the saved copy. Fetch by URL instead so the newest version always wins online.
+  var fresh = req.mode === 'navigate' ? fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req, { cache: 'no-cache' });
+  e.respondWith(fresh.then(function (res) {
     if (res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(req, copy); }); }
     return res;
   }).catch(function () {
