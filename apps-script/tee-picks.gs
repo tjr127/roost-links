@@ -115,7 +115,10 @@ function teePick_(ss) {
   return {
     night: night.key, label: night.label, course: night.course, nine: night.nine, holes: holes.length,
     casual: night.casual, locked: night.locked, lockText: night.lockText,
-    tees: tees.map(function (t) { return { tee: t.tee, color: t.color, yards: t.yards, ok: t.rating !== null && t.slope !== null }; }),
+    tees: tees.map(function (t) { return { tee: t.tee, color: t.color, yards: t.yards, ok: t.rating !== null && t.slope !== null, rating: t.rating, slope: t.slope }; }),
+    par: par, exp: ss.getSheetByName('Settings').getRange('B43:B44').getValues().map(function (r) { return Number(r[0]) || 0; }),
+    tbl: (function () { var o = {}; ss.getSheetByName('Settings').getRange('A20:C37').getValues().forEach(function (r) { if (r[0] !== '') o[Number(r[0])] = [Number(r[1]) || 0, Number(r[2]) || 0]; }); return o; })(),
+    maxN: Number(ss.getSheetByName('Settings').getRange('B39').getValue()) || 20,
     players: players
   };
 }

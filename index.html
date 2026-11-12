@@ -663,10 +663,10 @@
     var rows = tp.tees.filter(function (t) { return t.ok; }).map(function (t) {
       var ch = me0.chs[t.tee], on = t.tee === playing;
       var tag = on ? (pend ? 'saving…' : me0.pick ? 'playing' : 'playing · default') : '';
-      return '<button type="button" class="hc-tee tp-row' + (on ? ' mine' : '') + (can ? '' : ' ro') + '"' + (can ? ' data-tpick="' + esc(t.tee) + '"' : ' disabled') + '>' +
-        '<span>' + esc(t.tee) + (tag ? ' <em>(' + tag + ')</em>' : '') +
-        (t.color || t.yards ? '<small>' + esc(t.color) + (t.color && t.yards ? ' · ' : '') + (t.yards ? yds(t.yards) + ' yds' : '') + '</small>' : '') + '</span>' +
-        '<b>' + esc(ch === '' ? '–' : plus(ch)) + '</b></button>';
+      return '<button type="button" class="tp-cell' + (on ? ' mine' : '') + (can ? '' : ' ro') + '"' + (can ? ' data-tpick="' + esc(t.tee) + '"' : ' disabled') + '>' +
+        '<span class="tp-top"><span class="tp-name">' + (t.color ? '<i class="tp-dot" style="background:' + esc(t.color.toLowerCase()) + '"></i>' : '') + esc(t.tee) + '</span><b>' + esc(ch === '' ? '–' : plus(ch)) + '</b></span>' +
+        '<small>' + esc(t.color) + (t.color && t.yards ? ' · ' : '') + (t.yards ? yds(t.yards) + ' yds' : '') + '</small>' +
+        (tag ? '<em>' + tag + '</em>' : '') + '</button>';
     }).join('');
     var lockTime = tp.lockText.replace(/^.* at /, '');
     var note;
@@ -675,9 +675,9 @@
     else note = 'Pick your tees by ' + tp.lockText + '. Tee choice locks then.';
     if (!mine && !tp.locked && !tp.casual) note += a ? '' : ' Sign in to pick yours.';
     var msg = tpNote.name === p.name && tpNote.text ? '<div class="tp-msg' + (tpNote.err ? ' err' : '') + '">' + esc(tpNote.text) + '</div>' : '';
-    return '<div class="hc-tile tp"><div class="k">Course handicap</div>' +
-      '<div class="s" style="margin:2px 0 6px">' + esc(tp.course) + ' · ' + esc(nine) + '<br>' + esc(tp.label) + '</div>' +
-      rows + '<div class="tp-note' + (tp.locked && !tp.casual ? ' locked' : '') + '">' + (tp.locked && !tp.casual ? '🔒 ' : '') + esc(note) + '</div>' + msg + '</div>';
+    return '<div class="hc-tile tp"><div class="tp-head"><div class="k">Course handicap</div>' +
+      '<div class="s">' + esc(tp.course) + ' · ' + esc(nine) + ' · ' + esc(tp.label.replace(/^(\w{3})\w*/, '$1')) + '</div></div>' +
+      '<div class="tp-grid">' + rows + '</div>' + '<div class="tp-note' + (tp.locked && !tp.casual ? ' locked' : '') + '">' + (tp.locked && !tp.casual ? '🔒 ' : '') + esc(note) + '</div>' + msg + '</div>';
   }
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('[data-tpick]');
@@ -701,6 +701,57 @@
     });
   });
 
+  // ---- Index strip: index, trend, and the score that would lower it ----
+  function hcIdx(ds, tbl, n0) {
+    var w = ds.slice(0, n0), rule = tbl[w.length];
+    if (!rule || !rule[0]) return null;
+    w.sort(function (a, b) { return a - b; });
+    var t = 0; for (var i = 0; i < rule[0]; i++) t += w[i];
+    var v = Math.round((t / rule[0] + rule[1]) * 1e6) / 1e6;
+    return Math.round(v * 10) / 10;
+  }
+  function hcGoal(p) {
+    var tp = data && data.teePick, me0 = tp && tp.players && tp.players[p.name];
+    if (!tp || !me0 || !tp.tbl || p.source === 'Manual' || num(p.index) === null) return '';
+    var playing = tpPend[p.name] || me0.pick || me0.def;
+    var tee = tp.tees.filter(function (t) { return t.tee === playing && t.ok; })[0];
+    if (!tee || !tp.par) return '';
+    var ds = (p.diffs || []).map(function (x) { return Number(x.d); });
+    var maxN = tp.maxN || 20, cur = hcIdx(ds, tp.tbl, maxN);
+    if (cur === null) return '';
+    var lim = null;
+    for (var x = 60; x >= -15; x = Math.round((x - 0.1) * 10) / 10) {
+      var ni = hcIdx([x].concat(ds), tp.tbl, maxN);
+      if (ni !== null && ni < cur) { lim = x; break; }
+    }
+    if (lim === null) return '';
+    var h = tp.holes, idx = num(p.index), e = tp.exp || [0.52, 1.2];
+    var extra = h < 18 ? (18 - h) / 9 * (e[0] * idx + e[1]) : 0;
+    function diffOf(g) { return Math.round(((g - tee.rating * h / 18) * 113 / tee.slope + extra) * 10) / 10; }
+    var g = Math.floor(lim * tee.slope / 113 + tee.rating * h / 18 - extra * tee.slope / 113) + 2;
+    while (g > 0 && diffOf(g) > lim) g--;
+    if (g <= 0) return '';
+    var where = esc(tp.course) + (tp.nine === 'Front' || tp.nine === 'Back' ? ' ' + esc(tp.nine) + ' 9' : '');
+    if (lim >= 59.9) return '<div class="hs-goal">Your next posted round lowers your index (an old round drops off).</div>';
+    return '<div class="hs-goal">To lower your index: shoot <b>' + g + '</b> or better from ' + esc(playing) + ' on ' + where + '.<span>Adjusted score (net double bogey max); beats a differential of ' + lim.toFixed(1) + '.</span></div>';
+  }
+  function hcStrip(p) {
+    var sub = p.source === 'Manual' ? 'Set manually' : (p.used ? 'Best ' + p.used + ' of ' + esc(p.rounds) + ' rounds' : 'Needs 3 rounds');
+    var ix = (p.diffs || []).map(function (x) { return num(x.ix); });
+    var trend = '';
+    if (p.source !== 'Manual' && ix.length > 1 && ix[0] !== null) {
+      var back = Math.min(5, ix.length - 1);
+      while (back > 0 && ix[back] === null) back--;
+      if (back > 0) {
+        var dlt = Math.round((ix[0] - ix[back]) * 10) / 10;
+        trend = dlt === 0 ? 'No change over the last ' + back + ' rounds' :
+          '<span class="' + (dlt < 0 ? 'dn' : 'up') + '">' + (dlt < 0 ? '▼ ' : '▲ ') + Math.abs(dlt).toFixed(1) + '</span> over the last ' + back + ' rounds';
+      }
+    }
+    return '<div class="hc-tile hc-strip"><div class="hs-row"><div class="hs-l"><div class="v">' + esc(p.index === '' ? '–' : plus(p.index)) + '</div><div class="k">Handicap index</div></div>' +
+      '<div class="hs-r"><div>' + sub + '</div>' + (trend ? '<div>' + trend + '</div>' : '') + '</div></div>' + hcGoal(p) + '</div>';
+  }
+
   function renderHcp() {
     var h = (data && data.handicaps) || { players: [] };
     var list = h.players || [];
@@ -718,8 +769,7 @@
 
     var where = h.course ? esc(h.course) + (h.nine ? ' ' + esc(h.nine) + (h.nine === '18' ? ' holes' : ' 9') : '') : 'Tonight\'s course';
     var html = '<div class="hc-tiles">' +
-      '<div class="hc-tile"><div class="v">' + esc(p.index === '' ? '–' : plus(p.index)) + '</div><div class="k">Handicap index</div>' +
-        '<div class="s">' + (p.source === 'Manual' ? 'Set manually' : (p.used ? 'Best ' + p.used + ' of ' + esc(p.rounds) + ' rounds' : 'Needs 3 rounds')) + '</div></div>' +
+      hcStrip(p) +
       (tpTile(p) || ('<div class="hc-tile"><div class="k">Course handicap</div><div class="s" style="margin:2px 0 6px">' + where + '</div>' +
         (p.chs || []).map(function (c) {
           return '<div class="hc-tee' + (c.tee === p.tees ? ' mine' : '') + '"><span>' + esc(c.tee) + (c.tee === p.tees ? ' <em>(active)</em>' : '') + (function (t) { return t && (t.color || t.yards) ? '<small>' + esc(t.color) + (t.color && t.yards ? ' · ' : '') + (t.yards ? yds(t.yards) + ' yds' : '') + '</small>' : ''; })(teeOf(c.tee)) + '</span><b>' + esc(c.ch === '' ? '–' : plus(c.ch)) + '</b></div>';
