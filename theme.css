@@ -204,3 +204,17 @@ table.sc .dots { color: var(--amber); }
 .flip-btn:disabled { opacity: .35; }
 .flip-btn:active { transform: scale(.94); }
 .flip-count { grid-column: 1 / -1; text-align: center; font-size: 12px; color: var(--muted); min-height: 14px; }
+
+/* Tonight's tee yardages */
+.teestrip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 14px; }
+.teestrip .ts { display: flex; align-items: center; gap: 8px; background: #181E1A; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.teestrip .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px rgba(255,255,255,.35); }
+.teestrip .tn { font: 600 12px Inter, sans-serif; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.teestrip .ty { font: 700 15px 'Space Grotesk', sans-serif; color: var(--ink); }
+.teestrip.hide { display: none; }
+.teestrip .tn i { display: block; font-style: normal; font-weight: 500; font-size: 11px; opacity: .8; }
+.hc-tee { align-items: center; }
+.hc-tee small { display: block; font-size: 11px; font-weight: 500; opacity: .8; margin-top: 1px; }
+.teestrip .tn i { display: block; font-style: normal; font-weight: 500; font-size: 11px; opacity: .8; }
+.hc-tee { align-items: center; }
+.hc-tee small { display: block; font-size: 11px; font-weight: 500; opacity: .8; margin-top: 1px; }

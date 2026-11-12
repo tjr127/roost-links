@@ -245,6 +245,7 @@
 <main>
   <nav class="subnav hide" aria-label="Scores"><button type="button" data-tab="enter">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button></nav>
   <section id="tonight">
+    <div id="teestrip" class="teestrip hide"></div>
     <div id="matchwrap"><h2>Head-to-Head Match Leaderboard</h2><div id="matches"></div></div>
     <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="field"></div>
     <div id="statswrap" class="hide"><h2>Individual Stats</h2><div class="card" id="stats"></div></div>
@@ -298,6 +299,20 @@
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 
   var data = null;
+  function teeOf(t) {
+    var ti = data && data.teeInfo; if (!ti || !t) return null;
+    return ti.tees.filter(function (x) { return x.tee === t; })[0] || null;
+  }
+  function yds(n) { return n === '' || n == null ? '' : Number(n).toLocaleString('en-US'); }
+  function renderTeeStrip() {
+    var el = document.getElementById('teestrip'), ti = data && data.teeInfo;
+    var tees = ti ? ti.tees.filter(function (x) { return x.yards || x.color; }) : [];
+    el.classList.toggle('hide', !tees.length);
+    el.innerHTML = tees.map(function (x) {
+      return '<div class="ts"><span class="dot" style="background:' + esc(x.color.toLowerCase()) + '"></span>' +
+        '<div><div class="tn">' + esc(x.tee) + (x.color ? ' <i>' + esc(x.color) + '</i>' : '') + '</div><div class="ty">' + (x.yards ? yds(x.yards) + ' yds' : '') + '</div></div></div>';
+    }).join('');
+  }
 
   function showTab(tab) {
     document.querySelectorAll('nav button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab); });
@@ -437,7 +452,7 @@
       '<div><div class="v">' + esc(sum(p.holes, 'n')) + '</div><div class="k">Net</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'p')) + '</div><div class="k">Points</div></div>' +
       '<div><div class="v">' + status + '</div><div class="k">Thru</div></div></div>' +
-      '<div class="sc-meta">' + esc(p.tees ? p.tees + ' tees' : '') + (p.hcp !== '' ? ' · Course handicap ' + esc(p.hcp) : '') + (sum(p.holes, 'pen') ? ' · Penalties ' + esc(sum(p.holes, 'pen')) : '') + (sum(p.holes, 'm') ? ' · Mulligans ' + esc(sum(p.holes, 'm')) : '') + '</div>';
+      '<div class="sc-meta">' + (p.tees ? esc(p.tees) + ' tees' + (function (t) { return t ? (t.color ? ' (' + esc(t.color) + ')' : '') + (t.yards ? ' · ' + yds(t.yards) + ' yds' : '') : ''; })(teeOf(p.tees)) : '') + (p.hcp !== '' ? ' · Course handicap ' + esc(p.hcp) : '') + (sum(p.holes, 'pen') ? ' · Penalties ' + esc(sum(p.holes, 'pen')) : '') + (sum(p.holes, 'm') ? ' · Mulligans ' + esc(sum(p.holes, 'm')) : '') + '</div>';
 
     if (front.length && back.length) {
       html += cardTable('Front 9', front, [{ label: 'Out', holes: front }]) +
@@ -652,7 +667,7 @@
         '<div class="s">' + (p.source === 'Manual' ? 'Set manually' : (p.used ? 'Best ' + p.used + ' of ' + esc(p.rounds) + ' rounds' : 'Needs 3 rounds')) + '</div></div>' +
       '<div class="hc-tile"><div class="k">Course handicap</div><div class="s" style="margin:2px 0 6px">' + where + '</div>' +
         (p.chs || []).map(function (c) {
-          return '<div class="hc-tee' + (c.tee === p.tees ? ' mine' : '') + '"><span>' + esc(c.tee) + (c.tee === p.tees ? ' <em>(active)</em>' : '') + '</span><b>' + esc(c.ch === '' ? '–' : plus(c.ch)) + '</b></div>';
+          return '<div class="hc-tee' + (c.tee === p.tees ? ' mine' : '') + '"><span>' + esc(c.tee) + (c.tee === p.tees ? ' <em>(active)</em>' : '') + (function (t) { return t && (t.color || t.yards) ? '<small>' + esc(t.color) + (t.color && t.yards ? ' · ' : '') + (t.yards ? yds(t.yards) + ' yds' : '') + '</small>' : ''; })(teeOf(c.tee)) + '</span><b>' + esc(c.ch === '' ? '–' : plus(c.ch)) + '</b></div>';
         }).join('') + '</div>' +
       '</div>';
 
@@ -917,6 +932,7 @@ function renderField() {
     data = d;
     document.getElementById('title').textContent = d.title || '';
     document.getElementById('updated').textContent = d.updated;
+    renderTeeStrip();
 
     var m = d.matches.map(function (x) {
       var a = num(x.ap), b = num(x.bp);
