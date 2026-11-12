@@ -263,3 +263,19 @@ table.sc tr.yds td { font-size: 11px; }
 .tp-cell.mine b { color: var(--amber); }
 .tp-cell.ro { cursor: default; }
 .tp-cell:not(.ro):active { transform: scale(.98); }
+
+/* Enter score overview card with putts (Nov 12) */
+.en-grid { gap: 4px; padding: 8px 6px; align-items: stretch; }
+.en-grid button, .en-grid .en-lbls, .en-grid .en-tot { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px 0; min-width: 0; }
+.en-grid button span, .en-lbls span, .en-tot span { font-size: 11px; line-height: 14px; }
+.en-grid button b, .en-tot b { display: block; font-size: 17px; line-height: 22px; }
+.en-grid button i, .en-tot i { display: block; font-style: normal; font-size: 13px; line-height: 16px; font-weight: 600; color: var(--muted); min-height: 16px; }
+.en-lbls { align-items: flex-start !important; padding-left: 2px !important; color: var(--muted); }
+.en-lbls span { font-weight: 700; text-transform: uppercase; font-size: 9.5px; letter-spacing: .03em; }
+.en-lbls span:nth-child(2) { line-height: 22px; }
+.en-lbls span:nth-child(3) { line-height: 16px; }
+.en-tot { background: var(--card2); border-radius: 12px; color: var(--muted); }
+.en-tot b { color: var(--ink); font-family: var(--num); }
+.en-grid button.on i { color: var(--amber); }
+table.sc tr.putts td { color: var(--muted); }
+table.sc tr.putts td.tot { color: var(--ink); }

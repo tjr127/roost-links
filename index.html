@@ -422,7 +422,7 @@
         return '<td>' + (h.n !== '' ? '<span class="nb ' + netClass(h) + '">' + esc(h.n) + '</span>' : '') + '</td>';
       }, 'n') +
       row('Pts', '', function (h) { return '<td>' + esc(h.p) + '</td>'; }, 'p') +
-      (holes.some(function (h) { return n(h.pt) !== null; }) ? row('Putts', 'sub', function (h) { return '<td>' + esc(h.pt) + '</td>'; }, 'pt') : '') +
+      row('Putts', 'putts', function (h) { return '<td>' + esc(h.pt) + '</td>'; }, 'pt') +
       (holes.some(function (h) { return n(h.pen); }) ? row('Pen', 'sub', function (h) { return '<td>' + esc(h.pen) + '</td>'; }, 'pen') : '') +
       (holes.some(function (h) { return n(h.m); }) ? row('Mull', 'sub', function (h) { return '<td>' + esc(h.m) + '</td>'; }, 'm') : '') +
       '</table></div>';
@@ -453,6 +453,7 @@
       '<div><div class="v">' + esc(sum(p.holes, 'g')) + '</div><div class="k">Gross</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'n')) + '</div><div class="k">Net</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'p')) + '</div><div class="k">Points</div></div>' +
+      '<div><div class="v">' + esc(sum(p.holes, 'pt')) + '</div><div class="k">Putts</div></div>' +
       '<div><div class="v">' + status + '</div><div class="k">Thru</div></div></div>' +
       '<div class="sc-meta">' + (p.tees ? esc(p.tees) + ' tees' + (function (t) { return t ? (t.color ? ' (' + esc(t.color) + ')' : '') + (t.yards ? ' · ' + yds(t.yards) + ' yds' : '') : ''; })(teeOf(p.tees)) : '') + (p.hcp !== '' ? ' · Course handicap ' + esc(p.hcp) : '') + (sum(p.holes, 'pen') ? ' · Penalties ' + esc(sum(p.holes, 'pen')) : '') + (sum(p.holes, 'm') ? ' · Mulligans ' + esc(sum(p.holes, 'm')) : '') + '</div>';
 
@@ -635,12 +636,22 @@
     var rel = names2[String(diff)] || (diff > 0 ? '+' + diff : String(diff));
     document.getElementById('enrel').textContent = rel + (s ? ' (net ' + (entry.val - s) + ')' : '');
 
-    document.getElementById('enholes').innerHTML = '<div class="sc-lbl">' + esc(p.name) + '\'s card · tap a hole</div><div class="en-grid">' +
-      p.holes.map(function (x) {
-        var q = pending[pkey(p.name, x.hole)];
-        return '<button type="button" data-hole="' + x.hole + '" class="' + (x.hole === entry.hole ? 'on ' : '') + (x.g === '' ? 'empty ' : '') + (q ? q.state : '') + '">' +
-          x.hole + '<b>' + (x.g !== '' ? esc(x.g) : '·') + '</b><i>' + (x.pt !== '' && x.pt !== undefined ? esc(x.pt) + 'p' : '') + '</i></button>';
-      }).join('') + '</div>';
+    // Overview card: one block per nine with Hole / Score / Putts rows and a total column.
+    function enBlock(hs, totLabel) {
+      var g = 0, pt = 0, anyPt = false;
+      hs.forEach(function (x) { if (n(x.g) !== null) g += n(x.g); if (n(x.pt) !== null) { pt += n(x.pt); anyPt = true; } });
+      return '<div class="en-grid" style="grid-template-columns:44px repeat(' + hs.length + ',1fr) 40px">' +
+        '<div class="en-lbls"><span>Hole</span><span>Score</span><span>Putts</span></div>' +
+        hs.map(function (x) {
+          var q = pending[pkey(p.name, x.hole)];
+          return '<button type="button" data-hole="' + x.hole + '" class="' + (x.hole === entry.hole ? 'on ' : '') + (x.g === '' ? 'empty ' : '') + (q ? q.state : '') + '">' +
+            '<span>' + x.hole + '</span><b>' + (x.g !== '' ? esc(x.g) : '·') + '</b><i>' + (x.pt !== '' && x.pt !== undefined ? esc(x.pt) : '–') + '</i></button>';
+        }).join('') +
+        '<div class="en-tot"><span>' + totLabel + '</span><b>' + (g || '–') + '</b><i>' + (anyPt ? pt : '–') + '</i></div></div>';
+    }
+    var fr = p.holes.filter(function (x) { return x.hole <= 9; }), bk = p.holes.filter(function (x) { return x.hole >= 10; });
+    document.getElementById('enholes').innerHTML = '<div class="sc-lbl">' + esc(p.name) + '\'s card · tap a hole</div>' +
+      (fr.length ? enBlock(fr, 'Out') : '') + (bk.length ? enBlock(bk, 'In') : '');
   }
 
   document.getElementById('hcpwho').addEventListener('change', function () {
