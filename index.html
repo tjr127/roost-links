@@ -354,7 +354,7 @@
     }
     var w = 0, l = 0, t = 0;
     p.weeks.forEach(function (x) { if (x.status === 'W') w++; if (x.status === 'L') l++; if (x.status === 'T') t++; });
-    document.getElementById('schedsum').textContent = 'Record ' + w + '-' + t + '-' + l + ' (W-T-L)';
+    document.getElementById('schedsum').textContent = 'Record ' + w + '-' + l + '-' + t + ' (W-L-T)';
     var label = { W: 'W', L: 'L', T: 'T', bye: 'Bye', makeup: 'Makeup', pending: 'Pending', upcoming: '' };
     document.getElementById('weeks').innerHTML = p.weeks.map(function (x) {
       var bye = x.status === 'bye';
@@ -958,11 +958,11 @@ function renderField() {
       (g.desc ? '<div class="gdesc">' + esc(g.desc) + '</div>' : '') + '</div>' : '';
 
     document.getElementById('table').innerHTML =
-      '<table><tr><th class="n">#</th><th>Player</th><th class="n">W-T-L</th><th class="n">Pts</th></tr>' +
+      '<table><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +
       d.standings.map(function (x) {
         return '<tr class="' + (num(x.seed) !== null && num(x.seed) <= 4 ? 'top' : '') + '"><td class="n">' + esc(x.seed) +
           '</td><td>' + esc(x.player) + (x.note ? ' <span class="note">' + esc(x.note) + '</span>' : '') +
-          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
+          '</td><td class="n">' + esc(String(x.wtl).replace(/^(\d+)-(\d+)-(\d+)$/, '$1-$3-$2')) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
       }).join('') + '</table>';
 
     renderSchedule();
