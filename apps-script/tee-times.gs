@@ -94,31 +94,40 @@ function teeState_(night) {
 }
 
 /**
- * Suggested groups: Early and Late pickers stay put; "Either" players are placed to keep
- * head-to-head opponents together first, then to balance the groups (target 4 and 4, never over 5 if avoidable).
+ * Suggested groups (Ty, Nov 12): Early and Late pickers stay put. "Either" players and scheduled
+ * players with no pick (nopick) are placed to even out the groups first (4 and 4 for eight players),
+ * then to keep head-to-head opponents together.
  */
-function teeSuggest_(choices, pairs) {
-  var early = [], late = [], either = [];
+function teeSuggest_(choices, pairs, nopick) {
+  var early = [], late = [], flex = [];
   Object.keys(choices).forEach(function (n) {
     var c = choices[n];
-    if (c === 'Early') early.push(n); else if (c === 'Late') late.push(n); else if (c === 'Either') either.push(n);
+    if (c === 'Early') early.push(n); else if (c === 'Late') late.push(n); else if (c === 'Either') flex.push(n);
   });
+  nopick = (nopick || []).filter(function (n) { return !choices[n]; });
+  flex = flex.concat(nopick);
   var best = null;
-  var combos = Math.pow(2, either.length);
+  var combos = Math.pow(2, flex.length);
   for (var mask = 0; mask < combos; mask++) {
     var e = early.slice(), l = late.slice();
-    either.forEach(function (n, i) { if (mask & (1 << i)) l.push(n); else e.push(n); });
+    flex.forEach(function (n, i) { if (mask & (1 << i)) l.push(n); else e.push(n); });
     var split = 0;
     pairs.forEach(function (p) {
       var a = e.indexOf(p[0]) >= 0 ? 'E' : l.indexOf(p[0]) >= 0 ? 'L' : '';
       var b = e.indexOf(p[1]) >= 0 ? 'E' : l.indexOf(p[1]) >= 0 ? 'L' : '';
       if (a && b && a !== b) split++;
     });
-    var over = Math.max(0, e.length - 5) + Math.max(0, l.length - 5);
-    var score = over * 1000 + split * 100 + Math.abs(e.length - l.length) * 10 + (e.length < l.length ? 1 : 0);
+    var score = Math.abs(e.length - l.length) * 1000 + split * 10 + (e.length < l.length ? 1 : 0);
     if (!best || score < best.score) best = { score: score, early: e, late: l, split: split };
   }
-  return { early: best.early, late: best.late, split: best.split };
+  return { early: best.early, late: best.late, split: best.split, nopick: nopick };
+}
+
+/** Scheduled league members (they have a match that night) who haven't picked a tee time. */
+function teeNoPick_(league, choices, pairs) {
+  var sched = {};
+  pairs.forEach(function (p) { sched[p[0]] = true; sched[p[1]] = true; });
+  return league.filter(function (n) { return !choices[n] && sched[n]; });
 }
 
 function teeTimes_(ss) {
@@ -140,7 +149,7 @@ function teeTimes_(ss) {
     opens: Utilities.formatDate(night.opens, tz, "EEE, MMM d 'at' h:mm a"),
     closes: Utilities.formatDate(night.closes, tz, "EEE 'at' h:mm a"),
     times: TEE_TIMES_, players: players, pairs: pairs,
-    suggested: teeSuggest_(choices, pairs),
+    suggested: teeSuggest_(choices, pairs, teeNoPick_(league, choices, pairs)),
     confirmed: conf ? JSON.parse(conf) : null,
     draft: (function (d) { return d ? JSON.parse(d) : null; })(apiProps_().getProperty('teeDraft:' + night.key))
   };

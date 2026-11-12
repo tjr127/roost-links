@@ -304,4 +304,5 @@ table.mplan .mdots { color: var(--amber); letter-spacing: 1px; }
 .tt-tbtns button:disabled { cursor: default; opacity: .85; }
 .tt-tbtns button:disabled:not(.on) { opacity: .45; }
 i.tt-tee { font-style: normal; font-size: 11px; font-weight: 600; color: var(--muted); }
+span.tt-np { font-size: 11px; color: var(--muted); }
 .tp-go { display: block; margin-top: 6px; font-size: 12.5px; }

@@ -37,13 +37,14 @@
   function savedDraft(tt) { return tt.draft || localDraft(tt.night); }
   // Keep a set of groups in step with current picks: drop players no longer playing, add new pickers to their side.
   function normalize(tt, g) {
-    var playing = tt.players.map(function (p) { return p.name; }).filter(function (n) { var c = choiceOf(tt, n); return c === 'Early' || c === 'Late' || c === 'Either'; });
+    var nop = (tt.suggested && tt.suggested.nopick) || [];
+    var playing = tt.players.map(function (p) { return p.name; }).filter(function (n) { var c = choiceOf(tt, n); return c === 'Early' || c === 'Late' || c === 'Either' || (!c && nop.indexOf(n) >= 0); });
     var early = (g.early || []).filter(function (n) { return playing.indexOf(n) >= 0; });
     var late = (g.late || []).filter(function (n) { return playing.indexOf(n) >= 0 && early.indexOf(n) < 0; });
     playing.forEach(function (n) {
       if (early.indexOf(n) >= 0 || late.indexOf(n) >= 0) return;
       var c = choiceOf(tt, n), s = tt.suggested;
-      (c === 'Late' || (c === 'Either' && s.late.indexOf(n) >= 0) ? late : early).push(n);
+      (c === 'Late' || (c !== 'Early' && s.late.indexOf(n) >= 0) ? late : early).push(n);
     });
     return { night: tt.night, early: early, late: late };
   }
@@ -72,7 +73,8 @@
           '<small>' + (x.yards ? Number(x.yards).toLocaleString('en-US') + ' yds' : e(x.color)) + (ch !== '' && ch !== undefined ? ' · CH ' + (ch < 0 ? '+' + (-ch) : ch) : '') + '</small></button>';
       }).join('') + '</div>' + (isDef && cur ? '<div class="tt-byenote">' + e(cur) + ' is ' + (who === (RL.user() || {}).name ? 'your' : e(who) + '\'s') + ' usual tees. Tap another to change for this week.</div>' : '') + '</div>';
   }
-  function names(list, tt) { return list.length ? list.map(function (n) { return e(n) + (tt ? teeTag(tt, n) : ''); }).join(', ') : '<span class="tt-none">—</span>'; }
+  function noPick(tt, n) { return !!(tt && !choiceOf(tt, n) && tt.suggested && (tt.suggested.nopick || []).indexOf(n) >= 0); }
+  function names(list, tt) { return list.length ? list.map(function (n) { return e(n) + (tt ? teeTag(tt, n) : '') + (noPick(tt, n) ? ' <span class="tt-np">(no pick)</span>' : ''); }).join(', ') : '<span class="tt-none">—</span>'; }
   function splitPairs(tt, early, late) {
     return tt.pairs.filter(function (p) {
       var a = early.indexOf(p[0]) >= 0 ? 'E' : late.indexOf(p[0]) >= 0 ? 'L' : '';

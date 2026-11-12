@@ -101,6 +101,8 @@ function teeAutoClose_(ss) {
   var t = teeTimes0_(ss);
   if (!t) return;
   var playing = t.players.filter(function (p) { return p.choice === 'Early' || p.choice === 'Late' || p.choice === 'Either'; }).map(function (p) { return p.name; });
+  // Scheduled players who never picked are placed too (Ty, Nov 12).
+  (t.suggested.nopick || []).forEach(function (n) { if (playing.indexOf(n) < 0) playing.push(n); });
   props.setProperty(flag, now.toISOString());
   if (!playing.length) return;
   var g = t.draft || t.suggested;
