@@ -196,3 +196,11 @@ table.sc .dots { color: var(--amber); }
 .rl-pushbar { border-left: 0; border: 1px solid #3A3018; background: linear-gradient(160deg, #2A2210 0%, var(--card) 70%); }
 .rl-pushbar .rl-btn { background: var(--amber); color: var(--amber-ink); }
 .rl-x { color: var(--muted); }
+
+/* ‹ › player flipper on Scorecards and Handicaps */
+.flip-row { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 8px; align-items: center; }
+.flip-row select { width: 100%; }
+.flip-btn { width: 48px; height: 48px; border-radius: 24px; border: 0; background: var(--amber); color: var(--amber-ink); font: 700 26px/1 var(--num); display: flex; align-items: center; justify-content: center; padding: 0 0 3px; cursor: pointer; }
+.flip-btn:disabled { opacity: .35; }
+.flip-btn:active { transform: scale(.94); }
+.flip-count { grid-column: 1 / -1; text-align: center; font-size: 12px; color: var(--muted); min-height: 14px; }
