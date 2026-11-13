@@ -27,6 +27,6 @@ self.addEventListener('fetch', function (e) {
     if (res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(req, copy); }); }
     return res;
   }).catch(function () {
-    return caches.match(req).then(function (hit) { return hit || caches.match('index.html'); });
+    return caches.match(req, { ignoreSearch: true }).then(function (hit) { return hit || caches.match('index.html'); });
   }));
 });
