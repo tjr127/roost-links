@@ -406,3 +406,9 @@ header .brand { padding-right: 52px; }
 .tt-addb { display: flex; gap: 6px; flex: none; }
 .tt-addb button { all: unset; box-sizing: border-box; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line2, var(--line)); background: var(--card2, #1F2621); color: var(--ink); font: 600 13px Inter, sans-serif; cursor: pointer; }
 .tt-addb button:active { background: rgba(245,177,60,.14); color: var(--amber); border-color: rgba(245,177,60,.6); }
+
+/* Stats > Stats: Tonight / Season switch (Nov 13) */
+.statsw { display: flex; gap: 4px; margin: 10px 0 10px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+.statsw button { all: unset; box-sizing: border-box; flex: 1; text-align: center; min-height: 36px; line-height: 36px; border-radius: 999px; color: var(--muted); font: 600 13px Inter, sans-serif; cursor: pointer; }
+.statsw button.on { background: rgba(245,177,60,.16); color: var(--amber); box-shadow: inset 0 0 0 1px rgba(245,177,60,.5); }
+#stw-tonight.hide, #stw-season.hide { display: none; }

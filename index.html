@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=38">
-<link rel="stylesheet" href="theme.css?v=38">
+<link rel="stylesheet" href="app.css?v=39">
+<link rel="stylesheet" href="theme.css?v=39">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=38"></script>
-<script src="rules.js?v=38"></script>
+<script src="app.js?v=39"></script>
+<script src="rules.js?v=39"></script>
 </head>
 <body>
 <header>
@@ -295,7 +295,11 @@
     <div class="card" id="enholes"></div>
   </section>
   <section id="entrysw" class="hide"><h2>Enter scores for anyone</h2><div id="eswbody"></div></section>
-  <section id="stats" class="hide"><h2>Tonight's stats</h2><div class="card" id="statsbody"></div><h2>Season stats</h2><div class="card" id="seasonbody"></div></section>
+  <section id="stats" class="hide">
+    <div class="statsw" role="tablist" aria-label="Stats"><button type="button" role="tab" data-stw="tonight">Tonight's stats</button><button type="button" role="tab" data-stw="season">Season stats</button></div>
+    <div id="stw-tonight"><div class="card" id="statsbody"></div></div>
+    <div id="stw-season" class="hide"><div class="card" id="seasonbody"></div></div>
+  </section>
   <section id="adminsched" class="hide"><div id="adminteecard"></div></section>
   <section id="hcp" class="hide">
     <h2>Player handicaps</h2>
@@ -1261,6 +1265,17 @@ function renderField() {
     renderEntry();
   }
 
+  // Stats > Stats (Nov 13): Tonight's stats / Season stats switch, one card at a time; the pick is remembered on the phone.
+  function setStatsView(v) {
+    v = v === 'season' ? 'season' : 'tonight';
+    store('statsView', v);
+    document.getElementById('stw-tonight').classList.toggle('hide', v !== 'tonight');
+    document.getElementById('stw-season').classList.toggle('hide', v !== 'season');
+    [].forEach.call(document.querySelectorAll('[data-stw]'), function (b) { var on = b.dataset.stw === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  }
+  document.querySelector('.statsw').addEventListener('click', function (ev) { var b = ev.target.closest('[data-stw]'); if (b) setStatsView(b.dataset.stw); });
+  setStatsView(store('statsView'));
+
   var lastLoad = 0, loadSeq = 0, shownSeq = 0;
   function load() {
     var fetchedAt = Date.now(), my = ++loadSeq;
@@ -1282,9 +1297,9 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=38"></script>
-<script src="settings.js?v=38"></script>
-<script src="flip.js?v=38"></script>
-<script src="match.js?v=38"></script>
+<script src="tee.js?v=39"></script>
+<script src="settings.js?v=39"></script>
+<script src="flip.js?v=39"></script>
+<script src="match.js?v=39"></script>
 </body>
 </html>
