@@ -127,6 +127,7 @@ function apiSave_(req) {
   var user = apiUser_(req.token);
   if (!user) return { ok: false, code: 'auth', error: 'Please sign in again.' };
   if (String(req.name) !== user.name && !user.admin) return { ok: false, code: 'denied', error: 'You can only enter your own scores.' };
+  if (!user.admin && !entryAllowed_(user.name)) return { ok: false, code: 'entryoff', error: 'Score entry is turned off for you. Ty is entering scores.' };
   API_INTERNAL_ = true;
   try {
     return { ok: true, result: saveScore(req.name, req.hole, req.gross, req.putts) };

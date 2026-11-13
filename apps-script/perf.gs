@@ -30,6 +30,7 @@ function getBoardData(fresh) {
     var d = buildBoardData_();
     d.live = boardLive_();
     d._h = { handicaps: boardHash_(d.handicaps), schedule: boardHash_(d.schedule) };
+    try { d.entry = entryInfo_(); } catch (x) { console.error(x); }
     try {
       var s = JSON.stringify(d);
       if (s.length < 98000) { cache.put(BOARD_KEY_, s, BOARD_TTL_); cache.put(BOARD_STALE_KEY_, s, 600); }
@@ -75,7 +76,10 @@ function doPost(e) {
   AGENT_DIRTY_ = false;
   var isAction = false;
   try { var b = JSON.parse(e && e.postData ? e.postData.contents : '{}'); isAction = !!(b && b.action); } catch (x) {}
-  try { return doPost0_(e); } finally { if (isAction || AGENT_DIRTY_) boardBust_(); }
+  try {
+    if (isAction && b.action === 'entry') return ContentService.createTextOutput(JSON.stringify(apiEntry_(b))).setMimeType(ContentService.MimeType.JSON);
+    return doPost0_(e);
+  } finally { if (isAction || AGENT_DIRTY_) boardBust_(); }
 }
 
 /** Score saves from the old script.google.com page (and the app, via apiSave_) clear it too. */
