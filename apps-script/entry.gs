@@ -15,7 +15,9 @@ function entryInfo_() {
   apiPlayers_().forEach(function (p) {
     var admin = apiIsAdmin_(p.name);
     players.push({ name: p.name, guest: !!p.guest, admin: admin });
-    if (admin || props['entry:' + p.name] === 'on') on[p.name] = true;
+    // Nov 13 (Ty): admins have a switch too (it only controls their own Scores/Stats > Enter score pill; Admin > Enter
+    // score always works for them). Admins default to on: 'entry:<Admin>' = 'off' turns it off.
+    if (admin ? props['entry:' + p.name] !== 'off' : props['entry:' + p.name] === 'on') on[p.name] = true;
   });
   return { on: on, players: players };
 }
@@ -25,10 +27,14 @@ function apiEntry_(b) {
   var user = apiUser_(b.token);
   if (!user) return { ok: false, code: 'auth', error: 'Please sign in again.' };
   if (!user.admin) return { ok: false, code: 'denied', error: 'Only Ty can change who enters scores.' };
-  var all = apiPlayers_().map(function (p) { return p.name; }).filter(function (n) { return !apiIsAdmin_(n); });
-  var names = b.name === '*' ? all : all.filter(function (n) { return n === String(b.name); });
+  var everyone = apiPlayers_().map(function (p) { return p.name; });
+  // "Everyone on / off" covers players only; an admin's own switch is set by name.
+  var names = b.name === '*' ? everyone.filter(function (n) { return !apiIsAdmin_(n); }) : everyone.filter(function (n) { return n === String(b.name); });
   if (!names.length) return { ok: false, error: String(b.name) + ' is not an active player.' };
   var props = apiProps_();
-  names.forEach(function (n) { if (b.on) props.setProperty('entry:' + n, 'on'); else props.deleteProperty('entry:' + n); });
+  names.forEach(function (n) {
+    if (apiIsAdmin_(n)) { if (b.on) props.deleteProperty('entry:' + n); else props.setProperty('entry:' + n, 'off'); }
+    else if (b.on) props.setProperty('entry:' + n, 'on'); else props.deleteProperty('entry:' + n);
+  });
   return { ok: true, changed: names.length };
 }

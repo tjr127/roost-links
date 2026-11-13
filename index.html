@@ -224,11 +224,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=36">
-<link rel="stylesheet" href="theme.css?v=36">
+<link rel="stylesheet" href="app.css?v=37">
+<link rel="stylesheet" href="theme.css?v=37">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=36"></script>
-<script src="rules.js?v=36"></script>
+<script src="app.js?v=37"></script>
+<script src="rules.js?v=37"></script>
 </head>
 <body>
 <header>
@@ -240,7 +240,7 @@
   <button type="button" data-tab="board" data-group="tonight teams field" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Board</span></button>
   <button type="button" data-tab="standings"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Standings</span></button>
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
-  <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Scores</span></button>
+  <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Stats</span></button>
   <button type="button" data-tab="admin" data-group="adminenter adminsched" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
 </nav>
 <main>
@@ -332,7 +332,7 @@
   }
   function isAdmin() { var a = window.RL && RL.user(); return !!(a && a.admin); }
   function entryOn(n) { var e = data && data.entry; return !e || !e.on ? true : !!e.on[n]; }
-  function canSelfEnter() { var a = window.RL && RL.user(); return !!a && (a.admin || entryOn(a.name)); }
+  function canSelfEnter() { var a = window.RL && RL.user(); return !!a && entryOn(a.name); }  // Nov 13: admins follow their own switch too
   function boardPicked() { var p = null; try { p = JSON.parse(store('boardPick') || 'null'); } catch (e) {} return p && data && p.n === data.title ? p.t : ''; }
   function boardDefault() { return boardPicked() || (data && data.roundType === 'Casual' ? 'field' : 'tonight'); }
   function resolveTab(tab) {
@@ -660,14 +660,15 @@
     if (!isAdmin()) { el.innerHTML = ''; return; }
     var e = data && data.entry;
     if (!e || !e.players) { el.innerHTML = '<div class="card esw"><div class="empty">The per-player switches appear once the server update is in.</div></div>'; return; }
-    var list = e.players.filter(function (p) { return !p.admin; });
-    var allOn = list.length && list.every(function (p) { return !!e.on[p.name]; }), allOff = list.every(function (p) { return !e.on[p.name]; });
+    var list = e.players.slice().sort(function (x, y) { return (y.admin ? 1 : 0) - (x.admin ? 1 : 0); });  // admins (Ty) first
+    var pl = list.filter(function (p) { return !p.admin; });
+    var allOn = pl.length && pl.every(function (p) { return !!e.on[p.name]; }), allOff = pl.every(function (p) { return !e.on[p.name]; });
     el.innerHTML = '<div class="card esw">' +
-      '<div class="esw-top"><div><b>Players entering their own scores</b><div class="esw-sub">Off hides Enter score for them. GSPro still records their scores, and you can enter anyone\'s below.</div></div></div>' +
+      '<div class="esw-top"><div><b>Players entering their own scores</b><div class="esw-sub">Off hides Enter score on the Stats tab for them (you too). GSPro still records their scores, and you can always enter anyone\'s above. Everyone on / off doesn\'t change your own switch.</div></div></div>' +
       '<div class="esw-all"><button type="button" class="tog' + (allOn ? ' on' : '') + '" data-esw="*" data-on="1">Everyone on</button><button type="button" class="tog' + (allOff ? ' on' : '') + '" data-esw="*" data-on="0">Everyone off</button></div>' +
       list.map(function (p) {
         var on = !!e.on[p.name];
-        return '<div class="esw-row"><span>' + esc(p.name) + (p.guest ? ' <i>guest</i>' : '') + '</span>' +
+        return '<div class="esw-row"><span>' + esc(p.name) + (p.admin ? ' <i>you</i>' : '') + (p.guest ? ' <i>guest</i>' : '') + '</span>' +
           '<button type="button" class="sw' + (on ? ' on' : '') + '" role="switch" aria-checked="' + on + '" aria-label="' + esc(p.name) + ' can enter scores" data-esw="' + esc(p.name) + '" data-on="' + (on ? '0' : '1') + '"><i></i></button></div>';
       }).join('') +
       '<div class="esw-msg" id="eswmsg"></div></div>';
@@ -678,7 +679,7 @@
     var name = b.getAttribute('data-esw'), on = b.getAttribute('data-on') === '1', a = RL.user();
     if (!a || !a.admin) return;
     var e = data.entry, before = JSON.stringify(e.on);
-    e.players.forEach(function (p) { if (!p.admin && (name === '*' || p.name === name)) e.on[p.name] = on; });
+    e.players.forEach(function (p) { if (name === '*' ? !p.admin : p.name === name) e.on[p.name] = on; });
     renderEntrySw(); updateNav();
     RL.post({ action: 'entry', token: a.token, name: name, on: on }).then(function () {
       var m = document.getElementById('eswmsg'); if (m) m.textContent = 'Saved';
@@ -692,7 +693,7 @@
     var list = (data && data.cards) || [];
     var au = RL.user(), adminView = !!window.ADMIN_ENTER && !!(au && au.admin);
     var names = list.map(function (x) { return x.name; }).filter(function (x) {
-      return adminView || (!!au && au.name === x && (au.admin || entryOn(x)));
+      return adminView || (!!au && au.name === x && entryOn(x));
     });
     var sel = document.getElementById('enwho');
     var optKey = (adminView ? 'A|' : 'P|') + names.join('|');
@@ -1261,9 +1262,9 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=36"></script>
-<script src="settings.js?v=36"></script>
-<script src="flip.js?v=36"></script>
-<script src="match.js?v=36"></script>
+<script src="tee.js?v=37"></script>
+<script src="settings.js?v=37"></script>
+<script src="flip.js?v=37"></script>
+<script src="match.js?v=37"></script>
 </body>
 </html>
