@@ -84,8 +84,9 @@ function doPost(e) {
   try { var b = JSON.parse(e && e.postData ? e.postData.contents : '{}'); isAction = !!(b && b.action); } catch (x) {}
   try {
     if (isAction && b.action === 'entry') return ContentService.createTextOutput(JSON.stringify(apiEntry_(b))).setMimeType(ContentService.MimeType.JSON);
+    if (isAction && b.action === 'settings') return ContentService.createTextOutput(JSON.stringify(apiSettings_(b))).setMimeType(ContentService.MimeType.JSON);
     return doPost0_(e);
-  } finally { if (isAction || AGENT_DIRTY_) boardBust_(); }
+  } finally { if ((isAction && b.action !== 'settings') || AGENT_DIRTY_) boardBust_(); }  // settings bust only on a change
 }
 
 /** Score saves from the old script.google.com page (and the app, via apiSave_) clear it too. */

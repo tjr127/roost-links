@@ -132,8 +132,9 @@ function teeRemind_(ss) {
 
 /** Every 5 minutes. */
 function notifyTick() {
-  notifyTick0_();
   var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
+  try { teeDefaults_(ss); } catch (e) { console.error(e); }  // Nov 13: tee time defaults from Settings
+  notifyTick0_();
   try { teeRemind_(ss); } catch (e) { console.error(e); }
   try { teeAutoClose_(ss); } catch (e) { console.error(e); }
 }
