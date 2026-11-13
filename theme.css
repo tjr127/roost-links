@@ -65,8 +65,7 @@ select, .picker select, .fhead select, .tt-for select { background: var(--card2)
 .match .stk { color: var(--muted); }
 .match .pts { font-family: var(--num); font-size: 28px; color: var(--muted); background: none !important; padding: 0 2px; }
 .match .pts.lead { color: var(--amber); }
-.match .vs { color: #4E5852; font-size: 0; }
-.match .vs::after { content: "–"; font-size: 18px; font-weight: 700; }
+.match .vs { color: var(--muted); font-family: var(--num); font-size: 14px; font-weight: 600; padding: 0 6px; }
 .match .ow { color: var(--amber); }
 .match .thru { color: var(--muted); }
 
