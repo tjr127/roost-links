@@ -33,6 +33,19 @@
   }
   var forName = '';     // admin: whose pick the buttons set
   var edit = null;      // admin: { night, early: [], late: [] } once Ty moves someone
+  var cedit = null;     // admin: changes to already-confirmed groups, not saved until "Save changes"
+  // Admin (Nov 13): everyone not in a group (bye, no reply, can't play) with Early / Late buttons, so Ty can put
+  // anyone in a group at any time.
+  function addBlock(tt, g, sched) {
+    var out = tt.players.map(function (p) { return p.name; }).filter(function (n) { return g.early.indexOf(n) < 0 && g.late.indexOf(n) < 0; });
+    if (!out.length) return '';
+    return '<div class="tt-add"><div class="tt-gsub">Not in a group. Tap Early or Late to add them.</div>' + out.map(function (n) {
+      var c = choiceOf(tt, n);
+      var why = c === 'Out' ? 'can\'t play' : !sched[n] ? 'bye' : c ? LABEL[c].toLowerCase() : 'no reply';
+      return '<div class="tt-addrow"><span class="tt-addn">' + e(n) + ' <i class="tt-why' + (c === 'Out' ? ' out' : '') + '">' + why + '</i></span>' +
+        '<span class="tt-addb"><button type="button" data-add="' + e(n) + '" data-to="early">Early</button><button type="button" data-add="' + e(n) + '" data-to="late">Late</button></span></div>';
+    }).join('') + '</div>';
+  }
   var note = { text: '', err: false };
 
   function t() { return window.data && window.data.teeTimes; }
@@ -130,6 +143,7 @@
     var conf = tt.confirmed;
     if (edit && edit.night !== tt.night) edit = null;
     if (conf) edit = null;
+    if (!conf || (cedit && cedit.night !== tt.night)) cedit = null;
 
     var status = conf ? 'Groups set by ' + e(conf.by) + (conf.at ? ' · ' + e(conf.at) : '')
       : tt.state === 'before' ? 'Sign-up opens ' + e(tt.opens)
@@ -176,20 +190,34 @@
       (byes.length ? '<div class="tt-noreply"><b>Bye this week:</b> ' + byes.map(e).join(', ') + '</div>' : '');
 
     // Groups
-    if (conf) {
+    var chip = function (n, to) { return '<button type="button" class="tt-chip" data-move="' + e(n) + '" data-to="' + to + '">' + e(n) + teeTag(tt, n) + (choiceOf(tt, n) === 'Either' ? ' <i>either</i>' : '') + '</button>'; };
+    if (conf && admin) {
+      // Ty can still change confirmed groups: moves and adds stay on this phone until he saves (which re-sends the alert).
+      var cg = cedit || { night: tt.night, early: conf.early.slice(), late: conf.late.slice() };
+      var csplit = splitPairs(tt, cg.early, cg.late);
+      html += '<div class="tt-groups"><div class="tt-gtitle">' + (cedit ? 'Groups (unsaved changes)' : 'Groups') + '</div><div class="tt-gsub">Tap a name to move it to the other group.</div>' +
+        '<div class="tt-g"><b>Early · ' + e(tt.times.Early) + '</b> <span class="tt-n">' + cg.early.length + '</span><div class="tt-chips">' + cg.early.map(function (n) { return chip(n, 'late'); }).join('') + '</div></div>' +
+        '<div class="tt-g"><b>Late · ' + e(tt.times.Late) + '</b> <span class="tt-n">' + cg.late.length + '</span><div class="tt-chips">' + cg.late.map(function (n) { return chip(n, 'early'); }).join('') + '</div></div>' +
+        (csplit.length ? '<div class="tt-warn">Head-to-head split: ' + csplit.map(function (p) { return e(p[0]) + ' & ' + e(p[1]); }).join(', ') + '</div>' : '') +
+        addBlock(tt, cg, sched) +
+        (cedit ? '<button type="button" class="en-save tt-confirm" id="ttconfirm">Save changes</button><button type="button" class="rl-link tt-small" id="ttcancel">Cancel changes</button>' +
+          '<div class="tt-gsub">Saving sends everyone the updated groups alert.</div>' : '') +
+        '</div>';
+      el.dataset.groups = JSON.stringify(cg);
+      html += '<button type="button" class="rl-link tt-small" id="ttreopen">Reopen sign-up</button>';
+    } else if (conf) {
       html += groupBlock(tt, conf.early, conf.late, 'Groups');
-      if (admin) html += '<button type="button" class="rl-link tt-small" id="ttreopen">Reopen sign-up</button>';
-    } else if (by.Early.length + by.Late.length + by.Either.length) {
+    } else if (admin || by.Early.length + by.Late.length + by.Either.length) {
       if (admin) {
         var sd = edit || savedDraft(tt);
         var g = normalize(tt, sd || tt.suggested);
         if (sd) edit = g;
-        var chip = function (n, to) { return '<button type="button" class="tt-chip" data-move="' + e(n) + '" data-to="' + to + '">' + e(n) + teeTag(tt, n) + (choiceOf(tt, n) === 'Either' ? ' <i>either</i>' : '') + '</button>'; };
         var split = splitPairs(tt, g.early, g.late);
         html += '<div class="tt-groups"><div class="tt-gtitle">' + (edit ? 'Your groups' : 'Suggested groups') + '</div><div class="tt-gsub">Tap a name to move it to the other group.</div>' +
           '<div class="tt-g"><b>Early · ' + e(tt.times.Early) + '</b> <span class="tt-n">' + g.early.length + '</span><div class="tt-chips">' + g.early.map(function (n) { return chip(n, 'late'); }).join('') + '</div></div>' +
           '<div class="tt-g"><b>Late · ' + e(tt.times.Late) + '</b> <span class="tt-n">' + g.late.length + '</span><div class="tt-chips">' + g.late.map(function (n) { return chip(n, 'early'); }).join('') + '</div></div>' +
           (split.length ? '<div class="tt-warn">Head-to-head split: ' + split.map(function (p) { return e(p[0]) + ' & ' + e(p[1]); }).join(', ') + '</div>' : '') +
+          addBlock(tt, g, sched) +
           '<button type="button" class="en-save tt-confirm" id="ttconfirm">Confirm groups</button>' +
           (edit ? '<button type="button" class="rl-link tt-small" id="ttreset">Back to suggested</button>' : '') +
           '<div class="tt-gsub">Confirming locks everyone\'s tee time and tees and sends the groups alert. If you don\'t, this is confirmed for you at ' + e(tt.closes.replace(/^.* at /, '')) + '.</div></div>';
@@ -266,11 +294,41 @@
       g.early = g.early.filter(function (x) { return x !== n; });
       g.late = g.late.filter(function (x) { return x !== n; });
       g[to].push(n);
-      edit = g;
-      saveDraft(tt, g);
+      if (tt.confirmed) cedit = { night: tt.night, early: g.early, late: g.late };
+      else { edit = g; saveDraft(tt, g); }
       renderTee();
       return;
     }
+    // Admin: put someone who isn't in a group into Early or Late.
+    var ad = ev.target.closest('[data-add]');
+    if (ad) {
+      var an = ad.getAttribute('data-add'), ato = ad.getAttribute('data-to');
+      var ag = JSON.parse(cardEl().dataset.groups || '{"early":[],"late":[]}');
+      ag.early = ag.early.filter(function (x) { return x !== an; });
+      ag.late = ag.late.filter(function (x) { return x !== an; });
+      ag[ato].push(an);
+      if (tt.confirmed) { cedit = { night: tt.night, early: ag.early, late: ag.late }; renderTee(); return; }
+      // Before confirming: also set their pick to that time, so the suggestion, the 3 PM auto-close and the
+      // groups alert all include them (the server lets Ty set anyone's pick until groups are confirmed).
+      if (edit || savedDraft(tt)) { edit = { night: tt.night, early: ag.early, late: ag.late }; saveDraft(tt, edit); }
+      var ach = ato === 'early' ? 'Early' : 'Late', aid = ++seq;
+      pend[an] = { v: ach, id: aid, state: 'saving', at: Date.now() };
+      setNote('Adding ' + an + ' to ' + ach + '…');
+      queue('t|' + an, function () { return post({ action: 'tee', name: an, choice: ach }); }).then(function () {
+        var q = pend[an];
+        if (!q || q.id !== aid) return;
+        q.state = 'saved'; q.at = Date.now(); q.ref = t();
+        setNote('Added ' + an + ' to ' + ach + ' ✓');
+        load();
+      }, function (er) {
+        var q = pend[an];
+        if (q && q.id === aid) delete pend[an];
+        setNote(er.message || 'Couldn\'t save. Try again.', true);
+        if (er.code === 'locked') load();
+      });
+      return;
+    }
+    if (ev.target.id === 'ttcancel') { cedit = null; renderTee(); return; }
     if (ev.target.id === 'ttreset') { edit = null; saveDraft(tt, null); renderTee(); return; }
     if (ev.target.id === 'ttsignin') { RL.signIn(); return; }
     if (ev.target.id === 'ttconfirm') {
@@ -280,7 +338,8 @@
       setNote('Confirming groups…');
       post({ action: 'teeConfirm', night: tt.night, early: gg.early, late: gg.late }).then(function () {
         tt.confirmed = { early: gg.early, late: gg.late, by: RL.user().name, at: 'just now' };
-        edit = null; setLocalDraft(tt.night, null); tt.draft = null; setNote('Groups confirmed ✓'); load();
+        var was = !!cedit;
+        edit = null; cedit = null; setLocalDraft(tt.night, null); tt.draft = null; setNote(was ? 'Groups saved ✓' : 'Groups confirmed ✓'); load();
       }, function (er) { setNote(er.message || 'Couldn\'t confirm. Try again.', true); });
       return;
     }
