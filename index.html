@@ -228,6 +228,7 @@
 <link rel="stylesheet" href="theme.css">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script src="app.js"></script>
+<script src="rules.js"></script>
 </head>
 <body>
 <header>
@@ -367,6 +368,14 @@
     if (on) document.getElementById('curtab').textContent = on.textContent;
     setMenu(false);
   }
+  // Team game card: tap for the full rules (rules.js).
+  document.addEventListener('click', function (ev) {
+    if (!ev.target.closest || !ev.target.closest('#grulesbtn')) return;
+    window.rulesOpen = !window.rulesOpen;
+    var r = document.getElementById('grules'), b = document.getElementById('grulesbtn');
+    if (r) r.classList.toggle('hide', !window.rulesOpen);
+    if (b) { b.setAttribute('aria-expanded', window.rulesOpen); b.querySelector('.gmore').textContent = window.rulesOpen ? 'Hide rules ▴' : 'Rules ›'; }
+  });
   // Head2Head view: Basic (names, Thru and scores only, so every match fits on one screen) or Detailed. Per phone; starts Detailed.
   function setH2hView(v) {
     v = v === 'basic' ? 'basic' : 'detailed'; store('h2hView', v);
@@ -1210,9 +1219,12 @@ function renderField() {
     if (window.ADMIN_ENTER) renderEntrySw();
 
     var g = d.teamGame || {};
+    var tdx = d.teamDetail || {};
     document.getElementById('gameinfo').innerHTML = (d.teams.length && g.game) ?
-      '<div class="card gamecard"><div class="gname">' + esc((g.scoring ? g.scoring + ' ' : '') + g.game) + '</div>' +
-      (g.desc ? '<div class="gdesc">' + esc(g.desc) + '</div>' : '') + '</div>' : '';
+      '<div class="card gamecard"><button type="button" class="grow" id="grulesbtn" aria-expanded="' + !!window.rulesOpen + '" aria-controls="grules">' +
+      '<span class="gname">' + esc((g.scoring ? g.scoring + ' ' : '') + g.game) + '</span><span class="gmore">' + (window.rulesOpen ? 'Hide rules ▴' : 'Rules ›') + '</span></button>' +
+      (g.desc ? '<div class="gdesc">' + esc(g.desc) + '</div>' : '') +
+      '<div class="grules' + (window.rulesOpen ? '' : ' hide') + '" id="grules">' + (window.gameRules ? gameRules(g.game, g.scoring, tdx.minPlayers, tdx.counted) : '') + '</div></div>' : '';
 
     document.getElementById('table').innerHTML =
       '<table><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +

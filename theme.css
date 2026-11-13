@@ -352,3 +352,16 @@ nav.subnav button { white-space: nowrap; padding: 0 4px; }
 .thead.tinl { margin-top: 14px; margin-bottom: 6px; }
 .thead .gname .tpl { display: inline-block; margin-right: 8px; border-radius: 8px; padding: 1px 7px; font-size: 13px; background: var(--mid); color: var(--amber); vertical-align: 3px; }
 #teams .fhead h2 { white-space: nowrap; }
+
+/* Nov 13: team game rules */
+.gamecard .grow { all: unset; box-sizing: border-box; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; cursor: pointer; }
+.gamecard .grow:focus-visible { outline: 2px solid var(--amber); outline-offset: 4px; border-radius: 6px; }
+.gamecard .gmore { flex: none; font: 600 13px Inter, sans-serif; color: var(--amber); white-space: nowrap; }
+.grules { margin-top: 10px; padding-top: 10px; border-top: 1px solid #3A3018; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.grules .glead { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+.grules h4 { margin: 12px 0 2px; font: 700 11px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); }
+.grules p { margin: 4px 0; }
+.grules b { color: var(--amber); font-weight: 600; }
+.grules ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
+.grules li { margin: 3px 0; }
+.grules li b { color: var(--ink); }
