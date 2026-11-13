@@ -110,6 +110,11 @@
   .fsort { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
   table.stt th, table.stt td { padding: 7px 2px; text-align: center; white-space: nowrap; }
   table.stt th { font-size: 11px; }
+  table.stt.sst td:first-child { line-height: 1.15; }
+  table.stt.sst td:first-child small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+  table.stt.sst th:first-child, table.stt.sst td:first-child { width: 26%; }
+  table.stt.sst td.b { font-size: inherit !important; font-weight: 700; color: var(--amber, #F5B13C); }
+  .sst-key { font-size: 12px; color: var(--muted); padding: 6px 10px 10px; line-height: 1.35; }
   table.stt th:first-child, table.stt td:first-child { width: 28%; text-align: left; padding-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   table.sc td.g { position: relative; font-weight: 600; }
   table.sc .dots { position: absolute; top: 0; right: 3px; font-size: 13px; font-weight: 700; line-height: 1; color: var(--green); }
@@ -224,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=37">
-<link rel="stylesheet" href="theme.css?v=37">
+<link rel="stylesheet" href="app.css?v=38">
+<link rel="stylesheet" href="theme.css?v=38">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=37"></script>
-<script src="rules.js?v=37"></script>
+<script src="app.js?v=38"></script>
+<script src="rules.js?v=38"></script>
 </head>
 <body>
 <header>
@@ -290,7 +295,7 @@
     <div class="card" id="enholes"></div>
   </section>
   <section id="entrysw" class="hide"><h2>Enter scores for anyone</h2><div id="eswbody"></div></section>
-  <section id="stats" class="hide"><h2>Tonight's stats</h2><div class="card" id="statsbody"></div></section>
+  <section id="stats" class="hide"><h2>Tonight's stats</h2><div class="card" id="statsbody"></div><h2>Season stats</h2><div class="card" id="seasonbody"></div></section>
   <section id="adminsched" class="hide"><div id="adminteecard"></div></section>
   <section id="hcp" class="hide">
     <h2>Player handicaps</h2>
@@ -1216,6 +1221,21 @@ function renderField() {
       }).join('') +
       '<div style="height:8px"></div>' : '<div class="empty">No stats yet tonight. They fill in as GSPro sends holes.</div>';
 
+    // Season stats (Nov 13): every hole GSPro has logged this season. Percentages, average and longest drive, totals.
+    var se = d.seasonStats;
+    var pct = function (a, n) { return n ? Math.round(a / n * 100) + '%' : '–'; };
+    document.getElementById('seasonbody').innerHTML = !se ? '<div class="empty">Season stats appear once the server update is in.</div>' : se.players.length ?
+      '<table class="stt sst"><tr><th>Player</th><th class="n">FW</th><th class="n">GIR</th><th class="n">Sand</th><th class="n">Drive</th><th class="n">LD</th><th class="n">Pen</th><th class="n">Mull</th></tr>' +
+      se.players.map(function (s) {
+        var lng = s.ld !== '' && s.ld === se.longest;
+        return '<tr><td title="' + esc(s.player) + '">' + esc(s.player) + '<small>' + s.holes + ' holes</small></td><td class="n">' + pct(s.fw, s.fwn) + '</td><td class="n">' + pct(s.gir, s.holes) +
+          '</td><td class="n">' + pct(s.sandS, s.sandC) + '</td><td class="n">' + (s.drAvg !== '' ? Math.round(s.drAvg) : '–') +
+          '</td><td class="n' + (lng ? ' b' : '') + '">' + (s.ld !== '' ? Math.round(s.ld) + (lng ? '★' : '') : '–') +
+          '</td><td class="n">' + (s.pen || '') + '</td><td class="n">' + (s.mull || '') + '</td></tr>';
+      }).join('') + '</table>' +
+      '<div class="sst-key">FW, GIR and Sand are percentages of chances. Drive is the average drive that finished in the fairway; LD is the longest (★ longest in the league). Pen and Mull are season totals.</div>'
+      : '<div class="empty">No season stats yet. They build up as GSPro sends holes.</div>';
+
     renderTeams(d);
     if (window.ADMIN_ENTER) renderEntrySw();
 
@@ -1262,9 +1282,9 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=37"></script>
-<script src="settings.js?v=37"></script>
-<script src="flip.js?v=37"></script>
-<script src="match.js?v=37"></script>
+<script src="tee.js?v=38"></script>
+<script src="settings.js?v=38"></script>
+<script src="flip.js?v=38"></script>
+<script src="match.js?v=38"></script>
 </body>
 </html>
