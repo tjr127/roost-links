@@ -147,16 +147,17 @@ function faTeams_() {
   var ok = teams.filter(function (t) { return t.score !== '' && t.score !== null && !isNaN(Number(t.score)); });
   var out = teams.filter(function (t) { return ok.indexOf(t) < 0; });
   ok.sort(function (a, b) { return lowWins ? a.score - b.score : b.score - a.score; });
-  var who = function (t) { return t.team + ' (' + faJoin_(String(t.players).split(/\s*,\s*/)) + ')'; };
+  var sn = d.shortNames || {};   // teams are called by their members (Nov 13): Ty/Clint
+  var who = function (t) { return String(t.players).split(/\s*,\s*/).map(function (n) { return sn[n] || n; }).join('/'); };
   var lines = [];
   ok.forEach(function (t, i) { lines.push((i + 1) + '. ' + who(t) + ': ' + Number(t.score)); });
   out.forEach(function (t) { lines.push(who(t) + ': no score (not enough players)'); });
   if (ok.length >= 2) {
     var w = ok[0], s = ok[1], last = ok[ok.length - 1];
     var gap = Math.abs(Number(w.score) - Number(s.score));
-    lines.push(gap === 0 ? w.team + ' and ' + s.team + ' tied for first. ' + faPick_(FA_TIE_, w.team + s.team)
-      : w.team + ' wins by ' + gap + '. ' + faPick_(FA_TEAMWIN_, w.team + gap));
-    if (ok.length >= 3 || gap > 0) lines.push(last.team + ' brought up the rear. ' + faPick_(FA_TEAMLAST_, last.team + last.score));
+    lines.push(gap === 0 ? who(w) + ' and ' + who(s) + ' tied for first. ' + faPick_(FA_TIE_, w.team + s.team)
+      : who(w) + ' wins by ' + gap + '. ' + faPick_(FA_TEAMWIN_, w.team + gap));
+    if (ok.length >= 3 || gap > 0) lines.push(who(last) + ' brought up the rear. ' + faPick_(FA_TEAMLAST_, last.team + last.score));
   }
   return { heading: 'Team game: ' + g.game + ' (' + g.scoring + ')', body: lines.join('\n') };
 }

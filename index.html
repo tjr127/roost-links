@@ -253,7 +253,7 @@
   <section id="field" class="hide">
     <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="fieldcard"></div>
   </section>
-  <section id="teams" class="hide"><h2>Team game</h2><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
+  <section id="teams" class="hide"><div class="fhead"><h2>Team game</h2><div class="seg" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div></div><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
   <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div></section>
   <section id="schedule" class="hide">
     <div id="teecard"></div>
@@ -960,6 +960,13 @@ function tdRank(list, lowWins) {
   });
   return out;
 }
+// Teams are called by their members (Nov 13): "Ty/Clint". Players-tab short names are used when set.
+function tLabel(t) {
+  var sn = (data && data.shortNames) || {};
+  var ps = (t.players || []).map(function (p) { return sn[p.name] || p.name; });
+  return ps.length ? ps.join('/') : t.name;
+}
+function teamView() { return store('teamView') === 'basic' ? 'basic' : 'detailed'; }
 function tdPlaceText(r) { return r ? (r.tied ? 'T' + r.place : ordinal(r.place)) : ''; }
 function tdGapText(r) {
   if (!r || r.n < 2) return '';
@@ -1018,39 +1025,53 @@ function renderTeams(d) {
     listEl.innerHTML = '<div class="card empty">No team game tonight</div>';
     return;
   }
-  var thru = tdThruMap(d), o = tdOrder(td);
-  var sel = td.teams.filter(function (t) { return t.name === teamSel; })[0];
+  var thru = tdThruMap(d), o = tdOrder(td), view = teamView();
+  document.querySelectorAll('[data-tv]').forEach(function (x) { var on = x.getAttribute('data-tv') === view; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  var sel = view === 'basic' ? td.teams.filter(function (t) { return t.name === teamSel; })[0] : null;
   if (!sel) {
     det.className = 'hide'; listEl.className = ''; info.className = '';
     var cnt = td.counted && td.counted !== 'Total' ? '<div class="tcount">Counting ' + esc(td.counted.toLowerCase()) + '</div>' : '';
-    listEl.innerHTML = cnt + o.list.map(function (t) {
+    if (view === 'detailed') {
+      // Every team broken out: members with Thru, then its hole-by-hole table.
+      listEl.innerHTML = cnt + o.list.map(function (t) { return teamDetailHtml(td, t, o, thru, true); }).join('') + teamLegend(td.game);
+      return;
+    }
+    // Basic: one line per team, tap for its hole-by-hole.
+    listEl.innerHTML = cnt + '<div class="card tbasic">' + o.list.map(function (t) {
       var r = o.rank[t.name];
-      return '<div class="card team tap" data-team="' + esc(t.name) + '"><div class="row"><span class="tname">' +
-        (r ? '<span class="tpl">' + tdPlaceText(r) + '</span>' : '') + esc(t.name) + '</span><span class="score">' +
-        (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + ' players</span>') + '</span></div>' +
-        t.players.map(function (p) {
-          var th = thru[p.name] || '';
-          return '<div class="mem"><span>' + esc(p.name) + '</span><span class="th' + (th === 'F' ? ' f' : '') + '">' + esc(th) + '</span></div>';
-        }).join('') + '<div class="tmore">' + (r ? esc(tdGapText(r)) + ' · ' : '') + 'Tap for hole-by-hole ›</div></div>';
-    }).join('');
+      return '<div class="trow tap" data-team="' + esc(t.name) + '"><span class="tpl">' + (r ? tdPlaceText(r) : '–') + '</span>' +
+        '<span class="tlab">' + esc(tLabel(t)) + (r && tdGapText(r) ? '<i>' + esc(tdGapText(r)) + '</i>' : '') + '</span>' +
+        '<span class="score">' + (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + '</span>') + '</span></div>';
+    }).join('') + '</div><div class="tleg">Tap a team for its hole-by-hole.</div>';
     Array.prototype.forEach.call(listEl.querySelectorAll('[data-team]'), function (el) {
       el.addEventListener('click', function () { openTeam(el.getAttribute('data-team')); });
     });
     return;
   }
   listEl.className = 'hide'; info.className = 'hide'; det.className = '';
-  det.innerHTML = teamDetailHtml(td, sel, o, thru);
+  det.innerHTML = teamDetailHtml(td, sel, o, thru) + teamLegend(td.game);
   det.querySelector('.tback').addEventListener('click', function () { openTeam(''); });
   Array.prototype.forEach.call(det.querySelectorAll('[data-go]'), function (el) {
     el.addEventListener('click', function () { openTeam(el.getAttribute('data-go')); });
   });
+}
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest && ev.target.closest('[data-tv]');
+  if (!b) return;
+  store('teamView', b.getAttribute('data-tv')); teamSel = ''; store('team', '');
+  if (data) renderTeams(data);
+});
+function teamLegend(game) {
+  return '<div class="tleg"><span class="sw use"></span> counts for the team' +
+    (/Vegas/.test(game) ? ' · <b>L</b> low, <b>H</b> high' + (game === '3 Man Vegas' ? ', <b>M</b> middle' : '') : '') +
+    ' · Team score shows once every player has finished the hole</div>';
 }
 function openTeam(name) {
   teamSel = name; store('team', name);
   if (data) renderTeams(data);
   window.scrollTo(0, 0);
 }
-function teamDetailHtml(td, t, o, thru) {
+function teamDetailHtml(td, t, o, thru, inline) {
   var game = td.game, r = o.rank[t.name];
   var pos = o.list.indexOf(t), prev = o.list[pos - 1], next = o.list[pos + 1];
   var hs = td.holes.map(function (h, i) { return { h: h, i: i }; }).filter(function (x) { return x.h.counted; });
@@ -1069,14 +1090,15 @@ function teamDetailHtml(td, t, o, thru) {
     if (tdNum(t.team[x.i]) !== null) run[x.i] = tdRank(lst, td.lowWins)[t.name];
   });
   var minThru = t.players.map(function (p) { return thru[p.name] || ''; });
-  var head = '<div class="tnav"><button class="tback">‹ Teams</button><span>' +
+  var head = (inline ? '' : '<div class="tnav"><button class="tback">‹ Teams</button><span>' +
     (prev ? '<button data-go="' + esc(prev.name) + '">‹</button>' : '') +
-    (next ? '<button data-go="' + esc(next.name) + '">›</button>' : '') + '</span></div>' +
-    '<div class="card gamecard thead"><div class="row"><span class="gname">' + esc(t.name) + '</span><span class="tbig">' +
+    (next ? '<button data-go="' + esc(next.name) + '">›</button>' : '') + '</span></div>') +
+    '<div class="card gamecard thead' + (inline ? ' tinl' : '') + '"><div class="row"><span class="gname">' + (inline && r ? '<span class="tpl">' + tdPlaceText(r) + '</span>' : '') + esc(tLabel(t)) + '</span><span class="tbig">' +
     (t.eligible ? esc(t.total || '–') : '') + '</span></div>' +
+    (inline ? (r && tdGapText(r) ? '<div class="tsub">' + esc(tdGapText(r)) + '</div>' : '') :
     '<div class="tsub">' + esc(game + ' · ' + td.scoring) + (td.counted !== 'Total' ? ' · ' + esc(td.counted) : '') +
     (r ? ' · <b>' + tdPlaceText(r) + '</b> ' + esc(tdGapText(r)) : '') + '</div>' +
-    (td.desc ? '<div class="gdesc">' + esc(td.desc) + '</div>' : '') +
+    (td.desc ? '<div class="gdesc">' + esc(td.desc) + '</div>' : '')) +
     '<div class="tplayers">' + t.players.map(function (p, i) {
       return esc(p.name) + (minThru[i] ? ' <span class="th' + (minThru[i] === 'F' ? ' f' : '') + '">' + esc(minThru[i] === 'F' ? 'F' : 'Thru ' + minThru[i]) + '</span>' : '');
     }).join(' · ') + '</div>' +
@@ -1111,10 +1133,7 @@ function teamDetailHtml(td, t, o, thru) {
     t.players.map(function (p) { return '<th class="n" title="' + esc(p.name) + '">' + esc(short(p.name)) + '</th>'; }).join('') +
     '<th class="n">Team</th><th class="n">Pos</th></tr>' + rows +
     '<tr class="tot"><td colspan="2">Total</td>' + ptot + '<td class="n tv">' + esc(t.eligible ? t.total : '') + '</td><td></td></tr></table></div>';
-  var legend = '<div class="tleg"><span class="sw use"></span> counts for the team' +
-    (/Vegas/.test(game) ? ' · <b>L</b> low, <b>H</b> high' + (game === '3 Man Vegas' ? ', <b>M</b> middle' : '') : '') +
-    ' · Team score shows once every player has finished the hole</div>';
-  return head + table + legend;
+  return head + table;
 }
 
 function renderField() {

@@ -318,11 +318,11 @@ nav.subnav button { white-space: nowrap; padding: 0 4px; }
 .esw-all .tog.on { background: var(--amber); color: var(--amber-ink); box-shadow: none; }
 .esw-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
 .esw-row i { color: var(--muted); font-style: normal; font-size: 12px; margin-left: 4px; }
-.sw { all: unset; box-sizing: border-box; position: relative; width: 48px; height: 28px; border-radius: 999px; background: var(--card2); box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; flex: none; }
-.sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); transition: left .15s; }
-.sw.on { background: var(--amber); box-shadow: none; }
-.sw.on i { left: 23px; background: var(--amber-ink); }
-.sw:focus-visible, .esw-all .tog:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.esw-row .sw { all: unset; box-sizing: border-box; position: relative; width: 48px; height: 28px; border-radius: 999px; background: var(--card2); box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; flex: none; }
+.esw-row .sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); transition: left .15s; }
+.esw-row .sw.on { background: var(--amber); box-shadow: none; }
+.esw-row .sw.on i { left: 23px; background: var(--amber-ink); }
+.esw-row .sw:focus-visible, .esw-all .tog:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .esw-msg { font-size: 12.5px; color: var(--win); min-height: 16px; margin-top: 6px; }
 .esw-msg.err { color: var(--loss); }
 #entrysw h2 { margin-top: 4px; }
@@ -339,3 +339,16 @@ nav.subnav button { white-space: nowrap; padding: 0 4px; }
 .h2h-basic .match .thr { font-size: 12px; margin-top: 0; }
 .h2h-basic .match .pts { font-size: 22px; }
 .h2h-basic .match .ow { margin-top: 2px; font-size: 10px; }
+
+/* Nov 13: Team Basic / Detailed */
+.tbasic { padding: 4px 14px; }
+.trow { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); cursor: pointer; }
+.trow:first-child { border-top: 0; }
+.trow .tpl { flex: none; min-width: 30px; text-align: center; border-radius: 8px; padding: 2px 6px; font: 700 13px var(--num); background: var(--mid); color: var(--amber); }
+.trow .tlab { flex: 1; font-size: 15px; font-weight: 600; min-width: 0; }
+.trow .tlab i { display: block; font-style: normal; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 1px; }
+.trow .score { font: 700 22px var(--num); color: var(--amber); }
+.trow .inel { font: 600 12px Inter, sans-serif; color: var(--muted); }
+.thead.tinl { margin-top: 14px; margin-bottom: 6px; }
+.thead .gname .tpl { display: inline-block; margin-right: 8px; border-radius: 8px; padding: 1px 7px; font-size: 13px; background: var(--mid); color: var(--amber); vertical-align: 3px; }
+#teams .fhead h2 { white-space: nowrap; }
