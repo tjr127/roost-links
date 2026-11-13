@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=39">
-<link rel="stylesheet" href="theme.css?v=39">
+<link rel="stylesheet" href="app.css?v=40">
+<link rel="stylesheet" href="theme.css?v=40">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=39"></script>
-<script src="rules.js?v=39"></script>
+<script src="app.js?v=40"></script>
+<script src="rules.js?v=40"></script>
 </head>
 <body>
 <header>
@@ -246,11 +246,13 @@
   <button type="button" data-tab="standings"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Standings</span></button>
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
   <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Stats</span></button>
+  <button type="button" data-tab="news" data-group="newsres newsann"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg><span>News</span></button>
   <button type="button" data-tab="admin" data-group="adminenter adminsched" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
 </nav>
 <main>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Stats</button></nav>
+  <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button></nav>
   <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button></nav>
   <section id="tonight">
     <div id="teestrip" class="teestrip hide"></div>
@@ -300,6 +302,8 @@
     <div id="stw-tonight"><div class="card" id="statsbody"></div></div>
     <div id="stw-season" class="hide"><div class="card" id="seasonbody"></div></div>
   </section>
+  <section id="newsres" class="hide"><div id="newsresbody"></div></section>
+  <section id="newsann" class="hide"><div id="newsannbody"></div></section>
   <section id="adminsched" class="hide"><div id="adminteecard"></div></section>
   <section id="hcp" class="hide">
     <h2>Player handicaps</h2>
@@ -348,6 +352,7 @@
     if (tab === 'board') return boardDefault();
     if (tab === 'scores') { var s0 = store('scoresTab'); return s0 && s0 !== 'enter' ? s0 : (canSelfEnter() ? 'enter' : 'cards'); }
     if (tab === 'admin') return store('adminTab') || 'adminenter';
+    if (tab === 'news') return store('newsTab') || 'newsres';
     if (tab === 'enter' && !canSelfEnter()) return 'cards';
     if (/^admin/.test(tab) && !isAdmin()) return boardDefault();
     return document.getElementById(tab) || SHOW[tab] ? tab : boardDefault();
@@ -364,6 +369,8 @@
     if (grp === 'board' && !auto && data) store('boardPick', JSON.stringify({ n: data.title, t: tab }));
     if (grp === 'scores') store('scoresTab', tab);
     if (grp === 'admin') store('adminTab', tab);
+    if (grp === 'news') store('newsTab', tab);
+    var tbOn = document.querySelector('nav.tabbar button.on'); if (tbOn && tbOn.scrollIntoView) try { tbOn.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
     var wasAdminEnter = window.ADMIN_ENTER, wasTeeAdmin = window.TEE_ADMIN;
     window.ADMIN_ENTER = tab === 'adminenter';
     window.TEE_ADMIN = tab === 'adminsched';
@@ -396,6 +403,7 @@
   // Admin tab only for admins; Enter score pill only for players allowed to enter their own scores.
   window.updateNav = function () {
     document.getElementById('adminbtn').classList.toggle('hide', !isAdmin());
+    var tb = document.querySelector('nav.tabbar'); if (tb) { var more = function () { tb.classList.toggle('more', tb.scrollWidth - tb.clientWidth - tb.scrollLeft > 4); }; more(); if (!tb.dataset.mw) { tb.dataset.mw = 1; tb.addEventListener('scroll', more, { passive: true }); window.addEventListener('resize', more); } }
     document.getElementById('enterpill').classList.toggle('hide', !canSelfEnter());
     if (curTab && resolveTab(curTab) !== curTab) showTab(curTab, true);
   };
@@ -1240,6 +1248,7 @@ function renderField() {
       '<div class="sst-key">FW, GIR and Sand are percentages of chances. Drive is the average drive that finished in the fairway; LD is the longest (★ longest in the league). Pen and Mull are season totals.</div>'
       : '<div class="empty">No season stats yet. They build up as GSPro sends holes.</div>';
 
+    renderNews(d);
     renderTeams(d);
     if (window.ADMIN_ENTER) renderEntrySw();
 
@@ -1263,6 +1272,24 @@ function renderField() {
     renderHcp();
     renderCard();
     renderEntry();
+  }
+
+  // News tab (Nov 13): Results = the latest league night's end-of-night alerts (replaced by the next night's);
+  // Announcements = every other alert from the last 3 days. Alerts sent to some players only show to them.
+  function renderNews(d) {
+    var n = d.news, au = window.RL && RL.user(), me = au ? au.name : '';
+    var rb = document.getElementById('newsresbody'), ab = document.getElementById('newsannbody');
+    if (!n) { rb.innerHTML = ab.innerHTML = '<div class="card empty">News appears once the server update is in.</div>'; return; }
+    var item = function (m, own) {
+      return '<div class="card nw">' + (m.title && m.title !== 'Roost Golf' ? '<div class="nw-t">' + esc(m.title) + '</div>' : '') +
+        '<div class="nw-b">' + esc(m.body).replace(/\n/g, '<br>') + '</div>' +
+        '<div class="nw-at">' + esc(m.at) + (own ? ' · just for you' : '') + '</div></div>';
+    };
+    rb.innerHTML = n.results.length ? '<div class="nw-night">' + esc(n.night) + ' · League night results</div>' + n.results.map(function (m) { return item(m); }).join('')
+      : '<div class="card empty">No results yet. After the next league night, the head-to-head results, low net and putts, and the team game show up here.</div>';
+    var list = n.announce.filter(function (m) { return !m.to || (me && m.to.indexOf(me) >= 0); });
+    ab.innerHTML = list.length ? list.map(function (m) { return item(m, !!m.to); }).join('') + '<div class="nw-key">Announcements stay here for 3 days.</div>'
+      : '<div class="card empty">No announcements in the last 3 days.</div>';
   }
 
   // Stats > Stats (Nov 13): Tonight's stats / Season stats switch, one card at a time; the pick is remembered on the phone.
@@ -1297,9 +1324,9 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=39"></script>
-<script src="settings.js?v=39"></script>
-<script src="flip.js?v=39"></script>
-<script src="match.js?v=39"></script>
+<script src="tee.js?v=40"></script>
+<script src="settings.js?v=40"></script>
+<script src="flip.js?v=40"></script>
+<script src="match.js?v=40"></script>
 </body>
 </html>

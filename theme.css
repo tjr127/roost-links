@@ -32,12 +32,14 @@ header .sub { font-size: 13px; color: var(--muted); opacity: 1; margin-top: 2px;
 
 /* Bottom tab bar */
 nav.tabbar { position: fixed; z-index: 30; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
-  max-width: 536px; margin: 0 auto; display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px;
+  max-width: 536px; margin: 0 auto; display: flex !important; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; gap: 2px;
   background: rgba(24,30,26,.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   border: 1px solid var(--line); border-radius: 24px; padding: 7px 6px; box-shadow: 0 10px 30px rgba(0,0,0,.4); flex-direction: row; }
 nav.tabbar button { all: unset; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   min-height: 48px; border-radius: 16px; color: var(--muted); font: 500 11px Inter, sans-serif; cursor: pointer; text-align: center; }
 nav.tabbar button svg { width: 22px; height: 22px; }
+nav.tabbar::-webkit-scrollbar { display: none; }
+nav.tabbar button { flex: 1 0 62px; }  /* Nov 13: 6 tabs (admins) scroll sideways on narrow phones; 5 fill the bar */
 nav.tabbar button.on { background: var(--amber); color: var(--amber-ink); font-weight: 700; }
 nav.tabbar button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 main { padding: 14px 14px calc(110px + env(safe-area-inset-bottom)); }
@@ -412,3 +414,12 @@ header .brand { padding-right: 52px; }
 .statsw button { all: unset; box-sizing: border-box; flex: 1; text-align: center; min-height: 36px; line-height: 36px; border-radius: 999px; color: var(--muted); font: 600 13px Inter, sans-serif; cursor: pointer; }
 .statsw button.on { background: rgba(245,177,60,.16); color: var(--amber); box-shadow: inset 0 0 0 1px rgba(245,177,60,.5); }
 #stw-tonight.hide, #stw-season.hide { display: none; }
+
+/* News tab (Nov 13) */
+.nw { padding: 12px 14px; }
+.nw-t { font: 700 15px var(--num, 'Space Grotesk'), sans-serif; color: var(--ink); margin-bottom: 4px; }
+.nw-b { font-size: 14px; line-height: 1.45; color: var(--ink); }
+.nw-at { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.nw-night { font: 700 13px Inter, sans-serif; letter-spacing: .5px; text-transform: uppercase; color: var(--amber); margin: 8px 4px 8px; }
+.nw-key { font-size: 12px; color: var(--muted); text-align: center; margin: 4px 0 8px; }
+nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0,0,0,.25)); mask-image: linear-gradient(to right, #000 82%, rgba(0,0,0,.25)); }
