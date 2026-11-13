@@ -193,6 +193,8 @@
     var b = el.querySelector('button');
     b.addEventListener('click', a ? window.RL.signOut : window.RL.signIn);
     if (typeof window.renderEntry === 'function' && window.data) window.renderEntry();
+    if (typeof window.updateNav === 'function') window.updateNav();
+    if (typeof window.renderTee === 'function' && window.data) window.renderTee();
   }
 
   // ---- Push notifications (OneSignal) ----

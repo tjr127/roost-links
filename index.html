@@ -236,19 +236,22 @@
   <button type="button" class="menubtn" id="menubtn" aria-label="Menu" aria-expanded="false">☰</button>
 </header>
 <nav class="tabbar" aria-label="Main">
-  <button type="button" data-tab="tonight" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Board</span></button>
-  <button type="button" data-tab="teams"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l-1.5 17a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1z"/><path d="M6.4 8h11.2"/></svg><span>Teams</span></button>
+  <button type="button" data-tab="board" data-group="tonight teams field" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Board</span></button>
   <button type="button" data-tab="standings"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Standings</span></button>
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
-  <button type="button" data-tab="enter" data-group="enter cards hcp"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Scores</span></button>
+  <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Scores</span></button>
+  <button type="button" data-tab="admin" data-group="adminenter adminsched" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
 </nav>
 <main>
-  <nav class="subnav hide" aria-label="Scores"><button type="button" data-tab="enter">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button></nav>
+  <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
+  <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Stats</button></nav>
+  <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button></nav>
   <section id="tonight">
     <div id="teestrip" class="teestrip hide"></div>
     <div id="matchwrap"><h2>Head-to-Head Match Leaderboard</h2><div id="matches"></div></div>
-    <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="field"></div>
-    <div id="statswrap" class="hide"><h2>Individual Stats</h2><div class="card" id="stats"></div></div>
+  </section>
+  <section id="field" class="hide">
+    <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="fieldcard"></div>
   </section>
   <section id="teams" class="hide"><h2>Team game</h2><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
   <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div></section>
@@ -264,6 +267,7 @@
     <div class="card picker"><label for="cardwho">Player</label><select id="cardwho"></select></div>
     <div id="cardbody"></div>
   </section>
+  <section id="entrysw" class="hide"><h2>Enter scores for anyone</h2><div id="eswbody"></div></section>
   <section id="enter" class="hide">
     <h2>Enter score</h2>
     <div class="card picker">
@@ -285,6 +289,8 @@
     </div>
     <div class="card" id="enholes"></div>
   </section>
+  <section id="stats" class="hide"><h2>Tonight's stats</h2><div class="card" id="statsbody"></div></section>
+  <section id="adminsched" class="hide"><div id="adminteecard"></div></section>
   <section id="hcp" class="hide">
     <h2>Player handicaps</h2>
     <div class="card picker"><label for="hcpwho">Player</label><select id="hcpwho"></select></div>
@@ -315,18 +321,58 @@
     }).join('');
   }
 
-  function showTab(tab) {
-    document.querySelectorAll('nav button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab); });
-    document.querySelectorAll('main section').forEach(function (s) { s.classList.toggle('hide', s.id !== tab); });
-    var inScores = /^(enter|cards|hcp)$/.test(tab);
-    var grp = document.querySelector('nav.tabbar [data-group]'); if (grp) grp.classList.toggle('on', inScores);
-    var sub = document.querySelector('nav.subnav'); if (sub) sub.classList.toggle('hide', !inScores);
+  // Tabs (Nov 13): Board = Head2Head / Team / Individual; Scores = Enter score / Scorecards / Handicaps / Stats;
+  // Admin (Ty only) = Enter score for anyone + self-entry switches / Schedule admin.
+  var SHOW = { adminenter: ['entrysw', 'enter'] };
+  var curTab = '';
+  function groupOf(tab) {
+    var b = [].filter.call(document.querySelectorAll('nav.tabbar [data-group]'), function (x) { return x.dataset.group.split(' ').indexOf(tab) >= 0; })[0];
+    return b ? b.dataset.tab : '';
+  }
+  function isAdmin() { var a = window.RL && RL.user(); return !!(a && a.admin); }
+  function entryOn(n) { var e = data && data.entry; return !e || !e.on ? true : !!e.on[n]; }
+  function canSelfEnter() { var a = window.RL && RL.user(); return !!a && (a.admin || entryOn(a.name)); }
+  function boardPicked() { var p = null; try { p = JSON.parse(store('boardPick') || 'null'); } catch (e) {} return p && data && p.n === data.title ? p.t : ''; }
+  function boardDefault() { return boardPicked() || (data && data.roundType === 'Casual' ? 'field' : 'tonight'); }
+  function resolveTab(tab) {
+    if (tab === 'board') return boardDefault();
+    if (tab === 'scores') { var s0 = store('scoresTab'); return s0 && s0 !== 'enter' ? s0 : (canSelfEnter() ? 'enter' : 'cards'); }
+    if (tab === 'admin') return store('adminTab') || 'adminenter';
+    if (tab === 'enter' && !canSelfEnter()) return 'cards';
+    if (/^admin/.test(tab) && !isAdmin()) return boardDefault();
+    return document.getElementById(tab) || SHOW[tab] ? tab : boardDefault();
+  }
+  function showTab(tab, auto) {
+    tab = resolveTab(tab);
+    var grp = groupOf(tab), show = SHOW[tab] || [tab];
+    curTab = tab;
+    document.querySelectorAll('nav.tabbar button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab || x.dataset.tab === grp); });
+    document.querySelectorAll('nav.subnav').forEach(function (n) { n.classList.toggle('hide', n.dataset.for !== grp); });
+    document.querySelectorAll('nav.subnav button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab); });
+    document.querySelectorAll('main section').forEach(function (s) { s.classList.toggle('hide', show.indexOf(s.id) < 0); });
     store('tab', tab);
-    if (tab === 'hcp' && data) renderHcp();
-    var on = document.querySelector('nav button[data-tab="' + tab + '"]');
+    if (grp === 'board' && !auto && data) store('boardPick', JSON.stringify({ n: data.title, t: tab }));
+    if (grp === 'scores') store('scoresTab', tab);
+    if (grp === 'admin') store('adminTab', tab);
+    var wasAdminEnter = window.ADMIN_ENTER, wasTeeAdmin = window.TEE_ADMIN;
+    window.ADMIN_ENTER = tab === 'adminenter';
+    window.TEE_ADMIN = tab === 'adminsched';
+    if (data) {
+      if (tab === 'hcp') renderHcp();
+      if (window.ADMIN_ENTER !== wasAdminEnter && typeof renderEntry === 'function') { entry.who = ''; renderEntry(); }
+      if (window.ADMIN_ENTER) renderEntrySw();
+      if (window.TEE_ADMIN !== wasTeeAdmin && window.renderTee) renderTee();
+    }
+    var on = document.querySelector('nav.subnav button[data-tab="' + tab + '"]') || document.querySelector('nav.tabbar button[data-tab="' + tab + '"]');
     if (on) document.getElementById('curtab').textContent = on.textContent;
     setMenu(false);
   }
+  // Admin tab only for admins; Enter score pill only for players allowed to enter their own scores.
+  window.updateNav = function () {
+    document.getElementById('adminbtn').classList.toggle('hide', !isAdmin());
+    document.getElementById('enterpill').classList.toggle('hide', !canSelfEnter());
+    if (curTab && resolveTab(curTab) !== curTab) showTab(curTab, true);
+  };
   function setMenu(open) {
     document.querySelector('header').classList.toggle('open', open);
     document.getElementById('menubtn').setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -339,7 +385,7 @@
     b.addEventListener('click', function () { showTab(b.dataset.tab); });
   });
   var lastTab = store('tab');
-  if (lastTab && document.getElementById(lastTab)) showTab(lastTab);
+  showTab(lastTab && (document.getElementById(lastTab) || SHOW[lastTab]) ? lastTab : 'board', true);
 
   // One "me" pick shared by Schedule, ScoreCards, Enter Score and Player Handicaps.
   if (store('me') === null) {
@@ -592,15 +638,52 @@
   document.getElementById('ensave').addEventListener('click', function () { sendScore(entry.val); });
   document.getElementById('enclear').addEventListener('click', function () { sendScore(''); });
 
+  function renderEntrySw() {
+    var el = document.getElementById('eswbody'); if (!el) return;
+    if (!isAdmin()) { el.innerHTML = ''; return; }
+    var e = data && data.entry;
+    if (!e || !e.players) { el.innerHTML = '<div class="card esw"><div class="empty">The per-player switches appear once the server update is in.</div></div>'; return; }
+    var list = e.players.filter(function (p) { return !p.admin; });
+    var allOn = list.length && list.every(function (p) { return !!e.on[p.name]; }), allOff = list.every(function (p) { return !e.on[p.name]; });
+    el.innerHTML = '<div class="card esw">' +
+      '<div class="esw-top"><div><b>Players entering their own scores</b><div class="esw-sub">Off hides Enter score for them. GSPro still records their scores, and you can enter anyone\'s below.</div></div></div>' +
+      '<div class="esw-all"><button type="button" class="tog' + (allOn ? ' on' : '') + '" data-esw="*" data-on="1">Everyone on</button><button type="button" class="tog' + (allOff ? ' on' : '') + '" data-esw="*" data-on="0">Everyone off</button></div>' +
+      list.map(function (p) {
+        var on = !!e.on[p.name];
+        return '<div class="esw-row"><span>' + esc(p.name) + (p.guest ? ' <i>guest</i>' : '') + '</span>' +
+          '<button type="button" class="sw' + (on ? ' on' : '') + '" role="switch" aria-checked="' + on + '" aria-label="' + esc(p.name) + ' can enter scores" data-esw="' + esc(p.name) + '" data-on="' + (on ? '0' : '1') + '"><i></i></button></div>';
+      }).join('') +
+      '<div class="esw-msg" id="eswmsg"></div></div>';
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-esw]');
+    if (!b || !data || !data.entry) return;
+    var name = b.getAttribute('data-esw'), on = b.getAttribute('data-on') === '1', a = RL.user();
+    if (!a || !a.admin) return;
+    var e = data.entry, before = JSON.stringify(e.on);
+    e.players.forEach(function (p) { if (!p.admin && (name === '*' || p.name === name)) e.on[p.name] = on; });
+    renderEntrySw(); updateNav();
+    RL.post({ action: 'entry', token: a.token, name: name, on: on }).then(function () {
+      var m = document.getElementById('eswmsg'); if (m) m.textContent = 'Saved';
+    }, function (er) {
+      e.on = JSON.parse(before); renderEntrySw(); updateNav();
+      var m = document.getElementById('eswmsg'); if (m) { m.textContent = (er && er.message) || 'Couldn\'t save. Try again.'; m.classList.add('err'); }
+    });
+  });
+
   function renderEntry() {
     var list = (data && data.cards) || [];
-    var names = list.map(function (x) { return x.name; }).filter(function (x) { return RL.canEdit(x); });
+    var au = RL.user(), adminView = !!window.ADMIN_ENTER && !!(au && au.admin);
+    var names = list.map(function (x) { return x.name; }).filter(function (x) {
+      return adminView || (!!au && au.name === x && (au.admin || entryOn(x)));
+    });
     var sel = document.getElementById('enwho');
-    if (sel.dataset.opts !== names.join('|')) {
-      sel.innerHTML = '<option value="">Choose your name…</option>' + names.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
-      sel.dataset.opts = names.join('|');
+    var optKey = (adminView ? 'A|' : 'P|') + names.join('|');
+    if (sel.dataset.opts !== optKey) {
+      sel.innerHTML = '<option value="">' + (adminView ? 'Choose a player…' : 'Choose your name…') + '</option>' + names.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
+      sel.dataset.opts = optKey;
     }
-    var saved = RL.entryName(me());
+    var saved = adminView ? me() : (au ? au.name : '');
     if (saved !== entry.who) {
       if (names.indexOf(saved) >= 0) { entry.who = saved; var p0 = enPlayer(); entry.hole = firstOpen(p0); setVals(enHole(p0)); }
       else { entry.who = ''; entry.hole = null; entry.val = null; entry.putts = null; }
@@ -614,7 +697,7 @@
     var on = !!p && p.holes.length > 0;
     ['enhole', 'enminus', 'enplus', 'enpminus', 'enpplus', 'ensave', 'enclear'].forEach(function (id) { document.getElementById(id).disabled = !on; });
     if (!on) {
-      hs.innerHTML = ''; document.getElementById('eninfo').textContent = p ? 'No holes set for tonight yet' : RL.entryHint(names.length > 0); document.getElementById('eninfo').classList.toggle('big', !p);
+      hs.innerHTML = ''; document.getElementById('eninfo').textContent = p ? 'No holes set for tonight yet' : adminView ? 'Pick a player to enter scores' : RL.entryHint(names.length > 0); document.getElementById('eninfo').classList.toggle('big', !p);
       document.getElementById('enval').textContent = '–'; document.getElementById('enpval').textContent = '–'; document.getElementById('enrel').textContent = '';
       document.getElementById('enholes').innerHTML = '';
       return;
@@ -700,7 +783,7 @@
   }
   document.addEventListener('click', function (ev) {
     var go = ev.target.closest && ev.target.closest('[data-gotab]');
-    if (go) { var nb = document.querySelector('nav.tabbar [data-tab="' + go.getAttribute('data-gotab') + '"]'); if (nb) nb.click(); window.scrollTo(0, 0); return; }
+    if (go) { showTab(go.getAttribute('data-gotab')); window.scrollTo(0, 0); return; }
     var b = ev.target.closest && ev.target.closest('[data-tpick]');
     if (!b) return;
     var tp = data && data.teePick, name = document.getElementById('hcpwho').value;
@@ -1040,7 +1123,7 @@ function renderField() {
       return d || a.i - b.i;
     });
     function th(key, label) { return '<th class="n' + (by === key ? ' sorted' : '') + '">' + label + '</th>'; }
-    document.getElementById('field').innerHTML = list.length ?
+    document.getElementById('fieldcard').innerHTML = list.length ?
       '<table><tr><th>Player</th><th class="n">Thru</th>' + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r) {
         var x = r.x;
@@ -1056,6 +1139,8 @@ function renderField() {
   })();
   function render(d) {
     data = d;
+    if (groupOf(curTab) === 'board' && !boardPicked() && curTab !== boardDefault()) showTab(boardDefault(), true);
+    updateNav();
     document.getElementById('title').textContent = d.title || '';
     document.getElementById('updated').textContent = d.updated;
     renderTeeStrip();
@@ -1075,15 +1160,13 @@ function renderField() {
         (window.matchStory ? window.matchStory(x) : '') +
         '</div>';
     }).join('');
-    document.getElementById('matches').innerHTML = m || '<div class="card empty">No matches tonight</div>';
-    document.getElementById('matchwrap').classList.toggle('hide', d.roundType === 'Casual');
+    document.getElementById('matches').innerHTML = m || '<div class="card empty">' + (d.roundType === 'Casual' ? 'Casual round: no head-to-head matches tonight' : 'No matches tonight') + '</div>';
 
     renderField();
 
     var st = d.agentStats || { players: [] };
-    document.getElementById('statswrap').classList.toggle('hide', !st.players.length);
     var holeList = function (l) { return l.map(function (h) { return h.hole + (h.n > 1 ? ' (' + h.n + ')' : ''); }).join(', '); };
-    document.getElementById('stats').innerHTML = st.players.length ?
+    document.getElementById('statsbody').innerHTML = st.players.length ?
       '<table class="stt"><tr><th>Player</th><th class="n">FW</th><th class="n">GIR</th><th class="n">Sand</th><th class="n">Drive</th><th class="n">Pen</th><th class="n">Mull</th></tr>' +
       st.players.map(function (s) {
         var lng = s.drive !== '' && s.drive === st.longest;
@@ -1095,9 +1178,10 @@ function renderField() {
         return '<div style="font-size:13px;padding:6px 10px 0"><b>' + esc(s.player) + '</b>' +
           (s.pen ? ' · Penalties on ' + holeList(s.penHoles) : '') + (s.mull ? ' · Mulligans on ' + holeList(s.mullHoles) : '') + '</div>';
       }).join('') +
-      '<div style="height:8px"></div>' : '';
+      '<div style="height:8px"></div>' : '<div class="empty">No stats yet tonight. They fill in as GSPro sends holes.</div>';
 
     renderTeams(d);
+    if (window.ADMIN_ENTER) renderEntrySw();
 
     var g = d.teamGame || {};
     document.getElementById('gameinfo').innerHTML = (d.teams.length && g.game) ?

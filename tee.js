@@ -91,12 +91,17 @@
       '</div>';
   }
 
+  // Nov 13: the Schedule tab shows everyone (Ty included) the player view; Ty's admin controls live in Admin > Schedule.
+  function cardId() { return window.TEE_ADMIN ? 'adminteecard' : 'teecard'; }
+  function cardEl() { return document.getElementById(cardId()); }
   window.renderTee = function () {
-    var el = document.getElementById('teecard');
+    var other = document.getElementById(window.TEE_ADMIN ? 'teecard' : 'adminteecard');
+    if (other) { other.innerHTML = ''; delete other.dataset.groups; }
+    var el = cardEl();
     if (!el) return;
     var tt = t();
-    if (!tt) { el.innerHTML = ''; return; }
-    var a = RL.user(), admin = !!(a && a.admin), me = a ? a.name : '';
+    if (!tt) { el.innerHTML = window.TEE_ADMIN ? '<div class="card empty">No upcoming league night on the Season tab.</div>' : ''; return; }
+    var a = RL.user(), admin = !!(a && a.admin) && !!window.TEE_ADMIN, me = a ? a.name : '';
     var league = tt.players.map(function (p) { return p.name; });
     var sched = scheduled(tt);
     var conf = tt.confirmed;
@@ -185,7 +190,7 @@
 
   document.addEventListener('click', function (ev) {
     var tt = t();
-    if (!tt || !ev.target.closest('#teecard')) return;
+    if (!tt || !ev.target.closest('#teecard, #adminteecard')) return;
     var b = ev.target.closest('[data-tee]');
     if (b) {
       var a = RL.user();
@@ -228,7 +233,7 @@
     }
     var m = ev.target.closest('[data-move]');
     if (m) {
-      var g = JSON.parse(document.getElementById('teecard').dataset.groups || '{}');
+      var g = JSON.parse(cardEl().dataset.groups || '{}');
       var n = m.getAttribute('data-move'), to = m.getAttribute('data-to');
       g.early = g.early.filter(function (x) { return x !== n; });
       g.late = g.late.filter(function (x) { return x !== n; });
@@ -241,7 +246,7 @@
     if (ev.target.id === 'ttreset') { edit = null; saveDraft(tt, null); renderTee(); return; }
     if (ev.target.id === 'ttsignin') { RL.signIn(); return; }
     if (ev.target.id === 'ttconfirm') {
-      var gg = JSON.parse(document.getElementById('teecard').dataset.groups || '{}');
+      var gg = JSON.parse(cardEl().dataset.groups || '{}');
       var wt = function (l) { return l.map(function (n) { var x = teesOf(tt, n); return n + (x ? ' (' + x + ')' : ''); }).join(', '); };
       if (!confirm('Confirm groups?\n\nEarly (' + gg.early.length + '): ' + wt(gg.early) + '\nLate (' + gg.late.length + '): ' + wt(gg.late) + '\n\nTee times and tees will be locked and everyone gets the alert.')) return;
       setNote('Confirming groups…');
