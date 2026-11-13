@@ -296,10 +296,15 @@ table.mplan .mdots { color: var(--amber); letter-spacing: 1px; }
 .tt-tees { margin-top: 12px; }
 .tt-tsub { text-transform: none; font-weight: 500; letter-spacing: 0; margin-left: 4px; }
 .tt-tbtns { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.tt-tbtns button { all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: #181E1A; color: var(--ink); cursor: pointer; min-width: 0; }
+.tt-tbtns button { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: #181E1A; color: var(--ink); cursor: pointer; min-width: 0; }
 .tt-tbtns button .tt-tn { font: 700 15px Inter, sans-serif; display: flex; align-items: center; gap: 6px; }
 .tt-tbtns button small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tt-tbtns button.on { border-color: rgba(245,177,60,.6); background: rgba(245,177,60,.14); color: var(--amber); }
+.tt-tbtns .tt-tl { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tt-tbtns .tt-hc { display: flex; flex-direction: column; align-items: center; flex: none; min-width: 44px; }
+.tt-tbtns .tt-hc small { font: 700 10px Inter, sans-serif; letter-spacing: .6px; color: var(--muted); }
+.tt-tbtns .tt-hc b { font: 700 26px/1 'Space Grotesk', sans-serif; color: var(--ink); margin-top: 2px; }
+.tt-tbtns button.on .tt-hc b, .tt-tbtns button.on .tt-hc small { color: var(--amber); }
 .tt-tbtns button:disabled { cursor: default; opacity: .85; }
 .tt-tbtns button:disabled:not(.on) { opacity: .45; }
 i.tt-tee { font-style: normal; font-size: 11px; font-weight: 600; color: var(--muted); }

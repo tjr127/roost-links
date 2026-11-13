@@ -90,8 +90,10 @@
       T.tees.filter(function (x) { return x.ok; }).map(function (x) {
         var ch = p.chs[x.tee];
         return '<button type="button"' + (can ? ' data-ttee="' + e(x.tee) + '"' : ' disabled') + ' class="' + (x.tee === cur ? 'on' : '') + '">' +
-          '<span class="tt-tn">' + (x.color ? '<i class="tp-dot" style="background:' + e(x.color.toLowerCase()) + '"></i>' : '') + e(x.tee) + '</span>' +
-          '<small>' + (x.yards ? Number(x.yards).toLocaleString('en-US') + ' yds' : e(x.color)) + (ch !== '' && ch !== undefined ? ' · CH ' + (ch < 0 ? '+' + (-ch) : ch) : '') + '</small></button>';
+          '<span class="tt-tl"><span class="tt-tn">' + (x.color ? '<i class="tp-dot" style="background:' + e(x.color.toLowerCase()) + '"></i>' : '') + e(x.tee) + '</span>' +
+          '<small>' + (x.yards ? Number(x.yards).toLocaleString('en-US') + ' yds' : e(x.color)) + '</small></span>' +
+          // Nov 13 (Ty): the course handicap is what players pick tees by, so it's the big number, labelled HDCP.
+          '<span class="tt-hc"><small>HDCP</small><b>' + (ch !== '' && ch !== undefined ? (ch < 0 ? '+' + (-ch) : ch) : '–') + '</b></span></button>';
       }).join('') + '</div>' + (isDef && cur ? '<div class="tt-byenote">' + e(cur) + ' is ' + (who === (RL.user() || {}).name ? 'your' : e(who) + '\'s') + ' usual tees. Tap another to change for this week.</div>' : '') + '</div>';
   }
   function noPick(tt, n) { return !!(tt && !choiceOf(tt, n) && tt.suggested && (tt.suggested.nopick || []).indexOf(n) >= 0); }
