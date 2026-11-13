@@ -87,9 +87,11 @@
     st.busy = true; draw();
     RL.post({ action: 'message', token: a.token, title: st.title.trim(), body: st.body.trim(), to: st.mode === 'all' ? '*' : targets() })
       .then(function (r) {
-        var miss = r.missing || [];
-        st.msg = 'Sent to ' + r.sent + ' phone' + (r.sent === 1 ? '' : 's') + ' ✓' +
-          (miss.length ? '. Alerts are off for ' + miss.join(', ') + ' (they can read it on the News tab).' : '');
+        var miss = (r.missing || []).filter(function (n, i, a) { return a.indexOf(n) === i; });
+        var to = r.to || [], got = Math.max(0, to.length - miss.length);
+        st.msg = !got ? 'Nobody you picked has alerts on, so no push went out. It\'s on the News tab for them.'
+          : 'Sent ✓ ' + (got === to.length ? (got === 1 ? to[0] + ' got it.' : (got === 2 ? 'Both players got it.' : 'All ' + got + ' players got it.')) : got + ' of ' + to.length + ' players got it.') +
+            (miss.length ? ' Alerts are off for ' + miss.join(', ') + ', so they\'ll only see it on the News tab.' : '');
         st.err = false; st.body = ''; st.title = ''; st.confirm = false;
       }, function (er) {
         st.msg = (er && er.message) || 'Couldn\'t send. Try again.'; st.err = true; st.confirm = false;
