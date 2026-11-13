@@ -140,8 +140,7 @@ function finalAlert_(ss, force, checkOnly, withTeams) {
 
 /** Team game summary from the board feed (getBoardData: teamGame + teams). */
 function faTeams_() {
-  boardBust_();   // the last score may have just landed: build from fresh data
-  var d = getBoardData();
+  var d = getBoardData(true);   // always a fresh build, so the final hole is included
   var g = d.teamGame || {}, teams = (d.teams || []).filter(function (t) { return t.players; });
   if (!teams.length || !g.game) return null;
   var lowWins = String(g.scoring) === 'Net' || /vegas/i.test(String(g.game));
