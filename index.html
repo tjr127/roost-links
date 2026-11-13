@@ -248,7 +248,7 @@
   <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button></nav>
   <section id="tonight">
     <div id="teestrip" class="teestrip hide"></div>
-    <div id="matchwrap"><h2>Head-to-Head Match Leaderboard</h2><div id="matches"></div></div>
+    <div id="matchwrap"><div class="fhead"><h2>Head-to-Head Matches</h2><div class="seg" role="group" aria-label="Match view"><button type="button" data-h2h="basic">Basic</button><button type="button" data-h2h="detailed">Detailed</button></div></div><div id="matches"></div></div>
   </section>
   <section id="field" class="hide">
     <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="fieldcard"></div>
@@ -367,6 +367,14 @@
     if (on) document.getElementById('curtab').textContent = on.textContent;
     setMenu(false);
   }
+  // Head2Head view: Basic (names, Thru and scores only, so every match fits on one screen) or Detailed. Per phone; starts Detailed.
+  function setH2hView(v) {
+    v = v === 'basic' ? 'basic' : 'detailed'; store('h2hView', v);
+    document.getElementById('matches').classList.toggle('h2h-basic', v === 'basic');
+    document.querySelectorAll('[data-h2h]').forEach(function (b) { var on = b.getAttribute('data-h2h') === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  }
+  document.querySelectorAll('[data-h2h]').forEach(function (b) { b.addEventListener('click', function () { setH2hView(b.getAttribute('data-h2h')); }); });
+  setH2hView(store('h2hView'));
   // Admin tab only for admins; Enter score pill only for players allowed to enter their own scores.
   window.updateNav = function () {
     document.getElementById('adminbtn').classList.toggle('hide', !isAdmin());
