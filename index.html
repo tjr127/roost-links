@@ -960,10 +960,9 @@ function tdRank(list, lowWins) {
   });
   return out;
 }
-// Teams are called by their members (Nov 13): "Ty/Clint". Players-tab short names are used when set.
+// Teams are called by their members' names (Nov 13): "Ty/Clint". (Players-tab short names are initials, used only in table headers.)
 function tLabel(t) {
-  var sn = (data && data.shortNames) || {};
-  var ps = (t.players || []).map(function (p) { return sn[p.name] || p.name; });
+  var ps = (t.players || []).map(function (p) { return p.name; });
   return ps.length ? ps.join('/') : t.name;
 }
 function teamView() { return store('teamView') === 'basic' ? 'basic' : 'detailed'; }

@@ -147,8 +147,8 @@ function faTeams_() {
   var ok = teams.filter(function (t) { return t.score !== '' && t.score !== null && !isNaN(Number(t.score)); });
   var out = teams.filter(function (t) { return ok.indexOf(t) < 0; });
   ok.sort(function (a, b) { return lowWins ? a.score - b.score : b.score - a.score; });
-  var sn = d.shortNames || {};   // teams are called by their members (Nov 13): Ty/Clint
-  var who = function (t) { return String(t.players).split(/\s*,\s*/).map(function (n) { return sn[n] || n; }).join('/'); };
+  // teams are called by their members' names (Nov 13): Ty/Clint
+  var who = function (t) { return String(t.players).split(/\s*,\s*/).join('/'); };
   var lines = [];
   ok.forEach(function (t, i) { lines.push((i + 1) + '. ' + who(t) + ': ' + Number(t.score)); });
   out.forEach(function (t) { lines.push(who(t) + ': no score (not enough players)'); });
