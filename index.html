@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=41">
-<link rel="stylesheet" href="theme.css?v=41">
+<link rel="stylesheet" href="app.css?v=42">
+<link rel="stylesheet" href="theme.css?v=42">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=41"></script>
-<script src="rules.js?v=41"></script>
+<script src="app.js?v=42"></script>
+<script src="rules.js?v=42"></script>
 </head>
 <body>
 <header>
@@ -247,13 +247,13 @@
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
   <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Stats</span></button>
   <button type="button" data-tab="news" data-group="newsres newsann"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg><span>News</span></button>
-  <button type="button" data-tab="admin" data-group="adminenter adminsched" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
+  <button type="button" data-tab="admin" data-group="adminenter adminsched adminmsg" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
 </nav>
 <main>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Stats</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button></nav>
-  <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button></nav>
+  <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button></nav>
   <section id="tonight">
     <div id="teestrip" class="teestrip hide"></div>
     <div id="matchwrap"><div class="fhead"><h2>Head-to-Head Matches</h2><div class="seg" role="group" aria-label="Match view"><button type="button" data-h2h="basic">Basic</button><button type="button" data-h2h="detailed">Detailed</button></div></div><div id="matches"></div></div>
@@ -306,6 +306,7 @@
   <section id="newsres" class="hide"><div id="newsresbody"></div></section>
   <section id="newsann" class="hide"><div id="newsannbody"></div></section>
   <section id="adminsched" class="hide"><div id="adminteecard"></div></section>
+  <section id="adminmsg" class="hide"><div id="msgbody"></div></section>
   <section id="hcp" class="hide">
     <h2>Player handicaps</h2>
     <div class="card picker"><label for="hcpwho">Player</label><select id="hcpwho"></select></div>
@@ -380,6 +381,7 @@
       if (window.ADMIN_ENTER !== wasAdminEnter && typeof renderEntry === 'function') { entry.who = ''; renderEntry(); }
       if (window.ADMIN_ENTER) renderEntrySw();
       if (window.TEE_ADMIN !== wasTeeAdmin && window.renderTee) renderTee();
+      if (tab === 'adminmsg' && window.renderMsg) renderMsg(true);
     }
     var on = document.querySelector('nav.subnav button[data-tab="' + tab + '"]') || document.querySelector('nav.tabbar button[data-tab="' + tab + '"]');
     if (on) document.getElementById('curtab').textContent = on.textContent;
@@ -1264,6 +1266,7 @@ function renderField() {
       : '<div class="empty">No season stats yet. They build up as GSPro sends holes.</div>';
 
     renderNews(d);
+    if (curTab === 'adminmsg' && window.renderMsg) renderMsg();
     renderTeams(d);
     if (window.ADMIN_ENTER) renderEntrySw();
 
@@ -1339,9 +1342,10 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=41"></script>
-<script src="settings.js?v=41"></script>
-<script src="flip.js?v=41"></script>
-<script src="match.js?v=41"></script>
+<script src="tee.js?v=42"></script>
+<script src="settings.js?v=42"></script>
+<script src="flip.js?v=42"></script>
+<script src="match.js?v=42"></script>
+<script src="msg.js?v=42"></script>
 </body>
 </html>

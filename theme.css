@@ -431,3 +431,18 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .putb b { font: 700 20px var(--num, 'Space Grotesk'), sans-serif; color: var(--ink); }
 .putb-s { font-size: 13px; color: var(--muted); }
 .putw { display: inline-block; min-width: 28px; padding: 2px 8px; border-radius: 999px; background: var(--amber); color: var(--amber-ink, #101412); font-weight: 700; }
+
+/* Admin > Message (Nov 13) */
+.msg-k { display: block; font-family: var(--num); font-size: 13px; color: var(--muted); margin: 14px 0 6px; }
+.msg-k span { font-family: inherit; font-size: 11.5px; opacity: .75; margin-left: 4px; }
+.msg-in { box-sizing: border-box; width: 100%; background: var(--card2); color: var(--ink); border: 1px solid var(--line2); border-radius: 12px; padding: 10px 12px; font: 16px/1.4 Inter, sans-serif; resize: vertical; }
+.msg-in:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: transparent; }
+.msg-count { text-align: right; font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+.msg-quick { display: flex; gap: 14px; margin: 4px 0 2px; }
+.msg-quick button { all: unset; cursor: pointer; color: var(--amber); font-size: 13px; padding: 4px 0; }
+.msg .en-save { width: 100%; margin-top: 14px; border: 0; font-size: 16px; cursor: pointer; }
+.msg .en-save:disabled { opacity: .45; cursor: default; }
+.msg-confirm { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--card2); font-size: 15px; }
+.msg-btns { display: flex; gap: 8px; }
+.msg-btns .en-save { flex: 2; margin-top: 10px; }
+.msg-cancel { all: unset; box-sizing: border-box; flex: 1; text-align: center; min-height: 54px; margin-top: 10px; border-radius: 16px; box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; }
