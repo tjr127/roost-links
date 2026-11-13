@@ -10,8 +10,27 @@
 (function () {
   var LABEL = { Early: 'Early', Late: 'Late', Either: 'Either', Out: 'Can\'t play' };
   var ORDER = ['Early', 'Late', 'Either', 'Out'];
-  var pend = {};        // name -> choice saved optimistically
-  var tpend = {};       // name -> tees saved optimistically
+  // Optimistic picks: name -> { v, id, state: 'saving' | 'saved', at }.
+  // Nov 13 fix: a pick stays here until a board refresh shows the same value (or 2 minutes pass). Before, it was
+  // dropped as soon as the save returned, and a refresh carrying an older board (the server's shared cache can hand
+  // out the copy from before the save) flipped the button back while the note still said "Saved".
+  var pend = {};        // name -> time pick
+  var tpend = {};       // name -> tees pick
+  var seq = 0;
+  var chain = {};       // one save at a time per player and kind, so two quick taps reach the sheet in order
+  var PEND_MS = 120000;
+  // Only a board that arrived after the save returned (a different teeTimes object) can confirm it.
+  function pendVal(map, n, server, tt) {
+    var q = map[n];
+    if (!q) return undefined;
+    if (q.state === 'saved' && ((tt !== q.ref && server === q.v) || Date.now() - q.at > PEND_MS)) { delete map[n]; return undefined; }
+    return q.v;
+  }
+  function queue(key, fn) {
+    var run = (chain[key] || Promise.resolve()).then(fn, fn);
+    chain[key] = run.then(function () {}, function () {});
+    return run;
+  }
   var forName = '';     // admin: whose pick the buttons set
   var edit = null;      // admin: { night, early: [], late: [] } once Ty moves someone
   var note = { text: '', err: false };
@@ -19,9 +38,10 @@
   function t() { return window.data && window.data.teeTimes; }
   function e(s) { return esc(s); }
   function choiceOf(tt, n) {
-    if (Object.prototype.hasOwnProperty.call(pend, n)) return pend[n];
     var p = tt.players.filter(function (x) { return x.name === n; })[0];
-    return p ? p.choice : '';
+    var server = p ? p.choice : '';
+    var v = pendVal(pend, n, server, tt);
+    return v !== undefined ? v : server;
   }
   // Players with a match that night (regular, one-way, or a makeup moved to that night). Everyone else has a bye.
   // Nights with no matches on the Matches tab (tiebreaker, playoffs) treat every member as scheduled.
@@ -55,9 +75,10 @@
   }
   // League-night tees (data.teeTimes.tees): the player's pick, else their Players-tab tees.
   function teesOf(tt, n) {
-    if (Object.prototype.hasOwnProperty.call(tpend, n)) return tpend[n];
     var T = tt.tees, p = T && T.players && T.players[n];
-    return p ? (p.pick || p.def || '') : '';
+    var server = p ? (p.pick || p.def || '') : '';
+    var v = pendVal(tpend, n, server, tt);
+    return v !== undefined ? v : server;
   }
   function teeTag(tt, n) { var x = teesOf(tt, n); return x ? ' <i class="tt-tee">' + e(x) + '</i>' : ''; }
   function teeRow(tt, who, can) {
@@ -196,15 +217,18 @@
       var a = RL.user();
       var sel = document.getElementById('ttfor');
       var who = a && a.admin && sel ? sel.value : a && a.name;
-      var c = b.getAttribute('data-tee');
-      pend[who] = c;
+      var c = b.getAttribute('data-tee'), id = ++seq;
+      pend[who] = { v: c, id: id, state: 'saving', at: Date.now() };
       setNote('Saving ' + who + ': ' + LABEL[c] + '…');
-      post({ action: 'tee', name: who, choice: c }).then(function () {
-        tt.players.forEach(function (p) { if (p.name === who) p.choice = c; });
-        delete pend[who];
+      queue('t|' + who, function () { return post({ action: 'tee', name: who, choice: c }); }).then(function () {
+        var q = pend[who];
+        if (!q || q.id !== id) return; // a newer tap for this player replaced it
+        q.state = 'saved'; q.at = Date.now(); q.ref = t();
         setNote('Saved ' + who + ': ' + LABEL[c] + ' ✓');
         load();
       }, function (er) {
+        var q = pend[who];
+        if (!q || q.id !== id) return;
         delete pend[who];
         setNote(er.message || 'Couldn\'t save. Try again.', true);
         if (er.code === 'locked') load();
@@ -215,16 +239,18 @@
     if (tb) {
       var au = RL.user(), sl = document.getElementById('ttfor');
       var w = au && au.admin && sl ? sl.value : au && au.name;
-      var tv = tb.getAttribute('data-ttee');
-      tpend[w] = tv;
+      var tv = tb.getAttribute('data-ttee'), tid = ++seq;
+      tpend[w] = { v: tv, id: tid, state: 'saving', at: Date.now() };
       setNote('Saving ' + w + ': ' + tv + ' tees…');
-      post({ action: 'tee', name: w, tees: tv }).then(function () {
-        var P = tt.tees && tt.tees.players && tt.tees.players[w];
-        if (P) P.pick = tv;
-        delete tpend[w];
+      queue('s|' + w, function () { return post({ action: 'tee', name: w, tees: tv }); }).then(function () {
+        var q = tpend[w];
+        if (!q || q.id !== tid) return;
+        q.state = 'saved'; q.at = Date.now(); q.ref = t();
         setNote('Saved ' + w + ': ' + tv + ' tees ✓');
         load();
       }, function (er) {
+        var q = tpend[w];
+        if (!q || q.id !== tid) return;
         delete tpend[w];
         setNote(er.message || 'Couldn\'t save. Try again.', true);
         if (er.code === 'locked') load();

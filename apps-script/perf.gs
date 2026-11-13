@@ -26,6 +26,7 @@ function getBoardData(fresh) {
     }
   }
   cache.put(BOARD_BUILD_KEY_, '1', 30);
+  var gen = boardGen_(cache);
   try {
     var d = buildBoardData_();
     d.live = boardLive_();
@@ -33,13 +34,18 @@ function getBoardData(fresh) {
     try { d.entry = entryInfo_(); } catch (x) { console.error(x); }
     try {
       var s = JSON.stringify(d);
-      if (s.length < 98000) { cache.put(BOARD_KEY_, s, BOARD_TTL_); cache.put(BOARD_STALE_KEY_, s, 600); }
+      // Nov 13: if a save cleared the board while this build ran, this copy may predate the save: return it, don't cache it.
+      if (s.length < 98000 && boardGen_(cache) === gen) { cache.put(BOARD_KEY_, s, BOARD_TTL_); cache.put(BOARD_STALE_KEY_, s, 600); }
     } catch (e) {}
     return d;
   } finally { cache.remove(BOARD_BUILD_KEY_); }
 }
 
-function boardBust_() { try { CacheService.getScriptCache().remove(BOARD_KEY_); } catch (e) {} }
+// board|gen changes on every bust, so a build that started before a save knows not to cache its (older) result.
+function boardGen_(cache) { return cache.get('board|gen') || '0'; }
+function boardBust_() {
+  try { var c = CacheService.getScriptCache(); c.put('board|gen', String(Date.now()) + Math.random(), 21600); c.remove(BOARD_KEY_); } catch (e) {}
+}
 
 function boardHash_(o) {
   var b = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify(o === undefined ? null : o), Utilities.Charset.UTF_8);

@@ -1240,11 +1240,12 @@ function renderField() {
     renderEntry();
   }
 
-  var lastLoad = 0;
+  var lastLoad = 0, loadSeq = 0, shownSeq = 0;
   function load() {
-    var fetchedAt = Date.now();
+    var fetchedAt = Date.now(), my = ++loadSeq;
     lastLoad = fetchedAt;
-    google.script.run.withSuccessHandler(function (d) { applyPending(d, fetchedAt); render(d); }).withFailureHandler(function () {
+    // Nov 13: ignore a reply that comes back after a newer one (an older board would undo what's on screen).
+    google.script.run.withSuccessHandler(function (d) { if (my < shownSeq) return; shownSeq = my; applyPending(d, fetchedAt); render(d); }).withFailureHandler(function () {
       document.getElementById('updated').textContent = 'just now (could not refresh)';
     }).getBoardData();
   }
