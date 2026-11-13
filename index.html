@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=43">
-<link rel="stylesheet" href="theme.css?v=43">
+<link rel="stylesheet" href="app.css?v=44">
+<link rel="stylesheet" href="theme.css?v=44">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=43"></script>
-<script src="rules.js?v=43"></script>
+<script src="app.js?v=44"></script>
+<script src="rules.js?v=44"></script>
 </head>
 <body>
 <header>
@@ -273,7 +273,8 @@
   </section>
   <section id="cards" class="hide">
     <h2>ScoreCards</h2>
-    <div class="card picker"><label for="cardwho">Player</label><select id="cardwho"></select></div>
+    <div class="card picker"><label for="cardnight">Round</label><select id="cardnight"></select>
+      <label for="cardwho" style="margin-top:12px">Player</label><select id="cardwho"></select></div>
     <div id="cardbody"></div>
   </section>
   <section id="enter" class="hide">
@@ -512,8 +513,57 @@
       '</table></div>';
   }
 
+  // Scorecards can show tonight or any earlier posted night (Nov 13). Past nights come from the Round Log
+  // through ?api=rounds (list) and ?api=rounds&night=yyyy-MM-dd (cards in the same shape as data.cards).
+  var cardNight = '';   // '' = tonight; otherwise yyyy-MM-dd
+  var past = { nights: null, at: 0, cards: {}, busy: {} };
+  function pastLoad() {
+    if (past.busy.list || (past.nights && Date.now() - past.at < 300000) || !window.RL || !RL.get) return;
+    past.busy.list = true;
+    RL.get('rounds').then(function (j) { past.nights = j.nights || []; }, function () { past.nights = past.nights || []; })
+      .then(function () { past.busy.list = false; past.at = Date.now(); renderCard(); });
+  }
+  function pastCards(night) {
+    var c = past.cards[night];
+    if (c && Date.now() - c.at < 300000) return c.cards;
+    if (!past.busy[night]) {
+      past.busy[night] = true;
+      RL.get('rounds', '&night=' + encodeURIComponent(night)).then(function (j) {
+        past.cards[night] = { cards: j.cards || [], at: Date.now() };
+      }, function () { past.cards[night] = { cards: c ? c.cards : [], at: Date.now(), err: true }; })
+        .then(function () { past.busy[night] = false; renderCard(); });
+    }
+    return c ? c.cards : null;
+  }
+  document.getElementById('cardnight').addEventListener('change', function () { cardNight = this.value; renderCard(); });
+
   function renderCard() {
-    var list = (data && data.cards) || [];
+    pastLoad();
+    var tonight = (data && data.cards) || [];
+    var title = (data && data.title) || '';
+    var nights = (past.nights || []).filter(function (x) {
+      // after posting, tonight's round is also in the Round Log: list it once, as Tonight
+      return !(tonight.length && title.indexOf(x.label.split(' · ')[0]) >= 0);
+    });
+    var nsel = document.getElementById('cardnight');
+    var useNight = cardNight;
+    if (useNight && !nights.some(function (x) { return x.night === useNight; })) useNight = past.nights ? '' : useNight;
+    if (!useNight && !tonight.length && nights.length) useNight = nights[0].night;   // tonight cleared: show the last night
+    var opts = (tonight.length || !nights.length ? [{ v: '', t: 'Tonight' + (title ? ' · ' + title : '') }] : [])
+      .concat(nights.map(function (x) { return { v: x.night, t: x.label }; }));
+    var okey = opts.map(function (o) { return o.v + o.t; }).join('|');
+    if (nsel.dataset.opts !== okey) {
+      nsel.innerHTML = opts.map(function (o) { return '<option value="' + esc(o.v) + '">' + esc(o.t) + '</option>'; }).join('');
+      nsel.dataset.opts = okey;
+    }
+    nsel.value = useNight;
+
+    var body = document.getElementById('cardbody');
+    var list = tonight;
+    if (useNight) {
+      list = pastCards(useNight);
+      if (!list) { body.innerHTML = '<div class="card empty">Loading that round…</div>'; return; }
+    }
     var sel = document.getElementById('cardwho');
     var want = me();
     var names = list.map(function (p) { return p.name; });
@@ -524,24 +574,29 @@
     sel.value = names.indexOf(want) >= 0 ? want : '';
 
     var p = list.filter(function (x) { return x.name === sel.value; })[0];
-    var body = document.getElementById('cardbody');
-    if (!p) { body.innerHTML = '<div class="card empty">' + (names.length ? 'Pick a name to see their scorecard' : 'No players on tonight\'s card yet') + '</div>'; return; }
+    if (!p) {
+      body.innerHTML = '<div class="card empty">' + (names.length ? 'Pick a name to see their scorecard' :
+        useNight ? 'No scorecards for that night' : 'No players on tonight\'s card yet') + '</div>';
+      return;
+    }
 
     var front = p.holes.filter(function (h) { return h.hole <= 9; });
     var back = p.holes.filter(function (h) { return h.hole >= 10; });
     var played = p.holes.filter(function (h) { return h.g !== ''; }).length;
     var done = p.holes.filter(function (h) { return h.g !== ''; });
     var status = played >= p.holes.length && played > 0 ? 'F' : (done.length ? String(done[done.length - 1].hole) : '–');
+    var putts = sum(p.holes, 'pt');
+    if (putts === '' && p.puttsTotal !== undefined) putts = p.puttsTotal;
+    var ty = useNight ? p.tee : teeOf(p.tees), yv = ty && ty.holes ? ty.holes : null;
 
     var html = '<div class="card sc-sum">' +
       '<div><div class="v">' + esc(sum(p.holes, 'g')) + '</div><div class="k">Gross</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'n')) + '</div><div class="k">Net</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'p')) + '</div><div class="k">Stableford</div></div>' +
-      '<div><div class="v">' + esc(sum(p.holes, 'pt')) + '</div><div class="k">Putts</div></div>' +
+      '<div><div class="v">' + esc(putts) + '</div><div class="k">Putts</div></div>' +
       '<div><div class="v">' + status + '</div><div class="k">Thru</div></div></div>' +
-      '<div class="sc-meta">' + (p.tees ? esc(p.tees) + ' tees' + (function (t) { return t ? (t.color ? ' (' + esc(t.color) + ')' : '') + (t.yards ? ' · ' + yds(t.yards) + ' yds' : '') : ''; })(teeOf(p.tees)) : '') + (p.hcp !== '' ? ' · Course handicap ' + esc(p.hcp) : '') + (sum(p.holes, 'pen') ? ' · Penalties ' + esc(sum(p.holes, 'pen')) : '') + (sum(p.holes, 'm') ? ' · Mulligans ' + esc(sum(p.holes, 'm')) : '') + '</div>';
+      '<div class="sc-meta">' + (p.tees ? esc(p.tees) + ' tees' + (ty ? (ty.color ? ' (' + esc(ty.color) + ')' : '') + (ty.yards ? ' · ' + yds(ty.yards) + ' yds' : '') : '') : '') + (p.hcp !== '' ? ' · Course handicap ' + esc(p.hcp) : '') + (sum(p.holes, 'pen') ? ' · Penalties ' + esc(sum(p.holes, 'pen')) : '') + (sum(p.holes, 'm') ? ' · Mulligans ' + esc(sum(p.holes, 'm')) : '') + '</div>';
 
-    var ty = teeOf(p.tees), yv = ty && ty.holes ? ty.holes : null;
     if (front.length && back.length) {
       html += cardTable('Front 9', front, [{ label: 'Out', holes: front }], yv) +
               cardTable('Back 9', back, [{ label: 'In', holes: back }, { label: 'Tot', holes: p.holes }], yv);
@@ -1342,10 +1397,10 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=43"></script>
-<script src="settings.js?v=43"></script>
-<script src="flip.js?v=43"></script>
-<script src="match.js?v=43"></script>
-<script src="msg.js?v=43"></script>
+<script src="tee.js?v=44"></script>
+<script src="settings.js?v=44"></script>
+<script src="flip.js?v=44"></script>
+<script src="match.js?v=44"></script>
+<script src="msg.js?v=44"></script>
 </body>
 </html>

@@ -68,6 +68,7 @@
   window.RL = {
     user: getAuth,
     post: apiPost,
+    get: apiGet,
     canEdit: function (name) { var a = getAuth(); return !!a && (a.admin || a.name === name); },
     // Enter Score follows your own name; admins can pick anyone.
     entryName: function (picked) { var a = getAuth(); return !a ? '' : a.admin ? picked : a.name; },
