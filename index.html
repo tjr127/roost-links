@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=40">
-<link rel="stylesheet" href="theme.css?v=40">
+<link rel="stylesheet" href="app.css?v=41">
+<link rel="stylesheet" href="theme.css?v=41">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=40"></script>
-<script src="rules.js?v=40"></script>
+<script src="app.js?v=41"></script>
+<script src="rules.js?v=41"></script>
 </head>
 <body>
 <header>
@@ -259,6 +259,7 @@
     <div id="matchwrap"><div class="fhead"><h2>Head-to-Head Matches</h2><div class="seg" role="group" aria-label="Match view"><button type="button" data-h2h="basic">Basic</button><button type="button" data-h2h="detailed">Detailed</button></div></div><div id="matches"></div></div>
   </section>
   <section id="field" class="hide">
+    <div id="puttbanner"></div>
     <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="fieldcard"></div>
   </section>
   <section id="teams" class="hide"><div class="fhead"><h2>Team game</h2><div class="seg" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div></div><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
@@ -1176,12 +1177,26 @@ function renderField() {
       return d || a.i - b.i;
     });
     function th(key, label) { return '<th class="n' + (by === key ? ' sorted' : '') + '">' + label + '</th>'; }
+    // Putting challenge (Nov 13): Low or High putts, alternating each league night. Banner on top; on the challenge
+    // night, the finished player(s) with the lowest (or highest) putts get their putts highlighted.
+    var pc = data && data.putts, pb = document.getElementById('puttbanner'), win = {};
+    if (pb) pb.innerHTML = pc ? '<div class="card putb"><span class="putb-k">Putting challenge</span><b>' + (pc.tonight ? 'This week: ' : esc(pc.night) + ': ') +
+      (pc.mode === 'High' ? 'HIGH' : 'LOW') + ' putts</b><span class="putb-s">' + (pc.mode === 'High' ? 'Most putts' : 'Fewest putts') + ' wins' +
+      (pc.tonight ? ' (finished rounds only)' : '') + '</span></div>' : '';
+    if (pc && pc.tonight) {
+      var holesN = Math.max.apply(null, [0].concat(((data && data.cards) || []).map(function (c) { return (c.holes || []).length; })));
+      var done = list.filter(function (x) { return holesN && num(x.thru) !== null && num(x.thru) >= holesN && num(x.putts) !== null; });
+      if (done.length) {
+        var best = done.reduce(function (m, x) { var v = num(x.putts); return m === null ? v : pc.mode === 'High' ? Math.max(m, v) : Math.min(m, v); }, null);
+        done.forEach(function (x) { if (num(x.putts) === best) win[x.player] = true; });
+      }
+    }
     document.getElementById('fieldcard').innerHTML = list.length ?
       '<table><tr><th>Player</th><th class="n">Thru</th>' + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r) {
         var x = r.x;
         return '<tr><td>' + esc(x.player) + '</td><td class="n">' + esc(x.thru) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + esc(x.net) +
-          '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + esc(x.pts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + esc(x.putts) + '</td></tr>';
+          '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + esc(x.pts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + (win[x.player] ? '<span class="putw" title="Putting challenge leader">' + esc(x.putts) + '</span>' : esc(x.putts)) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores yet</div>';
   }
   (function () {
@@ -1324,9 +1339,9 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=40"></script>
-<script src="settings.js?v=40"></script>
-<script src="flip.js?v=40"></script>
-<script src="match.js?v=40"></script>
+<script src="tee.js?v=41"></script>
+<script src="settings.js?v=41"></script>
+<script src="flip.js?v=41"></script>
+<script src="match.js?v=41"></script>
 </body>
 </html>

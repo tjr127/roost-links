@@ -34,6 +34,7 @@ function getBoardData(fresh) {
     try { d.entry = entryInfo_(); } catch (x) { console.error(x); }
     try { d.seasonStats = seasonStats_(); } catch (x) { console.error(x); }  // Nov 13: Stats > Season stats
     try { d.news = newsFeed_(); } catch (x) { console.error(x); }  // Nov 13: News tab
+    try { d.putts = puttsChallenge_(); } catch (x) { console.error(x); }  // Nov 13: weekly Low/High putts challenge
     try {
       var s = JSON.stringify(d);
       // Nov 13: if a save cleared the board while this build ran, this copy may predate the save: return it, don't cache it.
