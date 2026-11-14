@@ -32,8 +32,8 @@
     if (!a.sgH) return null;
     var keys = k === 'sgt' ? ['ott', 'app', 'arg', 'putt'] : [k];
     var raw = keys.reduce(function (t, c) { return t + a[c]; }, 0) / a.sgH * 18;
-    if (S.base !== 'hcp') return raw;
-    var idx = hcpIndex(a.p); if (idx === null) return null;
+    if (S.base === 'tour') return raw;
+    var idx = S.base === 'scratch' ? 0 : hcpIndex(a.p); if (idx === null) return null;   // scratch = the 0-handicap benchmark
     return raw - keys.reduce(function (t, c) { return t + benchAt(c, idx); }, 0);
   }
   // Metric definitions. v(a) -> number or null from an aggregate; better: 1 = higher is better, -1 = lower is better.
@@ -112,14 +112,16 @@
     return '<svg class="sx-spark" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" aria-hidden="true"><polyline points="' + xy.map(function (p) { return p.join(','); }).join(' ') + '"/><circle cx="' + l[0] + '" cy="' + l[1] + '" r="2"/></svg>';
   }
 
-  var S = { base: st('sxBase') === 'hcp' ? 'hcp' : 'tour', view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: '' };
+  var S = { base: ['hcp', 'scratch'].indexOf(st('sxBase')) >= 0 ? st('sxBase') : 'tour', view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: '' };
   try { S.sort = JSON.parse(st('sxSort') || '{}') || {}; } catch (x) { S.sort = {}; }
 
   function baseSel() {
-    return '<label class="sx-sel"><select id="sxbase" aria-label="Strokes gained compared with"><option value="tour"' + (S.base !== 'hcp' ? ' selected' : '') + '>vs PGA Tour</option>' +
+    return '<label class="sx-sel"><select id="sxbase" aria-label="Strokes gained compared with"><option value="tour"' + (S.base === 'tour' ? ' selected' : '') + '>vs PGA Tour</option>' +
+      '<option value="scratch"' + (S.base === 'scratch' ? ' selected' : '') + '>vs scratch golfer</option>' +
       '<option value="hcp"' + (S.base === 'hcp' ? ' selected' : '') + '>vs my handicap</option></select></label>';
   }
   var BASE_KEY = { tour: 'Against the average PGA Tour player (ShotLink baseline; 0 = Tour average, negative = strokes lost to a Tour pro).',
+    scratch: 'Against a typical scratch (0 handicap) golfer (0 = scratch level; + = better than scratch). Scratch benchmark: golfity.com, based on Mark Broadie\'s research.',
     hcp: 'Against a typical golfer with the same handicap index (0 = playing to your handicap; + = better than golfers at your level). Benchmarks by handicap: golfity.com, based on Mark Broadie\'s research; Handicaps tab index.' };
   function renderAll(box) {
     var ln = lastNight(), tonightHas = D.statFeed && D.statFeed.tonight === ln;
@@ -154,7 +156,7 @@
           '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) : S.scope === 'night' ? a.holes + ' holes' : a.nights + ' rd' + (a.nights === 1 ? '' : 's')) + '</small></td>' +
           cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (x >= 0 ? ' sx-pos' : ' sx-neg') : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
       }).join('') + '</table>';
-    html += '<div class="paykey">' + cat.key + (hasSg ? ' <b>SG ' + (S.base === 'hcp' ? 'vs my handicap' : 'vs Tour') + ':</b> ' + BASE_KEY[S.base] : '') + ' Tap a column to sort.</div>';
+    html += '<div class="paykey">' + cat.key + (hasSg ? ' <b>SG ' + ({ tour: 'vs Tour', scratch: 'vs scratch golfer', hcp: 'vs my handicap' })[S.base] + ':</b> ' + BASE_KEY[S.base] : '') + ' Tap a column to sort.</div>';
     // Tonight's penalty / mulligan holes (Driving only)
     var ag = D.agentStats;
     if (cat.id === 'drive' && S.scope === 'night' && tonightHas && ag && ag.players) {
