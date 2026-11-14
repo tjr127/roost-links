@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=49">
-<link rel="stylesheet" href="theme.css?v=49">
+<link rel="stylesheet" href="app.css?v=50">
+<link rel="stylesheet" href="theme.css?v=50">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=49"></script>
-<script src="rules.js?v=49"></script>
+<script src="app.js?v=50"></script>
+<script src="rules.js?v=50"></script>
 </head>
 <body>
 <header>
@@ -322,7 +322,6 @@
   // Payouts (Ty, Nov 14). Regular season: by standings place; players tied on points share the combined pot of the places they cover.
   var SEASON_PAY = [180, 130, 80], PLAYOFF_PAY = [210, 150, 90];
   function money(v) { return '$' + (Math.round(v * 100) % 100 ? v.toFixed(2) : String(Math.round(v))); }
-  function ordinal(n) { var t = n % 100, u = n % 10; return n + (t >= 11 && t <= 13 ? 'th' : u === 1 ? 'st' : u === 2 ? 'nd' : u === 3 ? 'rd' : 'th'); }
   function seasonPay(rows) {
     var out = rows.map(function () { return 0; }), i = 0;
     out.tied = rows.map(function () { return 0; });
@@ -1350,11 +1349,18 @@ function renderField() {
       '<div class="grules' + (window.rulesOpen ? '' : ' hide') + '" id="grules">' + (window.gameRules ? gameRules(g.game, g.scoring, tdx.minPlayers, tdx.counted) : '') + '</div></div>' : '';
 
     var pay = seasonPay(d.standings);
+    // # column: players level on points share the place (1, 1, 3…); seed order and the top-4 shading stay as the sheet has them.
+    var rank = d.standings.map(function (x, i, a) {
+      var p = num(x.pts), r = i;
+      if (p === null) return x.seed;
+      while (r > 0 && num(a[r - 1].pts) === p) r--;
+      return r + 1;
+    });
     document.getElementById('table').innerHTML =
       '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +
       d.standings.map(function (x, i) {
-        return '<tr class="' + (num(x.seed) !== null && num(x.seed) <= 4 ? 'top' : '') + '"><td class="n">' + esc(x.seed) +
-          '</td><td>' + esc(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') + (pay.tied[i] ? '<div class="tiefor">Tied for ' + ordinal(pay.tied[i]) + '</div>' : '') + (x.note ? ' <span class="note">' + esc(x.note) + '</span>' : '') +
+        return '<tr class="' + (num(x.seed) !== null && num(x.seed) <= 4 ? 'top' : '') + '"><td class="n">' + esc(rank[i]) +
+          '</td><td>' + esc(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') + (x.note ? ' <span class="note">' + esc(x.note) + '</span>' : '') +
           '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
       }).join('') + '</table>' +
       '<div class="paykey">Green = regular-season payout if the season ended today (1st ' + money(SEASON_PAY[0]) + ', 2nd ' + money(SEASON_PAY[1]) +
@@ -1421,10 +1427,10 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=49"></script>
-<script src="settings.js?v=49"></script>
-<script src="flip.js?v=49"></script>
-<script src="match.js?v=49"></script>
-<script src="msg.js?v=49"></script>
+<script src="tee.js?v=50"></script>
+<script src="settings.js?v=50"></script>
+<script src="flip.js?v=50"></script>
+<script src="match.js?v=50"></script>
+<script src="msg.js?v=50"></script>
 </body>
 </html>
