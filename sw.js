@@ -4,7 +4,7 @@ importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
 // Roost Links service worker: always try the network first so players get updates
 // as soon as they open the app; fall back to the saved copy only when offline.
 // League data comes from Google and is never cached here.
-var CACHE = 'roost-links-v58';
+var CACHE = 'roost-links-v59';
 var SHELL = ['./', 'index.html', 'app.js', 'tee.js', 'settings.js', 'flip.js', 'match.js', 'msg.js', 'puttstand.js', 'stats.js', 'rules.js', 'app.css', 'theme.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
