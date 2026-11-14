@@ -2,7 +2,7 @@
  * Stats > Stats (redesign Nov 14, 2026). Two views:
  *   Everyone: one category at a time (Driving, Approach, Short game, Putting, Strokes gained), every player in a table
  *             sortable by any column; Tonight (or the last round) or Season.
- *   Me:       one player (the signed-in player by default): every stat with the season value, league rank, last round
+ *   Individual: one player (the signed-in player by default): every stat with the season value, league rank, last round
  *             and a trend line by round, plus strokes gained by category as bars.
  * Data: d.statFeed (apps-script/stats-feed.gs): one row per player per night from GSPro Log; columns in d.statFeed.cols.
  * Tonight's penalty / mulligan holes still come from d.agentStats.

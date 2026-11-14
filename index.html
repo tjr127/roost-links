@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=61">
-<link rel="stylesheet" href="theme.css?v=61">
+<link rel="stylesheet" href="app.css?v=62">
+<link rel="stylesheet" href="theme.css?v=62">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=61"></script>
-<script src="rules.js?v=61"></script>
+<script src="app.js?v=62"></script>
+<script src="rules.js?v=62"></script>
 </head>
 <body>
 <header>
@@ -302,7 +302,7 @@
   </section>
   <section id="entrysw" class="hide"><h2>Enter scores for anyone</h2><div id="eswbody"></div></section>
   <section id="stats" class="hide">
-    <div class="statsw" role="tablist" aria-label="Stats"><button type="button" role="tab" data-sxview="all">Everyone</button><button type="button" role="tab" data-sxview="me">Me</button></div>
+    <div class="statsw" role="tablist" aria-label="Stats"><button type="button" role="tab" data-sxview="all">Everyone</button><button type="button" role="tab" data-sxview="me">Individual</button></div>
     <div id="sxbody"></div>
   </section>
   <section id="newsres" class="hide"><div id="newsresbody"></div></section>
@@ -1307,7 +1307,7 @@ function renderField() {
 
     renderField();
 
-    // Stats > Stats (Nov 14 redesign): Everyone / Me, in stats.js.
+    // Stats > Stats (Nov 14 redesign): Everyone / Individual, in stats.js.
     if (window.renderStats) try { renderStats(d); } catch (x) { console.error(x); }
 
     renderNews(d);
@@ -1394,12 +1394,12 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=61"></script>
-<script src="settings.js?v=61"></script>
-<script src="flip.js?v=61"></script>
-<script src="match.js?v=61"></script>
-<script src="msg.js?v=61"></script>
-<script src="puttstand.js?v=61"></script>
-<script src="stats.js?v=61"></script>
+<script src="tee.js?v=62"></script>
+<script src="settings.js?v=62"></script>
+<script src="flip.js?v=62"></script>
+<script src="match.js?v=62"></script>
+<script src="msg.js?v=62"></script>
+<script src="puttstand.js?v=62"></script>
+<script src="stats.js?v=62"></script>
 </body>
 </html>
