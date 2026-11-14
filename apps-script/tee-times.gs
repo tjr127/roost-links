@@ -26,7 +26,7 @@ function teeSheet_(ss) {
 }
 
 /** The next league night on or after today (not an "Off" week), with its sign-up window. */
-function teeNight_(ss) {
+function teeNight0_(ss) {
   var tz = ss.getSpreadsheetTimeZone();
   var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
   var rows = ss.getSheetByName('Season').getRange('A2:E60').getValues();
@@ -84,7 +84,7 @@ function teeRows_(ss, nightKey) {
   return out;
 }
 
-function teeState_(night) {
+function teeState0_(night) {
   var now = new Date();
   var conf = apiProps_().getProperty('teeConf:' + night.key);
   if (conf) return 'confirmed';
@@ -134,14 +134,14 @@ function teeTimes_(ss) {
   var night = teeNight_(ss);
   if (!night) return null;
   var tz = ss.getSpreadsheetTimeZone();
-  var league = teeLeague_(ss);
+  var league = teePlayers_(ss);
   var rows = teeRows_(ss, night.key);
   var choices = {}, players = league.map(function (n) {
     var r = rows[n];
     if (r && r.choice) choices[n] = r.choice;
     return { name: n, choice: r ? r.choice : '', by: r ? r.by : '' };
   });
-  var pairs = teePairs_(ss, night.key).filter(function (p) { return league.indexOf(p[0]) >= 0 && league.indexOf(p[1]) >= 0; });
+  var pairs = (night.casual ? [] : teePairs_(ss, night.key)).filter(function (p) { return league.indexOf(p[0]) >= 0 && league.indexOf(p[1]) >= 0; });
   var state = teeState_(night);
   var conf = apiProps_().getProperty('teeConf:' + night.key);
   return {
@@ -165,7 +165,7 @@ function apiTee_(req) {
   var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
   var night = teeNight_(ss);
   if (!night) return { ok: false, error: 'No league night coming up.' };
-  if (teeLeague_(ss).indexOf(name) < 0) return { ok: false, error: name + ' is not a league member.' };
+  if (teePlayers_(ss).indexOf(name) < 0) return { ok: false, error: name + ' is not a league member.' };
   var state = teeState_(night);
   if (state === 'confirmed') return { ok: false, code: 'locked', error: 'Groups are set. Ask Ty if you need to change.' };
   if (!user.admin && state !== 'open') return { ok: false, code: 'locked', error: state === 'before' ? 'Sign-up opens ' + Utilities.formatDate(night.opens, ss.getSpreadsheetTimeZone(), "EEE 'at' h:mm a") + '.' : 'Sign-up is closed. Ask Ty if you need to change.' };
@@ -187,7 +187,7 @@ function apiTeeConfirm_(req) {
   var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
   var night = teeNight_(ss);
   if (!night || night.key !== String(req.night)) return { ok: false, error: 'That night is no longer the next league night. Refresh and try again.' };
-  var league = teeLeague_(ss);
+  var league = teePlayers_(ss);
   var early = (req.early || []).map(String).filter(function (n) { return league.indexOf(n) >= 0; });
   var late = (req.late || []).map(String).filter(function (n) { return league.indexOf(n) >= 0 && early.indexOf(n) < 0; });
   var lock = LockService.getScriptLock();

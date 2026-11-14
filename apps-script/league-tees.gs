@@ -13,7 +13,7 @@ var TEE_REMIND_HOUR_ = 8;   // Thursday 8:00 AM reminder
 
 function teeTimes_(ss) {
   var t = teeTimes0_(ss);
-  if (t) { try { t.tees = tpLeague_(ss); } catch (e) { console.error(e); } }
+  if (t) { t.casual = !!teeCasual_(ss); try { t.tees = tpLeague_(ss); } catch (e) { console.error(e); } }
   return t;
 }
 
@@ -39,7 +39,7 @@ function apiTeeTees_(req) {
   var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
   var night = teeNight_(ss);
   if (!night) return { ok: false, error: 'No league night coming up.' };
-  if (teeLeague_(ss).indexOf(name) < 0) return { ok: false, error: name + ' is not a league member.' };
+  if (teePlayers_(ss).indexOf(name) < 0) return { ok: false, error: name + ' is not a league member.' };
   var state = teeState_(night);
   if (state === 'confirmed') return { ok: false, code: 'locked', error: 'Groups and tees are set. Ask Ty if you need to change.' };
   if (!user.admin && state !== 'open') return { ok: false, code: 'locked', error: state === 'before' ? 'Sign-up opens ' + Utilities.formatDate(night.opens, ss.getSpreadsheetTimeZone(), "EEE 'at' h:mm a") + '.' : 'Sign-up is closed. Ask Ty if you need to change.' };
@@ -58,6 +58,7 @@ function teeTeesFor_(ss, nightKey) {
 
 /** Groups alert, now with each player's tees. */
 function notifyGroups_(ss, night, early, late) {
+  if ((night && night.casual) || teeCasual_(ss)) return;   // no alerts for casual rounds
   var tees = teeTeesFor_(ss, night.key);
   function list(g) { return g.length ? g.map(function (n) { return n + (tees[n] ? ' (' + tees[n] + ')' : ''); }).join(', ') : 'nobody'; }
   var msg = 'Early (' + TEE_TIMES_.Early.replace(':00', '') + '): ' + list(early) +
@@ -93,7 +94,7 @@ function teeConfirmAs_(ss, night, early, late, by) {
 /** 3 PM: if Ty hasn't confirmed, confirm his saved arrangement (or the suggestion). Once per night, so Reopen sticks. */
 function teeAutoClose_(ss) {
   var night = teeNight_(ss);
-  if (!night) return;
+  if (!night || night.casual) return;
   var now = new Date();
   if (now < night.closes || now - night.closes > 6 * 3600 * 1000) return;
   var props = apiProps_(), flag = 'ntf:autoclose:' + night.key;
@@ -115,7 +116,7 @@ function teeAutoClose_(ss) {
 /** Thursday 8 AM: nudge anyone with a match that night who hasn't picked a tee time. */
 function teeRemind_(ss) {
   var night = teeNight_(ss);
-  if (!night) return;
+  if (!night || night.casual) return;
   var now = new Date();
   var at = new Date(night.closes.getTime() - (TEE_CLOSE_.hour - TEE_REMIND_HOUR_) * 3600 * 1000);
   if (now < at || now >= night.closes || now - at > 2 * 3600 * 1000) return;

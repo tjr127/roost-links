@@ -138,6 +138,9 @@
     var tt = t();
     if (!tt) { el.innerHTML = window.TEE_ADMIN ? '<div class="card empty">No upcoming league night on the Season tab.</div>' : ''; return; }
     var a = RL.user(), admin = !!(a && a.admin) && !!window.TEE_ADMIN, me = a ? a.name : '';
+    // Nov 13 (Ty): players don't see the card until sign-up opens (Wed 8 AM). Ty's Admin > Schedule still shows it.
+    if (!admin && tt.state === 'before' && !tt.confirmed) { el.innerHTML = ''; return; }
+    var casual = !!tt.casual;   // casual round on Tonight: open now, locks at the first score, guests included
     var league = tt.players.map(function (p) { return p.name; });
     var sched = scheduled(tt);
     var conf = tt.confirmed;
@@ -147,7 +150,8 @@
 
     var status = conf ? 'Groups set by ' + e(conf.by) + (conf.at ? ' · ' + e(conf.at) : '')
       : tt.state === 'before' ? 'Sign-up opens ' + e(tt.opens)
-      : tt.state === 'open' ? 'Pick by ' + e(tt.closes)
+      : tt.state === 'open' ? (casual ? 'Open until the first group tees off' : 'Pick by ' + e(tt.closes))
+      : casual ? 'Closed · the first group has teed off'
       : 'Sign-up closed · groups being set';
 
     var who = admin ? (league.indexOf(forName) >= 0 ? forName : (league.indexOf(me) >= 0 ? me : league[0])) : me;
@@ -201,7 +205,7 @@
         (csplit.length ? '<div class="tt-warn">Head-to-head split: ' + csplit.map(function (p) { return e(p[0]) + ' & ' + e(p[1]); }).join(', ') + '</div>' : '') +
         addBlock(tt, cg, sched) +
         (cedit ? '<button type="button" class="en-save tt-confirm" id="ttconfirm">Save changes</button><button type="button" class="rl-link tt-small" id="ttcancel">Cancel changes</button>' +
-          '<div class="tt-gsub">Saving sends everyone the updated groups alert.</div>' : '') +
+          '<div class="tt-gsub">' + (casual ? 'Casual round: saving sends no alert.' : 'Saving sends everyone the updated groups alert.') + '</div>' : '') +
         '</div>';
       el.dataset.groups = JSON.stringify(cg);
       html += '<button type="button" class="rl-link tt-small" id="ttreopen">Reopen sign-up</button>';
@@ -220,7 +224,8 @@
           addBlock(tt, g, sched) +
           '<button type="button" class="en-save tt-confirm" id="ttconfirm">Confirm groups</button>' +
           (edit ? '<button type="button" class="rl-link tt-small" id="ttreset">Back to suggested</button>' : '') +
-          '<div class="tt-gsub">Confirming locks everyone\'s tee time and tees and sends the groups alert. If you don\'t, this is confirmed for you at ' + e(tt.closes.replace(/^.* at /, '')) + '.</div></div>';
+          '<div class="tt-gsub">' + (casual ? 'Confirming locks everyone\'s tee time and tees. Casual round: no alert, and nothing is confirmed for you.'
+            : 'Confirming locks everyone\'s tee time and tees and sends the groups alert. If you don\'t, this is confirmed for you at ' + e(tt.closes.replace(/^.* at /, '')) + '.') + '</div></div>';
         el.dataset.groups = JSON.stringify(g);
       } else {
         var dr = tt.draft ? normalize(tt, tt.draft) : null;
@@ -334,7 +339,7 @@
     if (ev.target.id === 'ttconfirm') {
       var gg = JSON.parse(cardEl().dataset.groups || '{}');
       var wt = function (l) { return l.map(function (n) { var x = teesOf(tt, n); return n + (x ? ' (' + x + ')' : ''); }).join(', '); };
-      if (!confirm('Confirm groups?\n\nEarly (' + gg.early.length + '): ' + wt(gg.early) + '\nLate (' + gg.late.length + '): ' + wt(gg.late) + '\n\nTee times and tees will be locked and everyone gets the alert.')) return;
+      if (!confirm('Confirm groups?\n\nEarly (' + gg.early.length + '): ' + wt(gg.early) + '\nLate (' + gg.late.length + '): ' + wt(gg.late) + '\n\nTee times and tees will be locked' + (tt.casual ? '.' : ' and everyone gets the alert.'))) return;
       setNote('Confirming groups…');
       post({ action: 'teeConfirm', night: tt.night, early: gg.early, late: gg.late }).then(function () {
         tt.confirmed = { early: gg.early, late: gg.late, by: RL.user().name, at: 'just now' };

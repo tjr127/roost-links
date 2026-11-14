@@ -49,7 +49,7 @@ function notifyOnce_(flag, heading, message, names) {
 /** Alert 1: tee-time sign-up is open. */
 function notifyOpen_(ss) {
   var night = teeNight_(ss);
-  if (!night) return;
+  if (!night || night.casual) return;
   var now = new Date();
   // Only in the first 2 hours after sign-up opens, so reopening sign-up later doesn't re-send it.
   if (now < night.opens || now >= night.closes || now - night.opens > 2 * 3600 * 1000) return;

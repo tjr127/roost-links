@@ -94,8 +94,8 @@ function teePick_(ss) {
 function tpLeague_(ss) {
   var n = teeNight_(ss);
   if (!n) return null;
-  var tz = ss.getSpreadsheetTimeZone(), nine = '';
-  ss.getSheetByName('Season').getRange('A2:E60').getValues().forEach(function (r) {
+  var tz = ss.getSpreadsheetTimeZone(), nine = n.casual ? n.nine : '';
+  if (!n.casual) ss.getSheetByName('Season').getRange('A2:E60').getValues().forEach(function (r) {
     if (r[1] instanceof Date && Utilities.formatDate(r[1], tz, 'yyyy-MM-dd') === n.key) nine = String(r[3] || '');
   });
   var top = ss.getSheetByName('Tonight').getRange('B2:B3').getDisplayValues();

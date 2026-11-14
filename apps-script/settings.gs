@@ -71,7 +71,7 @@ function setApplyOne_(ss, name, choice, ctx) {
 /** Next league night with sign-up open, its matchups and current picks; null when sign-up isn't open. */
 function setCtx_(ss) {
   var night = teeNight_(ss);
-  if (!night || teeState_(night) !== 'open') return null;
+  if (!night || night.casual || teeState_(night) !== 'open') return null;
   var pairs = teePairs_(ss, night.key), sched = {};
   pairs.forEach(function (x) { sched[x[0]] = true; sched[x[1]] = true; });
   return { night: night, pairs: pairs, sched: sched, rows: teeRows_(ss, night.key) };
