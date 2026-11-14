@@ -510,3 +510,9 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .ps-tag .pay { margin-left: 0 !important; font-size: 11px; }
 .ps-cap { font-size: 11px; color: var(--muted); }
 .ps-t .putw { min-width: 0; padding: 2px 6px; }
+/* Card padding for text blocks (Nov 14): .card has no padding in the app, so text cards and keys under tables get their own */
+#putteven, #puttrules { padding: 14px 16px 12px; }
+#putttable > .paykey, #table > .paykey { padding: 0 14px 12px; }
+.ps-rules { padding-left: 20px; }
+.ps-t th:first-child, .ps-t td:first-child { padding-left: 10px !important; }
+.ps-t th:last-child, .ps-t td:last-child { padding-right: 10px !important; }
