@@ -16,6 +16,8 @@
     return n.length <= 1 ? n.join('') : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1];
   }
   var open = {};
+  // Short names from the Players tab (column L) where set, so the table fits a phone (Ty, Nov 14).
+  function shortName(n) { var sn = ((last && last.shortNames) || {})[n]; return sn || n; }
   var last = null;
 
   function spark(rounds, lo, hi) {
@@ -92,7 +94,7 @@
       highL = act.length > 1 ? act.filter(function (p) { return same(p[key], mx) && lowL.indexOf(p) < 0; }) : [];
     }
     document.getElementById('puttleaders').innerHTML = '<div class="ps-leads">' + leaderCard('low', lowL, act, s, final) + leaderCard('high', highL, act, s, final) + '</div>' +
-      (!final && act.length ? '<div class="ps-note">Leaders are by average per round, since players have played different numbers of rounds' + (s.last ? ' (through ' + e(s.last) + ')' : '') + '.</div>' : '');
+      (!final && act.length ? '<div class="ps-note">Leaders are by average per round' + (act.some(function (p) { return p.n !== act[0].n; }) ? ', since players have played different numbers of rounds' : '') + (s.last ? ' (through ' + e(s.last) + ')' : '') + '.</div>' : '');
 
     // Table: total putts, low to high; players without a round at the bottom.
     var rows = act.slice().sort(function (a, b) { return a.total - b.total || a.avg - b.avg || (a.name < b.name ? -1 : 1); })
@@ -101,7 +103,8 @@
     act.forEach(function (p) { p.rounds.forEach(function (r) { all.push(r.p); }); });
     var lo = all.length ? Math.min.apply(null, all) : 0, hi = all.length ? Math.max.apply(null, all) : 0;
     document.getElementById('putttable').innerHTML =
-      '<table class="stand ps-t"><tr><th class="n">#</th><th>Player</th><th class="n">Rds</th><th class="n">Total</th><th class="n">Avg</th><th class="n">Pace</th></tr>' +
+      '<table class="stand ps-t"><colgroup><col class="c-r"><col><col class="c-n"><col class="c-n"><col class="c-a"><col class="c-p"></colgroup>' +
+      '<tr><th class="n">#</th><th>Player</th><th class="n">Rds</th><th class="n">Tot</th><th class="n">Avg</th><th class="n">Pace</th></tr>' +
       rows.map(function (p, i) {
         var r = i;
         if (p.n) { while (r > 0 && rows[r - 1].n && rows[r - 1].total === p.total) r--; }
@@ -111,8 +114,8 @@
         var paceHtml = p.n ? (isLow ? '<span class="putw">' + pace + '</span>' : isHigh ? '<span class="putw hi">' + pace + '</span>' : String(pace)) : '–';
         var tr = '<tr class="ps-row' + (p.n ? '' : ' none') + (open[p.name] ? ' open' : '') + '" data-ps="' + e(p.name) + '">' +
           '<td class="n">' + (p.n ? r + 1 : '') + '</td>' +
-          '<td><div class="ps-nm">' + e(p.name) + ' ' + tag + '</div>' + spark(p.rounds, lo, hi) + '</td>' +
-          '<td class="n">' + (p.cut ? (p.n - p.cut) + '<span class="ps-cut">of ' + p.n + '</span>' : p.n + '/' + s.cap) + '</td>' +
+          '<td class="ps-pl"><div class="ps-nm" title="' + e(p.name) + '">' + e(shortName(p.name)) + '</div>' + (tag ? '<div class="ps-tag">' + tag + '</div>' : '') + spark(p.rounds, lo, hi) + '</td>' +
+          '<td class="n">' + (p.cut ? (p.n - p.cut) + '<span class="ps-cut">of ' + p.n + '</span>' : p.n + '<span class="ps-cap">/' + s.cap + '</span>') + '</td>' +
           '<td class="n b">' + (p.n ? p.total : '–') + '</td>' +
           '<td class="n">' + (p.n ? f1(p.avg) : '–') + trend(p.rounds) + '</td>' +
           '<td class="n">' + paceHtml + '</td></tr>';

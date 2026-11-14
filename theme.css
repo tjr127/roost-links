@@ -500,3 +500,13 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .ps-rules { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
 .ps-rules li { margin-bottom: 6px; }
 .ps-cut { display: block; font-size: 10.5px; color: var(--muted); }
+/* Putt table fits a phone even with large system text (Nov 14) */
+.ps-t { table-layout: fixed; width: 100%; font-size: 15px; }
+.ps-t col.c-r { width: 9%; } .ps-t col.c-n { width: 13%; } .ps-t col.c-a { width: 15%; } .ps-t col.c-p { width: 16%; }
+.ps-t th { font-size: 11px !important; padding: 6px 2px !important; letter-spacing: .3px; }
+.ps-t td { padding: 8px 2px !important; }
+.ps-t td.ps-pl { overflow: hidden; }
+.ps-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-tag .pay { margin-left: 0 !important; font-size: 11px; }
+.ps-cap { font-size: 11px; color: var(--muted); }
+.ps-t .putw { min-width: 0; padding: 2px 6px; }
