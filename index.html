@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=46">
-<link rel="stylesheet" href="theme.css?v=46">
+<link rel="stylesheet" href="app.css?v=47">
+<link rel="stylesheet" href="theme.css?v=47">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=46"></script>
-<script src="rules.js?v=46"></script>
+<script src="app.js?v=47"></script>
+<script src="rules.js?v=47"></script>
 </head>
 <body>
 <header>
@@ -263,7 +263,7 @@
     <div class="fhead"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card" id="fieldcard"></div>
   </section>
   <section id="teams" class="hide"><div class="fhead"><h2>Team game</h2><div class="seg" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div></div><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
-  <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div></section>
+  <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div><div class="card" id="playoffpay"></div></section>
   <section id="schedule" class="hide">
     <div id="teecard"></div>
     <h2>Schedule</h2>
@@ -319,6 +319,21 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function thr(t) { return t ? '<div class="thr' + (t === 'F' ? ' f' : '') + '">' + esc(t) + '</div>' : ''; }
   function num(s) { var n = parseFloat(s); return isNaN(n) ? null : n; }
+  // Payouts (Ty, Nov 14). Regular season: by standings place; players tied on points share the combined pot of the places they cover.
+  var SEASON_PAY = [180, 130, 80], PLAYOFF_PAY = [210, 150, 90];
+  function money(v) { return '$' + (Math.round(v * 100) % 100 ? v.toFixed(2) : String(Math.round(v))); }
+  function seasonPay(rows) {
+    var out = rows.map(function () { return 0; }), i = 0;
+    while (i < rows.length && i < SEASON_PAY.length) {
+      var p = num(rows[i].pts), j = i + 1;
+      while (p !== null && j < rows.length && num(rows[j].pts) === p) j++;
+      var pot = 0;
+      for (var k = i; k < j; k++) pot += SEASON_PAY[k] || 0;
+      for (k = i; k < j; k++) out[k] = pot / (j - i);
+      i = j;
+    }
+    return out;
+  }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 
   var data = null;
@@ -1332,13 +1347,21 @@ function renderField() {
       (g.desc ? '<div class="gdesc">' + esc(g.desc) + '</div>' : '') +
       '<div class="grules' + (window.rulesOpen ? '' : ' hide') + '" id="grules">' + (window.gameRules ? gameRules(g.game, g.scoring, tdx.minPlayers, tdx.counted) : '') + '</div></div>' : '';
 
+    var pay = seasonPay(d.standings);
     document.getElementById('table').innerHTML =
-      '<table><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +
-      d.standings.map(function (x) {
+      '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th><th class="n">$</th></tr>' +
+      d.standings.map(function (x, i) {
         return '<tr class="' + (num(x.seed) !== null && num(x.seed) <= 4 ? 'top' : '') + '"><td class="n">' + esc(x.seed) +
           '</td><td>' + esc(x.player) + (x.note ? ' <span class="note">' + esc(x.note) + '</span>' : '') +
-          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
-      }).join('') + '</table>';
+          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td><td class="n pay">' + (pay[i] ? money(pay[i]) : '') + '</td></tr>';
+      }).join('') + '</table>' +
+      '<div class="paykey">$ = regular-season payout if the season ended today (1st ' + money(SEASON_PAY[0]) + ', 2nd ' + money(SEASON_PAY[1]) +
+      ', 3rd ' + money(SEASON_PAY[2]) + '). Players tied on points split the combined pot for the places they share.</div>';
+    document.getElementById('playoffpay').innerHTML =
+      '<div class="pp-t">Playoff payouts</div><div class="pp-row">' +
+      ['Champion', '2nd', '3rd'].map(function (l, i) {
+        return '<div class="pp"><div class="pp-a">' + money(PLAYOFF_PAY[i]) + '</div><div class="pp-l">' + l + '</div></div>';
+      }).join('') + '</div><div class="paykey">Paid at the end of the playoffs.</div>';
 
     renderSchedule();
     renderHcp();
@@ -1396,10 +1419,10 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=46"></script>
-<script src="settings.js?v=46"></script>
-<script src="flip.js?v=46"></script>
-<script src="match.js?v=46"></script>
-<script src="msg.js?v=46"></script>
+<script src="tee.js?v=47"></script>
+<script src="settings.js?v=47"></script>
+<script src="flip.js?v=47"></script>
+<script src="match.js?v=47"></script>
+<script src="msg.js?v=47"></script>
 </body>
 </html>

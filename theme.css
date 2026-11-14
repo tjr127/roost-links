@@ -446,3 +446,12 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .msg-btns { display: flex; gap: 8px; }
 .msg-btns .en-save { flex: 2; margin-top: 10px; }
 .msg-cancel { all: unset; box-sizing: border-box; flex: 1; text-align: center; min-height: 54px; margin-top: 10px; border-radius: 16px; box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; }
+
+/* Standings payouts (Nov 14) */
+.stand td.pay { color: #F5B13C; font-family: 'Space Grotesk', sans-serif; font-weight: 600; white-space: nowrap; }
+.paykey { color: #9BA59E; font-size: 12px; line-height: 1.4; margin-top: 8px; }
+#playoffpay .pp-t { font-family: 'Space Grotesk', sans-serif; font-weight: 600; margin-bottom: 8px; }
+#playoffpay .pp-row { display: flex; gap: 8px; }
+#playoffpay .pp { flex: 1; background: #1F2621; border: 1px solid #252D28; border-radius: 10px; padding: 10px 6px; text-align: center; }
+#playoffpay .pp-a { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: #F5B13C; }
+#playoffpay .pp-l { color: #9BA59E; font-size: 12px; margin-top: 2px; }
