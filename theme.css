@@ -562,3 +562,7 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .sx-t td.b { font-size: inherit !important; }
 .sx-t.sx-5 { font-size: 13px; }
 .sx-t.sx-5 col.c-m { width: 14.5%; }
+.sx-bar2 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.sx-bar2 .sx-scope { margin: 0; }
+.sx-base { display: inline-flex; margin: 0 0 10px; }
+.sx-bar2 .sx-base { margin: 0; }

@@ -12,6 +12,30 @@
   function st(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (x) { return null; } }
   var D = null;
 
+  // "vs my handicap" (Nov 14): typical strokes gained vs the PGA Tour per 18 holes for each handicap, by category,
+  // as published by golfity.com ("Strokes Gained Benchmarks for Every Handicap Level", based on Mark Broadie's research).
+  // A player's number "vs hcp" = their SG vs the Tour minus this benchmark at their index (interpolated; per 9 = half).
+  var HCP_LV = [0, 5, 10, 15, 20, 25, 30];
+  var HCP_SG = { ott: [-0.8, -1.4, -2.0, -2.7, -3.4, -4.2, -5.0], app: [-1.5, -3.0, -4.5, -6.0, -7.5, -9.0, -10.5],
+                 arg: [-0.5, -1.0, -1.5, -2.0, -2.5, -3.0, -3.5], putt: [-0.4, -0.8, -1.2, -1.5, -1.8, -2.2, -2.5] };
+  function hcpIndex(p) {
+    var h = D && D.handicaps && D.handicaps.players, x = (h || []).filter(function (q) { return q.name === p; })[0];
+    var n = x ? parseFloat(x.index) : NaN; return isNaN(n) ? null : n;
+  }
+  function benchAt(k, idx) {
+    var y = HCP_SG[k], i = 1;
+    while (i < HCP_LV.length - 1 && idx > HCP_LV[i]) i++;
+    var v = y[i - 1] + (y[i] - y[i - 1]) * (idx - HCP_LV[i - 1]) / (HCP_LV[i] - HCP_LV[i - 1]);
+    return Math.min(0, v) / 2;   // per 9 holes; never better than the Tour itself (plus handicaps)
+  }
+  function sgv(a, k) {
+    if (!a.sgH) return null;
+    var keys = k === 'sgt' ? ['ott', 'app', 'arg', 'putt'] : [k];
+    var raw = keys.reduce(function (t, c) { return t + a[c]; }, 0) / a.sgH * 9;
+    if (S.base !== 'hcp') return raw;
+    var idx = hcpIndex(a.p); if (idx === null) return null;
+    return raw - keys.reduce(function (t, c) { return t + benchAt(c, idx); }, 0);
+  }
   // Metric definitions. v(a) -> number or null from an aggregate; better: 1 = higher is better, -1 = lower is better.
   function per9(x, h) { return h ? x / h * 9 : null; }
   var M = {
@@ -27,11 +51,11 @@
     sand:  { l: 'Sand', t: 'Sand saves', u: '%', v: function (a) { return a.sandC ? a.sandS / a.sandC * 100 : null; }, b: 1, f: 0, n: function (a) { return a.sandS + '/' + a.sandC; } },
     putts: { l: 'Putts', t: 'Putts per 9', u: '', v: function (a) { return per9(a.putts, a.holes); }, b: -1, f: 1 },
     three: { l: '3-putt', t: '3-putt holes', u: '%', v: function (a) { return a.holes ? a.three / a.holes * 100 : null; }, b: -1, f: 0, n: function (a) { return a.three + '/' + a.holes; } },
-    ott:   { l: 'OTT', t: 'SG: Off the tee', u: '', v: function (a) { return per9(a.ott, a.sgH); }, b: 1, f: 2, sg: true },
-    app:   { l: 'APP', t: 'SG: Approach', u: '', v: function (a) { return per9(a.app, a.sgH); }, b: 1, f: 2, sg: true },
-    arg:   { l: 'ARG', t: 'SG: Around the green', u: '', v: function (a) { return per9(a.arg, a.sgH); }, b: 1, f: 2, sg: true },
-    putt:  { l: 'PUTT', t: 'SG: Putting', u: '', v: function (a) { return per9(a.putt, a.sgH); }, b: 1, f: 2, sg: true },
-    sgt:   { l: 'Total', t: 'SG: Total', u: '', v: function (a) { return per9(a.ott + a.app + a.arg + a.putt, a.sgH); }, b: 1, f: 2, sg: true }
+    ott:   { l: 'OTT', t: 'SG: Off the tee', u: '', v: function (a) { return sgv(a, 'ott'); }, b: 1, f: 2, sg: true },
+    app:   { l: 'APP', t: 'SG: Approach', u: '', v: function (a) { return sgv(a, 'app'); }, b: 1, f: 2, sg: true },
+    arg:   { l: 'ARG', t: 'SG: Around the green', u: '', v: function (a) { return sgv(a, 'arg'); }, b: 1, f: 2, sg: true },
+    putt:  { l: 'PUTT', t: 'SG: Putting', u: '', v: function (a) { return sgv(a, 'putt'); }, b: 1, f: 2, sg: true },
+    sgt:   { l: 'Total', t: 'SG: Total', u: '', v: function (a) { return sgv(a, 'sgt'); }, b: 1, f: 2, sg: true }
   };
   var CATS = [
     { id: 'drive', l: 'Driving', m: ['fw', 'drive', 'ld', 'pen', 'mull'],
@@ -43,7 +67,7 @@
     { id: 'putt', l: 'Putting', m: ['putts', 'three', 'putt'],
       key: '<b>Putts</b> per 9 holes. <b>3-putt</b> share of holes with 3 or more putts. <b>PUTT</b> strokes gained putting per 9 holes.' },
     { id: 'sg', l: 'SG', m: ['ott', 'app', 'arg', 'putt', 'sgt'],
-      key: 'Strokes gained per 9 holes against the average PGA Tour player (ShotLink baseline). 0 = Tour average; negative = strokes lost to a Tour pro. <b>OTT</b> tee shots on par 4s and 5s, <b>APP</b> approach shots, <b>ARG</b> within about 30 yards of the green, <b>PUTT</b> on the green. Starts with rounds after Nov 14.' }
+      key: 'Strokes gained per 9 holes. <b>OTT</b> tee shots on par 4s and 5s, <b>APP</b> approach shots, <b>ARG</b> within about 30 yards of the green, <b>PUTT</b> on the green. Starts with rounds after Nov 14.' }
   ];
 
   function rowsByPlayer(nightFilter) {
@@ -87,9 +111,15 @@
     return '<svg class="sx-spark" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" aria-hidden="true"><polyline points="' + xy.map(function (p) { return p.join(','); }).join(' ') + '"/><circle cx="' + l[0] + '" cy="' + l[1] + '" r="2"/></svg>';
   }
 
-  var S = { view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: '' };
+  var S = { base: st('sxBase') === 'hcp' ? 'hcp' : 'tour', view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: '' };
   try { S.sort = JSON.parse(st('sxSort') || '{}') || {}; } catch (x) { S.sort = {}; }
 
+  function baseSeg() {
+    return '<div class="sx-base seg" role="group" aria-label="Strokes gained against"><button type="button" data-sxbase="tour" class="' + (S.base !== 'hcp' ? 'on' : '') + '">vs Tour</button>' +
+      '<button type="button" data-sxbase="hcp" class="' + (S.base === 'hcp' ? 'on' : '') + '">vs my handicap</button></div>';
+  }
+  var BASE_KEY = { tour: 'Against the average PGA Tour player (ShotLink baseline; 0 = Tour average, negative = strokes lost to a Tour pro).',
+    hcp: 'Against a typical golfer with the same handicap index (0 = playing to your handicap; + = better than golfers at your level). Benchmarks by handicap: golfity.com, based on Mark Broadie\'s research; Handicaps tab index.' };
   function renderAll(box) {
     var ln = lastNight(), tonightHas = D.statFeed && D.statFeed.tonight === ln;
     var scopeNight = S.scope === 'night' ? ln : '';
@@ -107,8 +137,9 @@
     var html = '<div class="sx-chips" role="tablist">' + CATS.map(function (c) {
       return '<button type="button" data-sxcat="' + c.id + '" class="' + (c.id === cat.id ? 'on' : '') + '">' + c.l + '</button>';
     }).join('') + '</div>';
-    html += '<div class="sx-scope seg" role="group"><button type="button" data-sxscope="night" class="' + (S.scope === 'night' ? 'on' : '') + '">' + (tonightHas ? 'Tonight' : (ln ? nightLabel(ln) : 'Last round')) + '</button>' +
-      '<button type="button" data-sxscope="season" class="' + (S.scope !== 'night' ? 'on' : '') + '">Season</button></div>';
+    var hasSg = cat.m.some(function (k) { return M[k].sg; });
+    html += '<div class="sx-bar2"><div class="sx-scope seg" role="group"><button type="button" data-sxscope="night" class="' + (S.scope === 'night' ? 'on' : '') + '">' + (tonightHas ? 'Tonight' : (ln ? nightLabel(ln) : 'Last round')) + '</button>' +
+      '<button type="button" data-sxscope="season" class="' + (S.scope !== 'night' ? 'on' : '') + '">Season</button></div>' + (hasSg ? baseSeg() : '') + '</div>';
     if (!list.length) return box.innerHTML = html + '<div class="card empty">' + (S.scope === 'night' ? 'No stats for this round yet. They fill in as GSPro sends holes.' : 'No stats yet. They build up as GSPro sends holes.') + '</div>';
     var prev = null, rank = 0;
     html += '<div class="card sx-card"><table class="stand sx-t' + (cat.m.length > 4 ? ' sx-5' : '') + '"><colgroup><col class="c-r"><col>' + cat.m.map(function () { return '<col class="c-m">'; }).join('') + '</colgroup><tr><th class="n">#</th><th>Player</th>' +
@@ -117,10 +148,10 @@
         var v = sm.v(a);
         if (v === null) rank = ''; else if (prev === null || Math.abs(v - prev) > 1e-9) { rank = i + 1; prev = v; }
         return '<tr class="' + (a.p === u ? 'sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(short(a.p)) +
-          '<small>' + (S.scope === 'night' ? a.holes + ' holes' : a.nights + ' rd' + (a.nights === 1 ? '' : 's')) + '</small></td>' +
+          '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) : S.scope === 'night' ? a.holes + ' holes' : a.nights + ' rd' + (a.nights === 1 ? '' : 's')) + '</small></td>' +
           cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (x >= 0 ? ' sx-pos' : ' sx-neg') : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
       }).join('') + '</table>';
-    html += '<div class="paykey">' + cat.key + ' Tap a column to sort.</div>';
+    html += '<div class="paykey">' + cat.key + (hasSg ? ' <b>SG ' + (S.base === 'hcp' ? 'vs my handicap' : 'vs Tour') + ':</b> ' + BASE_KEY[S.base] : '') + ' Tap a column to sort.</div>';
     // Tonight's penalty / mulligan holes (Driving only)
     var ag = D.agentStats;
     if (cat.id === 'drive' && S.scope === 'night' && tonightHas && ag && ag.players) {
@@ -145,11 +176,11 @@
     var sgKeys = ['ott', 'app', 'arg', 'putt'];
     if (a.sgH) {
       var vals = sgKeys.map(function (k) { return M[k].v(a); }), mx = Math.max.apply(null, vals.map(function (v) { return Math.abs(v); }).concat([0.5]));
-      html += '<div class="card sx-sg"><div class="pp-t">Strokes gained per 9 holes <span class="sx-tot ' + (M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
+      html += baseSeg() + '<div class="card sx-sg"><div class="pp-t">Strokes gained per 9 holes <span class="sx-tot ' + (M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
         sgKeys.map(function (k, i) {
           var v = vals[i], w = Math.round(Math.abs(v) / mx * 50);
           return '<div class="sx-bar"><span class="sx-bl">' + M[k].t.replace('SG: ', '') + '</span><span class="sx-bt"><i class="' + (v >= 0 ? 'p' : 'n') + '" style="' + (v >= 0 ? 'left:50%' : 'right:50%') + ';width:' + w + '%"></i></span><b class="' + (v >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M[k], v) + '</b></div>';
-        }).join('') + '<div class="paykey">Against the average PGA Tour player (0). Bars left = strokes lost.</div></div>';
+        }).join('') + '<div class="paykey">' + BASE_KEY[S.base] + ' Bars left = strokes lost.' + (S.base === 'hcp' && hcpIndex(who) !== null ? ' Your index: ' + hcpIndex(who) + '.' : '') + '</div></div>';
     } else {
       html += '<div class="card sx-sg"><div class="pp-t">Strokes gained</div><div class="paykey">Starts with your next round once the GSPro agent update is in.</div></div>';
     }
@@ -182,6 +213,7 @@
     if ((b = t.closest('[data-sxview]'))) { S.view = b.getAttribute('data-sxview'); st('sxView', S.view); }
     else if ((b = t.closest('[data-sxcat]'))) { S.cat = b.getAttribute('data-sxcat'); st('sxCat', S.cat); }
     else if ((b = t.closest('[data-sxscope]'))) { S.scope = b.getAttribute('data-sxscope'); st('sxScope', S.scope); }
+    else if ((b = t.closest('[data-sxbase]'))) { S.base = b.getAttribute('data-sxbase'); st('sxBase', S.base); }
     else if ((b = t.closest('[data-sxsort]'))) { S.sort[S.cat] = b.getAttribute('data-sxsort'); st('sxSort', JSON.stringify(S.sort)); }
     else return;
     window.renderStats();
