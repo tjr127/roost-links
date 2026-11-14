@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=56">
-<link rel="stylesheet" href="theme.css?v=56">
+<link rel="stylesheet" href="app.css?v=57">
+<link rel="stylesheet" href="theme.css?v=57">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=56"></script>
-<script src="rules.js?v=56"></script>
+<script src="app.js?v=57"></script>
+<script src="rules.js?v=57"></script>
 </head>
 <body>
 <header>
@@ -302,9 +302,8 @@
   </section>
   <section id="entrysw" class="hide"><h2>Enter scores for anyone</h2><div id="eswbody"></div></section>
   <section id="stats" class="hide">
-    <div class="statsw" role="tablist" aria-label="Stats"><button type="button" role="tab" data-stw="tonight">Tonight's stats</button><button type="button" role="tab" data-stw="season">Season stats</button></div>
-    <div id="stw-tonight"><div class="card" id="statsbody"></div></div>
-    <div id="stw-season" class="hide"><div class="card" id="seasonbody"></div></div>
+    <div class="statsw" role="tablist" aria-label="Stats"><button type="button" role="tab" data-sxview="all">Everyone</button><button type="button" role="tab" data-sxview="me">Me</button></div>
+    <div id="sxbody"></div>
   </section>
   <section id="newsres" class="hide"><div id="newsresbody"></div></section>
   <section id="newsann" class="hide"><div id="newsannbody"></div></section>
@@ -1308,36 +1307,8 @@ function renderField() {
 
     renderField();
 
-    var st = d.agentStats || { players: [] };
-    var holeList = function (l) { return l.map(function (h) { return h.hole + (h.n > 1 ? ' (' + h.n + ')' : ''); }).join(', '); };
-    document.getElementById('statsbody').innerHTML = st.players.length ?
-      '<table class="stt"><tr><th>Player</th><th class="n">FW</th><th class="n">GIR</th><th class="n">Sand</th><th class="n">Drive</th><th class="n">Pen</th><th class="n">Mull</th></tr>' +
-      st.players.map(function (s) {
-        var lng = s.drive !== '' && s.drive === st.longest;
-        return '<tr><td title="' + esc(s.player) + '">' + esc(s.player) + '</td><td class="n">' + (s.fwn ? s.fw + '/' + s.fwn : '–') + '</td><td class="n">' + s.gir + '/' + s.holes +
-          '</td><td class="n">' + (s.sandC ? s.sandS + '/' + s.sandC : '–') + '</td><td class="n' + (lng ? ' b' : '') + '">' + (s.drive !== '' ? Math.round(s.drive) + (lng ? '★' : '') : '–') +
-          '</td><td class="n">' + (s.pen || '') + '</td><td class="n">' + (s.mull || '') + '</td></tr>';
-      }).join('') + '</table>' +
-      st.players.filter(function (s) { return s.pen || s.mull; }).map(function (s) {
-        return '<div style="font-size:13px;padding:6px 10px 0"><b>' + esc(s.player) + '</b>' +
-          (s.pen ? ' · Penalties on ' + holeList(s.penHoles) : '') + (s.mull ? ' · Mulligans on ' + holeList(s.mullHoles) : '') + '</div>';
-      }).join('') +
-      '<div style="height:8px"></div>' : '<div class="empty">No stats yet tonight. They fill in as GSPro sends holes.</div>';
-
-    // Season stats (Nov 13): every hole GSPro has logged this season. Percentages, average and longest drive, totals.
-    var se = d.seasonStats;
-    var pct = function (a, n) { return n ? Math.round(a / n * 100) + '%' : '–'; };
-    document.getElementById('seasonbody').innerHTML = !se ? '<div class="empty">Season stats appear once the server update is in.</div>' : se.players.length ?
-      '<table class="stt sst"><tr><th>Player</th><th class="n">FW</th><th class="n">GIR</th><th class="n">Sand</th><th class="n">Drive</th><th class="n">LD</th><th class="n">Pen</th><th class="n">Mull</th></tr>' +
-      se.players.map(function (s) {
-        var lng = s.ld !== '' && s.ld === se.longest;
-        return '<tr><td title="' + esc(s.player) + '">' + esc(s.player) + '<small>' + s.holes + ' holes</small></td><td class="n">' + pct(s.fw, s.fwn) + '</td><td class="n">' + pct(s.gir, s.holes) +
-          '</td><td class="n">' + pct(s.sandS, s.sandC) + '</td><td class="n">' + (s.drAvg !== '' ? Math.round(s.drAvg) : '–') +
-          '</td><td class="n' + (lng ? ' b' : '') + '">' + (s.ld !== '' ? Math.round(s.ld) + (lng ? '★' : '') : '–') +
-          '</td><td class="n">' + (s.pen || '') + '</td><td class="n">' + (s.mull || '') + '</td></tr>';
-      }).join('') + '</table>' +
-      '<div class="sst-key">FW, GIR and Sand are percentages of chances. Drive is the average drive that finished in the fairway; LD is the longest (★ longest in the league). Pen and Mull are season totals.</div>'
-      : '<div class="empty">No season stats yet. They build up as GSPro sends holes.</div>';
+    // Stats > Stats (Nov 14 redesign): Everyone / Me, in stats.js.
+    if (window.renderStats) try { renderStats(d); } catch (x) { console.error(x); }
 
     renderNews(d);
     if (curTab === 'adminmsg' && window.renderMsg) renderMsg();
@@ -1401,16 +1372,6 @@ function renderField() {
       : '<div class="card empty">No announcements in the last 3 days.</div>';
   }
 
-  // Stats > Stats (Nov 13): Tonight's stats / Season stats switch, one card at a time; the pick is remembered on the phone.
-  function setStatsView(v) {
-    v = v === 'season' ? 'season' : 'tonight';
-    store('statsView', v);
-    document.getElementById('stw-tonight').classList.toggle('hide', v !== 'tonight');
-    document.getElementById('stw-season').classList.toggle('hide', v !== 'season');
-    [].forEach.call(document.querySelectorAll('[data-stw]'), function (b) { var on = b.dataset.stw === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
-  }
-  document.querySelector('.statsw').addEventListener('click', function (ev) { var b = ev.target.closest('[data-stw]'); if (b) setStatsView(b.dataset.stw); });
-  setStatsView(store('statsView'));
 
   var lastLoad = 0, loadSeq = 0, shownSeq = 0;
   function load() {
@@ -1433,11 +1394,12 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=56"></script>
-<script src="settings.js?v=56"></script>
-<script src="flip.js?v=56"></script>
-<script src="match.js?v=56"></script>
-<script src="msg.js?v=56"></script>
-<script src="puttstand.js?v=56"></script>
+<script src="tee.js?v=57"></script>
+<script src="settings.js?v=57"></script>
+<script src="flip.js?v=57"></script>
+<script src="match.js?v=57"></script>
+<script src="msg.js?v=57"></script>
+<script src="puttstand.js?v=57"></script>
+<script src="stats.js?v=57"></script>
 </body>
 </html>
