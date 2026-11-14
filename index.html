@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=51">
-<link rel="stylesheet" href="theme.css?v=51">
+<link rel="stylesheet" href="app.css?v=52">
+<link rel="stylesheet" href="theme.css?v=52">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=51"></script>
-<script src="rules.js?v=51"></script>
+<script src="app.js?v=52"></script>
+<script src="rules.js?v=52"></script>
 </head>
 <body>
 <header>
@@ -1359,8 +1359,8 @@ function renderField() {
     document.getElementById('table').innerHTML =
       '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +
       d.standings.map(function (x, i) {
-        return '<tr class="' + (num(x.seed) !== null && num(x.seed) <= 4 ? 'top' : '') + '"><td class="n">' + esc(rank[i]) +
-          '</td><td>' + esc(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') + (x.note ? ' <span class="note">' + esc(x.note) + '</span>' : '') +
+        return '<tr class="' + ([1, 2, 3].indexOf(rank[i]) >= 0 ? 'place p' + rank[i] : '') + '"><td class="n">' + esc(rank[i]) +
+          '</td><td>' + esc(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') +
           '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
       }).join('') + '</table>' +
       '<div class="paykey">Green = regular-season payout if the season ended today (1st ' + money(SEASON_PAY[0]) + ', 2nd ' + money(SEASON_PAY[1]) +
@@ -1427,10 +1427,10 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=51"></script>
-<script src="settings.js?v=51"></script>
-<script src="flip.js?v=51"></script>
-<script src="match.js?v=51"></script>
-<script src="msg.js?v=51"></script>
+<script src="tee.js?v=52"></script>
+<script src="settings.js?v=52"></script>
+<script src="flip.js?v=52"></script>
+<script src="match.js?v=52"></script>
+<script src="msg.js?v=52"></script>
 </body>
 </html>
