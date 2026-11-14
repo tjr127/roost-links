@@ -150,7 +150,7 @@
       list.map(function (a, i) {
         var v = sm.v(a);
         if (v === null) rank = ''; else if (prev === null || Math.abs(v - prev) > 1e-9) { rank = i + 1; prev = v; }
-        return '<tr class="' + (a.p === u ? 'sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(short(a.p)) +
+        return '<tr class="' + (a.p === u ? 'sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(cat.id === 'drive' ? short(a.p) : a.p) +
           '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) : S.scope === 'night' ? a.holes + ' holes' : a.nights + ' rd' + (a.nights === 1 ? '' : 's')) + '</small></td>' +
           cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (x >= 0 ? ' sx-pos' : ' sx-neg') : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
       }).join('') + '</table>';

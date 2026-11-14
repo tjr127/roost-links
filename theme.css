@@ -577,3 +577,8 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
   color: var(--ink) !important; border: 1px solid var(--line2) !important; border-radius: 999px !important; padding: 6px 28px 6px 12px; font: 600 12.5px Inter, sans-serif; color-scheme: dark; }
 .sx-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .sx-tabs button { font-size: 12px; padding: 8px 0; }
+/* Full names on SG / Approach / Short / Putting (Nov 14): roomier player column */
+.sx-t.sx-5 col.c-r { width: 8%; } .sx-t.sx-5 col.c-m { width: 12.5%; }
+.sx-t:not(.sx-5) col.c-m { width: 17%; }
+.sx-t.sx-5 td.sx-pl { font-size: 13px; }
+.sx-t.sx-5 { font-size: 12.5px; }
