@@ -450,14 +450,18 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 /* Standings payouts (Nov 14) */
 .stand .pay { color: #8FD19E; font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: 4px; }
 .paykey { color: #9BA59E; font-size: 12px; line-height: 1.4; margin-top: 8px; }
-#playoffpay .pp-t { font-family: 'Space Grotesk', sans-serif; font-weight: 600; margin-bottom: 8px; }
-#playoffpay .pp-row { display: flex; gap: 8px; }
-#playoffpay .pp { flex: 1; background: #1F2621; border: 1px solid #252D28; border-radius: 10px; padding: 10px 6px; text-align: center; }
-#playoffpay .pp-a { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: #F5B13C; }
-#playoffpay .pp-l { color: #9BA59E; font-size: 12px; margin-top: 2px; }
+#seasonpay .pp-t, #playoffpay .pp-t { font-family: 'Space Grotesk', sans-serif; font-weight: 600; margin-bottom: 8px; }
+#seasonpay .pp-row, #playoffpay .pp-row { display: flex; gap: 8px; }
+#seasonpay .pp, #playoffpay .pp { flex: 1; background: #1F2621; border: 1px solid #252D28; border-top: 3px solid var(--pc); border-radius: 10px; padding: 10px 6px; text-align: center; }
+#seasonpay .pp-a, #playoffpay .pp-a { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--pc); }
+#seasonpay .pp-l, #playoffpay .pp-l { color: #9BA59E; font-size: 12px; margin-top: 2px; }
 /* Standings places (Nov 14): gold / silver / bronze rows; ties share the colour (rank is shared) */
 .stand tr.place td { font-weight: 600; }
 .stand tr.place td:first-child { box-shadow: inset 3px 0 0 var(--pc); font-family: var(--num); color: var(--pc); }
 .stand tr.p1 { --pc: #F7C948; } .stand tr.p1 td { background: rgba(247,201,72,.15); }
 .stand tr.p2 { --pc: #C9D1CC; } .stand tr.p2 td { background: rgba(201,209,204,.10); }
 .stand tr.p3 { --pc: #E07A4F; } .stand tr.p3 td { background: rgba(224,122,79,.15); }
+.pp1 { --pc: #F7C948; } .pp1 { background: rgba(247,201,72,.12) !important; }
+.pp2 { --pc: #C9D1CC; } .pp2 { background: rgba(201,209,204,.08) !important; }
+.pp3 { --pc: #E07A4F; } .pp3 { background: rgba(224,122,79,.12) !important; }
+#seasonpay, #playoffpay { padding: 14px 14px 12px; }
