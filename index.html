@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=53">
-<link rel="stylesheet" href="theme.css?v=53">
+<link rel="stylesheet" href="app.css?v=54">
+<link rel="stylesheet" href="theme.css?v=54">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=53"></script>
-<script src="rules.js?v=53"></script>
+<script src="app.js?v=54"></script>
+<script src="rules.js?v=54"></script>
 </head>
 <body>
 <header>
@@ -243,7 +243,7 @@
 </header>
 <nav class="tabbar" aria-label="Main">
   <button type="button" data-tab="board" data-group="tonight teams field" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Board</span></button>
-  <button type="button" data-tab="standings"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Standings</span></button>
+  <button type="button" data-tab="stand" data-group="standings puttstand"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Standings</span></button>
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
   <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Stats</span></button>
   <button type="button" data-tab="news" data-group="newsres newsann"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg><span>News</span></button>
@@ -252,6 +252,7 @@
 <main>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Stats</button></nav>
+  <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button></nav>
   <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button></nav>
   <section id="tonight">
@@ -264,6 +265,7 @@
   </section>
   <section id="teams" class="hide"><div class="fhead"><h2>Team game</h2><div class="seg" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div></div><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></section>
   <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div><div class="card" id="seasonpay"></div><div class="card" id="playoffpay"></div></section>
+  <section id="puttstand" class="hide"><h2>Putt standings</h2><div id="puttleaders"></div><div class="card" id="putttable"></div><div class="card" id="putteven"></div><div class="card" id="puttrules"></div></section>
   <section id="schedule" class="hide">
     <div id="teecard"></div>
     <h2>Schedule</h2>
@@ -372,6 +374,7 @@
     if (tab === 'scores') { var s0 = store('scoresTab'); return s0 && s0 !== 'enter' ? s0 : (canSelfEnter() ? 'enter' : 'cards'); }
     if (tab === 'admin') return store('adminTab') || 'adminenter';
     if (tab === 'news') return store('newsTab') || 'newsres';
+    if (tab === 'stand') return store('standTab') || 'standings';
     if (tab === 'enter' && !canSelfEnter()) return 'cards';
     if (/^admin/.test(tab) && !isAdmin()) return boardDefault();
     return document.getElementById(tab) || SHOW[tab] ? tab : boardDefault();
@@ -389,6 +392,7 @@
     if (grp === 'scores') store('scoresTab', tab);
     if (grp === 'admin') store('adminTab', tab);
     if (grp === 'news') store('newsTab', tab);
+    if (grp === 'stand') store('standTab', tab);
     var tbOn = document.querySelector('nav.tabbar button.on'); if (tbOn && tbOn.scrollIntoView) try { tbOn.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
     var wasAdminEnter = window.ADMIN_ENTER, wasTeeAdmin = window.TEE_ADMIN;
     window.ADMIN_ENTER = tab === 'adminenter';
@@ -1372,6 +1376,7 @@ function renderField() {
     document.getElementById('seasonpay').innerHTML = payCard('Regular season payouts', SEASON_PAY, ['1st', '2nd', '3rd'], 'Paid on the final regular-season standings.');
     document.getElementById('playoffpay').innerHTML = payCard('Playoff payouts', PLAYOFF_PAY, ['Champion', '2nd', '3rd'], 'Paid at the end of the playoffs.');
 
+    if (window.renderPuttStand) try { renderPuttStand(d); } catch (x) { console.error(x); }
     renderSchedule();
     renderHcp();
     renderCard();
@@ -1428,10 +1433,11 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=53"></script>
-<script src="settings.js?v=53"></script>
-<script src="flip.js?v=53"></script>
-<script src="match.js?v=53"></script>
-<script src="msg.js?v=53"></script>
+<script src="tee.js?v=54"></script>
+<script src="settings.js?v=54"></script>
+<script src="flip.js?v=54"></script>
+<script src="match.js?v=54"></script>
+<script src="msg.js?v=54"></script>
+<script src="puttstand.js?v=54"></script>
 </body>
 </html>

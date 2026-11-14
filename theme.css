@@ -465,3 +465,38 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .pp2 { --pc: #C9D1CC; } .pp2 { background: rgba(201,209,204,.08) !important; }
 .pp3 { --pc: #E07A4F; } .pp3 { background: rgba(224,122,79,.12) !important; }
 #seasonpay, #playoffpay { padding: 14px 14px 12px; }
+/* Season putt standings (Nov 14): Standings > Putts (puttstand.js) */
+.ps-leads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ps-lead { margin: 0 !important; padding: 12px !important; --lc: var(--amber); box-shadow: inset 0 3px 0 var(--lc); }
+.ps-lead.high { --lc: #F28B7C; }
+.ps-lk { font: 700 10.5px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--lc); }
+.ps-ln { font: 700 18px var(--num); color: var(--ink); margin: 4px 0 2px; line-height: 1.2; }
+.ps-tie { font: 600 11px Inter, sans-serif; color: var(--muted); }
+.ps-ls { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.ps-la { font: 700 16px var(--num); color: #8FD19E; margin-top: 6px; }
+.ps-note { font-size: 12px; color: var(--muted); margin: 8px 2px 10px; line-height: 1.4; }
+.ps-t td { vertical-align: middle; }
+.ps-t tr.ps-row { cursor: pointer; }
+.ps-t tr.ps-row.none td { color: var(--muted); }
+.ps-t tr.open td { background: rgba(245,177,60,.06); }
+.ps-nm { white-space: nowrap; }
+.stand .pay.hi { color: #F28B7C; }
+.putw.hi { background: #F28B7C; }
+.ps-spark { display: block; margin-top: 3px; overflow: visible; }
+.ps-spark polyline { fill: none; stroke: var(--amber); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; opacity: .85; }
+.ps-spark circle { fill: var(--amber); }
+.ps-tr { display: block; font-size: 10.5px; font-weight: 600; line-height: 1.1; }
+.ps-tr.dn { color: #8FD19E; } .ps-tr.up { color: #F28B7C; } .ps-tr.flat { color: var(--muted); }
+.ps-detail td { background: rgba(245,177,60,.06); padding-top: 2px !important; }
+.ps-rd { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.ps-rd:last-child { border-bottom: 0; }
+.ps-rd b { font-family: var(--num); }
+.ps-rd.muted { color: var(--muted); }
+#putteven .pp-t, #puttrules .pp-t { font-family: var(--num); font-weight: 600; margin-bottom: 8px; }
+.ps-ev { display: flex; gap: 10px; align-items: baseline; font-size: 14px; padding: 4px 0; line-height: 1.5; }
+.ps-ev b { font-family: var(--num); }
+.ps-evk { flex: 0 0 auto; font: 700 10.5px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--amber); min-width: 34px; }
+.ps-evk.hi { color: #F28B7C; }
+.ps-rules { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; color: var(--ink); }
+.ps-rules li { margin-bottom: 6px; }
+.ps-cut { display: block; font-size: 10.5px; color: var(--muted); }
