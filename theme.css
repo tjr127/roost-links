@@ -613,3 +613,8 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .bio-lorebtn .gmore { color: var(--amber); font-size: 13px; }
 .st-msg.err { color: var(--loss); }
 .card.bio-c { padding: 14px !important; margin-bottom: 12px; }
+.bio-c .bio-k { display: block; margin: 4px 0 8px; }
+.bio-c .bio-add { margin-top: 14px; }
+.bio-c .bio-add .en-save { margin-top: 10px; }
+.bio-tip { margin: 6px 0 0 !important; font-size: 12.5px !important; }
+.bio-msg { margin-top: 12px; }
