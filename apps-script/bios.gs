@@ -43,7 +43,8 @@ function bioRead_(ss) {
     if (i === 0 || !h) return;
     if (BIO_OFF_.test(h)) { off = i + 1; return; }
     var f = BIO_FIELDS_.filter(function (x) { return x[0].test(h); })[0];
-    if (f) cols.push({ key: f[1], label: h, desc: f[2], col: i + 1, add: f[3] });
+    // A column added later (e.g. by the weekly tidy-up) is a section too; its header is its description.
+    cols.push(f ? { key: f[1], label: h, desc: f[2], col: i + 1, add: f[3] } : { key: 'c' + (i + 1), label: h, desc: h + '.', col: i + 1, add: true });
   });
   var rows = [];
   for (var i = 1; i < names.length && names[i][0]; i++) rows.push({ name: names[i][0], row: i + 1 });
