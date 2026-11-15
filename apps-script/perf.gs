@@ -90,8 +90,10 @@ function doPost(e) {
     if (isAction && b.action === 'entry') return ContentService.createTextOutput(JSON.stringify(apiEntry_(b))).setMimeType(ContentService.MimeType.JSON);
     if (isAction && b.action === 'message') return ContentService.createTextOutput(JSON.stringify(apiMessage_(b))).setMimeType(ContentService.MimeType.JSON);
     if (isAction && b.action === 'settings') return ContentService.createTextOutput(JSON.stringify(apiSettings_(b))).setMimeType(ContentService.MimeType.JSON);
+    if (isAction && b.action === 'bios') return ContentService.createTextOutput(JSON.stringify(apiBios_(b))).setMimeType(ContentService.MimeType.JSON);
+    if (isAction && b.action === 'bio') return ContentService.createTextOutput(JSON.stringify(apiBioAdd_(b))).setMimeType(ContentService.MimeType.JSON);
     return doPost0_(e);
-  } finally { if ((isAction && b.action !== 'settings') || AGENT_DIRTY_) boardBust_(); }  // settings bust only on a change
+  } finally { if ((isAction && ['settings', 'bios', 'bio'].indexOf(b.action) < 0) || AGENT_DIRTY_) boardBust_(); }  // settings bust only on a change; bios never touch the board
 }
 
 /** Score saves from the old script.google.com page (and the app, via apiSave_) clear it too. */
