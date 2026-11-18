@@ -207,7 +207,9 @@
     return OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       serviceWorkerPath: 'roost-links/sw.js', serviceWorkerParam: { scope: '/roost-links/' },
-      notifyButton: { enable: false }
+      notifyButton: { enable: false },
+      // No "Thanks for subscribing!" push: OneSignal sends it on every new subscription, and phones get re-subscribed after app updates.
+      welcomeNotification: { disable: true }
     }).then(function () {
       OS = OneSignal;
       var a = getAuth();
