@@ -184,6 +184,7 @@ function apiTee_(req) {
 function apiTeeConfirm_(req) {
   var user = apiUser_(req.token);
   if (!user || !user.admin) return { ok: false, code: 'denied', error: 'Only Ty can set the groups.' };
+  TEE_GUESTS_OK_ = true;   // Ty can put guests in a group (Nov 18)
   var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
   var night = teeNight_(ss);
   if (!night || night.key !== String(req.night)) return { ok: false, error: 'That night is no longer the next league night. Refresh and try again.' };

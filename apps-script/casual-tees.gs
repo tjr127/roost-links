@@ -51,11 +51,4 @@ function teeState_(night) {
   return teeState0_(night);
 }
 
-/** Who can pick on the card: league members on league nights; every active player (guests too) on a casual round. */
-function teePlayers_(ss) {
-  if (!teeCasual_(ss)) return teeLeague_(ss);
-  var rows = ss.getSheetByName('Players').getRange('A2:C40').getDisplayValues()
-    .filter(function (r) { return r[0] && r[2] === 'TRUE'; });
-  return rows.filter(function (r) { return r[1] === 'League'; }).map(function (r) { return r[0]; })
-    .concat(rows.filter(function (r) { return r[1] !== 'League'; }).map(function (r) { return r[0]; }));
-}
+// teePlayers_ moved to guest-tees.gs (Nov 18: guests Ty adds on league nights).

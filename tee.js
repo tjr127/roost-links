@@ -36,12 +36,15 @@
   var cedit = null;     // admin: changes to already-confirmed groups, not saved until "Save changes"
   // Admin (Nov 13): everyone not in a group (bye, no reply, can't play) with Early / Late buttons, so Ty can put
   // anyone in a group at any time.
+  // Nov 18 (Ty): active guests are listed too (tagged "guest"); adding one puts them on that night's card.
   function addBlock(tt, g, sched) {
-    var out = tt.players.map(function (p) { return p.name; }).filter(function (n) { return g.early.indexOf(n) < 0 && g.late.indexOf(n) < 0; });
+    var names = tt.players.map(function (p) { return p.name; });
+    (tt.guests || []).forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });
+    var out = names.filter(function (n) { return g.early.indexOf(n) < 0 && g.late.indexOf(n) < 0; });
     if (!out.length) return '';
     return '<div class="tt-add"><div class="tt-gsub">Not in a group. Tap Early or Late to add them.</div>' + out.map(function (n) {
       var c = choiceOf(tt, n);
-      var why = c === 'Out' ? 'can\'t play' : !sched[n] ? 'bye' : c ? LABEL[c].toLowerCase() : 'no reply';
+      var why = c === 'Out' ? 'can\'t play' : isGuest(tt, n) ? 'guest' : !sched[n] ? 'bye' : c ? LABEL[c].toLowerCase() : 'no reply';
       return '<div class="tt-addrow"><span class="tt-addn">' + e(n) + ' <i class="tt-why' + (c === 'Out' ? ' out' : '') + '">' + why + '</i></span>' +
         '<span class="tt-addb"><button type="button" data-add="' + e(n) + '" data-to="early">Early</button><button type="button" data-add="' + e(n) + '" data-to="late">Late</button></span></div>';
     }).join('') + '</div>';
@@ -49,6 +52,7 @@
   var note = { text: '', err: false };
 
   function t() { return window.data && window.data.teeTimes; }
+  function isGuest(tt, n) { return (tt.guests || []).indexOf(n) >= 0; }
   function e(s) { return esc(s); }
   function choiceOf(tt, n) {
     var p = tt.players.filter(function (x) { return x.name === n; })[0];
@@ -162,13 +166,13 @@
     if (canPick) {
       html += '<div class="tt-pick">' +
         (admin ? '<label class="tt-for">Pick for <select id="ttfor">' + league.map(function (n) {
-          return '<option value="' + e(n) + '"' + (n === who ? ' selected' : '') + '>' + e(n) + (sched[n] ? '' : ' (bye)') + '</option>';
+          return '<option value="' + e(n) + '"' + (n === who ? ' selected' : '') + '>' + e(n) + (isGuest(tt, n) ? ' (guest)' : sched[n] ? '' : ' (bye)') + '</option>';
         }).join('') + '</select></label>' : '<div class="tt-you">Your pick</div>') +
         '<div class="tt-btns">' + ORDER.map(function (c) {
           return '<button type="button" data-tee="' + c + '" class="' + (choiceOf(tt, who) === c ? 'on ' : '') + (c === 'Out' ? 'out' : '') + '">' +
             LABEL[c] + (tt.times[c] ? '<small>' + e(tt.times[c]) + '</small>' : '') + '</button>';
         }).join('') + '</div>' +
-        (!sched[who] ? '<div class="tt-byenote">' + (who === me ? 'You have' : e(who) + ' has') + ' a bye this week. Pick a time only if ' + (who === me ? 'you\'re' : e(who) + ' is') + ' coming to play.</div>' : '') +
+        (!sched[who] && !isGuest(tt, who) ? '<div class="tt-byenote">' + (who === me ? 'You have' : e(who) + ' has') + ' a bye this week. Pick a time only if ' + (who === me ? 'you\'re' : e(who) + ' is') + ' coming to play.</div>' : '') +
         teeRow(tt, who, true) +
         '</div>';
     } else if (a && league.indexOf(me) >= 0 && tt.tees) {
@@ -183,8 +187,8 @@
     var byes = [];
     league.forEach(function (n) {
       var c = choiceOf(tt, n);
-      if (by[c]) by[c].push(n); else if (sched[n]) none.push(n);
-      if (!sched[n]) byes.push(n + (c ? ' (' + LABEL[c].toLowerCase() + ')' : ''));
+      if (by[c]) by[c].push(n); else if (sched[n] && !isGuest(tt, n)) none.push(n);
+      if (!sched[n] && !isGuest(tt, n)) byes.push(n + (c ? ' (' + LABEL[c].toLowerCase() + ')' : ''));
     });
     html += '<div class="tt-sum">' + ORDER.map(function (c) {
       return '<div class="tt-col ' + c.toLowerCase() + '"><div class="tt-k">' + LABEL[c] + ' <span class="tt-n">' + by[c].length + '</span></div>' +

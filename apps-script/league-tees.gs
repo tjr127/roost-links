@@ -13,12 +13,14 @@ var TEE_REMIND_HOUR_ = 8;   // Thursday 8:00 AM reminder
 
 function teeTimes_(ss) {
   var t = teeTimes0_(ss);
-  if (t) { t.casual = !!teeCasual_(ss); try { t.tees = tpLeague_(ss); } catch (e) { console.error(e); } }
+  if (t) { t.casual = !!teeCasual_(ss); t.guests = teeGuests_(ss); try { t.tees = tpLeague_(ss); } catch (e) { console.error(e); } }
   return t;
 }
 
 /** App: tee time pick (choice) and/or tees for the next league night. */
 function apiTee_(req) {
+  var au = apiUser_(req.token);
+  if (au && au.admin) TEE_GUESTS_OK_ = true;   // Ty can add guests (Nov 18)
   if (req.choice !== undefined) {
     var r = apiTee0_(req);
     if (!r.ok) return r;
@@ -68,7 +70,7 @@ function notifyGroups_(ss, night, early, late) {
 
 /** Confirm groups as `by` (same writes as Ty's Confirm groups) and send the alert. */
 function teeConfirmAs_(ss, night, early, late, by) {
-  var league = teeLeague_(ss);
+  var league = teePlayers_(ss);
   var lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {
