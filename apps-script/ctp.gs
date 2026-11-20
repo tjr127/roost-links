@@ -340,7 +340,7 @@ function ctpViewOf_(st) {
 function ctpFt_(ft) {
   if (ft == null) return '';
   var inch = ctpIn_(ft), f = Math.floor(inch / 12), i = inch % 12;
-  return f + '\'' + i + '"';
+  return f ? f + '\'' + i + '"' : i + '"';   // under a foot: inches only
 }
 
 // ---------- Google side ----------

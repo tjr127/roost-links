@@ -20,7 +20,7 @@
   window.ctpOn = on;
   function players() { var en = window.data && window.data.entry; return (en && en.players) || []; }
   function money(v) { v = Number(v) || 0; return (v < 0 ? '−$' : v > 0 ? '+$' : '$') + Math.abs(v); }
-  function ft(x) { if (x == null) return ''; var i = Math.round(Number(x) * 12); return Math.floor(i / 12) + '′' + (i % 12) + '″'; }
+  function ft(x) { if (x == null) return ''; var i = Math.round(Number(x) * 12), f = Math.floor(i / 12); return f ? f + '′' + (i % 12) + '″' : (i % 12) + '″'; }   // under a foot: inches only
   function liveShots() { return st && st.ch ? (st.ch.phase === 'offer' ? [] : st.ch.shots) : (st && st.hole ? st.hole.shots : []); }
   function shotOf(p) { return liveShots().filter(function (s) { return s.p === p; })[0] || null; }
   function holeShotOf(p) { return st && st.hole ? st.hole.shots.filter(function (s) { return s.p === p; })[0] || null : null; }
