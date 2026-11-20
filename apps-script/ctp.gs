@@ -210,6 +210,10 @@ function ctpView_() { return ctpViewOf_(ctpLoad_()); }
 function ctpBrief_() { var st = ctpLoad_(); return { on: !!(st && st.on), rev: st ? st.rev : 0 }; }
 
 function apiCtp_(b) {
+  try { return apiCtp0_(b); } catch (err) { return { ok: false, error: String(err && err.message || err) }; }
+}
+
+function apiCtp0_(b) {
   var user = apiUser_(b.token), isAdmin = !!(user && user.admin);
   var isAgent = String(b.key || '') === AGENT_KEY_;
   if (b.op === 'state') return { ok: true, ctp: ctpView_() };
