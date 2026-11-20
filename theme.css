@@ -681,3 +681,7 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .ctp-t i { font-style: normal; font-size: 11px; color: var(--muted); }
 .ctp-admin .msg-confirm { margin-top: 12px; }
 .ctp-admin .en-save { border: 0; cursor: pointer; font-size: 16px; }
+/* CTP challenges (Nov 20) */
+.ctp-up.chal small { color: var(--win); }
+.ctp-chal .ctp-ans { margin: 0 0 10px; }
+.ctp-b.sel { background: var(--card2); box-shadow: inset 0 0 0 2px var(--line2); }
