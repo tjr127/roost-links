@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=71">
-<link rel="stylesheet" href="theme.css?v=71">
+<link rel="stylesheet" href="app.css?v=72">
+<link rel="stylesheet" href="theme.css?v=72">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=71"></script>
-<script src="rules.js?v=71"></script>
+<script src="app.js?v=72"></script>
+<script src="rules.js?v=72"></script>
 </head>
 <body>
 <header>
@@ -1004,6 +1004,9 @@
   }
   function renderHcpAll(h) {
     var list = (h.players || []).slice();
+    // Active players only, league members and guests alike (entry.players = the Players tab's active list)
+    var act = data && data.entry && data.entry.players;
+    if (act && act.length) { var on = {}; act.forEach(function (x) { on[x.name] = 1; }); list = list.filter(function (p) { return on[p.name]; }); }
     var tp = data && data.teePick;
     var where = tp ? esc(tp.course) + (tp.nine === 'Front' || tp.nine === 'Back' ? ' · ' + esc(tp.nine) + ' 9' : tp.nine === '18' ? ' · 18 holes' : '') + (tp.label ? ' · ' + esc(tp.label.replace(/^(\w{3})\w*/, '$1')) : '')
       : (h.course ? esc(h.course) + (h.nine ? ' · ' + esc(h.nine) + (h.nine === '18' ? ' holes' : ' 9') : '') : '');
@@ -1013,7 +1016,7 @@
       var c = hcCourse(p), t = hcTrend(p);
       var tr = !t ? '<span class="muted">–</span>' : t.d === 0 ? '<span class="hx-st">● Steady</span>' :
         '<span class="' + (t.d < 0 ? 'dn' : 'up') + '">' + (t.d < 0 ? '▼ Down ' : '▲ Up ') + Math.abs(t.d).toFixed(1) + '</span>';
-      return '<tr data-hcrow="' + esc(p.name) + '"' + (p.name === mine ? ' class="me"' : '') + '><td class="hx-p">' + esc(p.name) + (p.source === 'Manual' ? '<small>set manually</small>' : '') + '</td>' +
+      return '<tr data-hcrow="' + esc(p.name) + '"' + (p.name === mine ? ' class="me"' : '') + '><td class="hx-p">' + esc(p.name) + (act && act.some(function (x) { return x.name === p.name && x.guest; }) ? '<small>guest</small>' : p.source === 'Manual' ? '<small>set manually</small>' : '') + '</td>' +
         '<td class="hx-n">' + esc(p.index === '' ? '–' : plus(p.index)) + '</td>' +
         '<td class="hx-n">' + esc(c.ch === '' || c.ch == null ? '–' : plus(c.ch)) + '<small>' + esc(c.tee) + '</small></td>' +
         '<td class="hx-t">' + tr + (t ? '<small>last ' + t.n + ' rds</small>' : '') + '</td></tr>';
@@ -1452,14 +1455,14 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=71"></script>
-<script src="settings.js?v=71"></script>
-<script src="flip.js?v=71"></script>
-<script src="match.js?v=71"></script>
-<script src="msg.js?v=71"></script>
-<script src="puttstand.js?v=71"></script>
-<script src="stats.js?v=71"></script>
-<script src="bios.js?v=71"></script>
-<script src="ctp.js?v=71"></script>
+<script src="tee.js?v=72"></script>
+<script src="settings.js?v=72"></script>
+<script src="flip.js?v=72"></script>
+<script src="match.js?v=72"></script>
+<script src="msg.js?v=72"></script>
+<script src="puttstand.js?v=72"></script>
+<script src="stats.js?v=72"></script>
+<script src="bios.js?v=72"></script>
+<script src="ctp.js?v=72"></script>
 </body>
 </html>
