@@ -1,0 +1,238 @@
+/*
+ * Closest to the Pin side game (Nov 20, 2026). Rules and server: apps-script/ctp.gs.
+ * - CTP tab: hidden until Ty starts a CTP game (data.ctp.on, or the fresh state fetched here) and gone after he ends it.
+ *   Shows who's up, the order with each shot, the leader, the pot, last hole's result, and wins / money tonight.
+ * - Ty (admin) runs it from his phone: Admin > CTP to pick players and start; in the CTP tab he can enter or fix a shot,
+ *   void a shot, add / remove players, change the order, re-hit the hole, undo, and end the game.
+ * - While the CTP tab (or Admin > CTP) is open, the game state is fetched every 3 seconds with ?api=ctp
+ *   (fast: it doesn't wait for the league board).
+ */
+(function () {
+  var st = null, rev = -1, timer = null, busy = false, msg = '', err = false;
+  var open = '';            // admin: the player row that's expanded
+  var pick = null;          // admin: players picked for a new game { name: true }
+  var confirmEnd = false;
+  var lastTab = '';
+
+  function e(s) { return esc(s); }
+  function admin() { var a = window.RL && RL.user(); return !!(a && a.admin); }
+  function on() { return !!(st ? st.on : (window.data && data.ctp && data.ctp.on)); }
+  window.ctpOn = on;
+  function players() { var en = window.data && window.data.entry; return (en && en.players) || []; }
+  function money(v) { v = Number(v) || 0; return (v < 0 ? '−$' : v > 0 ? '+$' : '$') + Math.abs(v); }
+  function ft(x) { if (x == null) return ''; var i = Math.round(Number(x) * 12); return Math.floor(i / 12) + '′' + (i % 12) + '″'; }
+  function shotOf(p) { return st && st.hole ? st.hole.shots.filter(function (s) { return s.p === p; })[0] || null : null; }
+
+  // ---------- data ----------
+  function fetchState() {
+    if (!window.RL) return;
+    RL.get('ctp').then(function (j) { take(j.ctp); }, function () {});
+  }
+  function take(c) {
+    if (!c) return;
+    var was = on();
+    st = c;
+    if (c.rev !== rev || !document.getElementById('ctpbody').innerHTML) { rev = c.rev; draw(); }
+    if (was !== on() && window.updateNav) updateNav();
+  }
+  function act(body, okMsg) {
+    if (busy) return;
+    var a = RL.user(); if (!a) return;
+    busy = true; msg = 'Saving…'; err = false; draw();
+    body.action = 'ctp'; body.token = a.token;
+    RL.post(body).then(function (j) {
+      busy = false; msg = okMsg || ''; err = false;
+      if (j.ctp) { st = j.ctp; rev = j.ctp.rev; }
+      draw(); if (window.updateNav) updateNav();
+    }, function (x) {
+      busy = false; msg = x.message || 'That didn\'t save. Try again.'; err = true; draw();
+    });
+  }
+  function poll(want) {
+    if (want && !timer) { fetchState(); timer = setInterval(function () { if (!document.hidden) fetchState(); }, 3000); }
+    if (!want && timer) { clearInterval(timer); timer = null; }
+  }
+
+  // Called by the page when the tab changes, and on every board refresh.
+  window.ctpShown = function (tab) { lastTab = tab; poll(tab === 'ctp' || tab === 'adminctp'); draw(); };
+  window.renderCtp = function (d) {
+    if (d && d.ctp && ((!st && d.ctp.on) || (st && (d.ctp.rev > st.rev || d.ctp.on !== !!st.on)))) fetchState();   // the board says something changed
+    draw();
+  };
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && timer) fetchState(); });
+
+  // ---------- drawing ----------
+  function draw() {
+    drawTab();
+    drawAdmin();
+  }
+
+  function resultLine(r) {
+    if (!r) return '';
+    if (r.r === 'win') return '<b>' + e(r.w) + '</b> won hole ' + r.n + (r.ft != null ? ' at ' + ft(r.ft) : '') + ' and takes <b>$' + r.pot + '</b>';
+    if (r.r === 'tie') return 'Hole ' + r.n + ': <b>' + e((r.tied || []).join(' & ')) + '</b> tied at ' + ft(r.ft) + '. One tie, all tie: pot carries ($' + r.pot + ')';
+    return 'Hole ' + r.n + ': <b>no qualy</b>. Nobody on the green, pot carries ($' + r.pot + ')';
+  }
+
+  function statusOf(p) {
+    var s = shotOf(p), lead = st.leader;
+    if (!s) return p === st.up ? '<span class="ctp-st up">Up</span>' : '<span class="ctp-st wait">–</span>';
+    if (s.g === 1) {
+      var best = lead && (lead.p === p || (lead.tie || []).indexOf(p) >= 0);
+      return '<span class="ctp-st green' + (best ? ' best' : '') + '">' + (s.ft != null ? ft(s.ft) : 'Green, distance?') + '</span>';
+    }
+    if (s.g === 0) return '<span class="ctp-st miss">' + (s.water ? 'Water' : 'Missed') + '</span>';
+    return '<span class="ctp-st wait">Green or not?</span>';
+  }
+
+  function drawTab() {
+    var box = document.getElementById('ctpbody'); if (!box) return;
+    if (!st || !st.on) {
+      box.innerHTML = '<div class="card ctp-card"><div class="empty">' + (st && st.ended ? 'CTP is over for tonight.' : 'No CTP game right now.') + '</div></div>' + (st && st.ended ? ledger() : '');
+      return;
+    }
+    var A = admin(), h = st.hole || { n: st.n, shots: [] };
+    var up = st.up, first = st.order[0], picks = st.last && st.last.r === 'win' && st.last.w === first && !h.shots.length;
+    var html = '<div class="card ctp-card ctp-head"><div class="ctp-row1"><span class="ctp-hole">Hole ' + h.n + '</span><span class="ctp-pot">Pot $' + st.pot + '</span></div>';
+    if (up) {
+      html += '<div class="ctp-up"><small>Up now</small>' + e(up) + '</div>' +
+        (picks && up === first ? '<div class="ctp-sub">' + e(first) + ' won the last hole: picks the distance and hits first.</div>' : '') +
+        (st.next ? '<div class="ctp-sub">On deck: ' + e(st.next) + '</div>' : '');
+    } else if (st.need === 'distance') html += '<div class="ctp-up wait">Waiting for a distance</div><div class="ctp-sub">More than one ball is on the green' + (A ? '. Enter the missing distance below.' : '. Ty is entering it.') + '</div>';
+    else if (st.need === 'green') html += '<div class="ctp-up wait">Green or not?</div><div class="ctp-sub">A shot couldn\'t be read' + (A ? '. Mark it below.' : '. Ty is checking it.') + '</div>';
+    else html += '<div class="ctp-up wait">Everyone has hit</div>' + (A ? '<button type="button" class="en-save ctp-go" data-ctp="resolve"' + (busy ? ' disabled' : '') + '>Decide this hole</button>' : '');
+    if (st.leader) html += '<div class="ctp-lead">Leader: <b>' + e(st.leader.tie.length ? st.leader.tie.join(' & ') + ' (tied)' : st.leader.p) + '</b> ' + ft(st.leader.ft) + '</div>';
+    if (st.last) html += '<div class="ctp-last ' + st.last.r + '">' + resultLine(st.last) + '</div>';
+    html += '</div>';
+
+    // Order and shots
+    html += '<h2>ORDER</h2><div class="card ctp-card">';
+    st.order.forEach(function (p, i) {
+      var s = shotOf(p), leaving = (st.out || []).indexOf(p) >= 0;
+      html += '<div class="ctp-p' + (p === up ? ' isup' : '') + (A ? ' tap' : '') + '"' + (A ? ' data-ctp="open" data-v="' + e(p) + '"' : '') + '>' +
+        '<span class="ctp-n">' + (i + 1) + '</span><span class="ctp-name">' + e(p) + (st.wins[p] ? ' <i>' + st.wins[p] + (st.wins[p] > 1 ? ' wins' : ' win') + '</i>' : '') + (leaving ? ' <i>leaving after this hole</i>' : '') + '</span>' + statusOf(p) + '</div>';
+      if (A && open === p) html += adminRow(p, i, s);
+    });
+    html += '</div>';
+    if (A) html += adminBar();
+    html += ledger() + history();
+    box.innerHTML = html;
+  }
+
+  function adminRow(p, i, s) {
+    var fIn = s && s.ft != null ? Math.floor(Math.round(s.ft * 12) / 12) : '', iIn = s && s.ft != null ? Math.round(s.ft * 12) % 12 : '';
+    return '<div class="ctp-edit">' +
+      '<div class="ctp-k">' + e(p) + (s ? ': fix this shot' : ': enter a shot by hand') + '</div>' +
+      '<div class="ctp-dist"><input type="number" inputmode="numeric" min="0" max="300" id="ctpft" placeholder="ft" value="' + fIn + '"><span>ft</span>' +
+      '<input type="number" inputmode="numeric" min="0" max="11" id="ctpin" placeholder="in" value="' + iIn + '"><span>in</span>' +
+      '<button type="button" class="ctp-b pri" data-ctp="green" data-v="' + e(p) + '">On the green</button></div>' +
+      '<div class="ctp-btns"><button type="button" class="ctp-b" data-ctp="miss" data-v="' + e(p) + '">Missed the green</button>' +
+      (s ? '<button type="button" class="ctp-b" data-ctp="void" data-v="' + e(p) + '">Void shot (hits again)</button>' : '') + '</div>' +
+      '<div class="ctp-btns"><button type="button" class="ctp-b" data-ctp="up" data-v="' + e(p) + '"' + (i === 0 ? ' disabled' : '') + '>Move up</button>' +
+      '<button type="button" class="ctp-b" data-ctp="down" data-v="' + e(p) + '"' + (i === st.order.length - 1 ? ' disabled' : '') + '>Move down</button>' +
+      '<button type="button" class="ctp-b warn" data-ctp="remove" data-v="' + e(p) + '">Remove</button></div></div>';
+  }
+
+  function adminBar() {
+    var out = players().filter(function (p) { return st.players.indexOf(p.name) < 0; });
+    var html = '<div class="card ctp-card ctp-admin"><div class="ctp-k">Ty\'s controls <span>tap a player above to enter, fix or void a shot, move or remove them</span></div>';
+    if (out.length) html += '<div class="ctp-add"><select id="ctpadd"><option value="">Add a player…</option>' + out.map(function (p) { return '<option>' + e(p.name) + '</option>'; }).join('') + '</select>' +
+      '<button type="button" class="ctp-b pri" data-ctp="add">Add</button></div>';
+    html += '<div class="ctp-btns"><button type="button" class="ctp-b" data-ctp="undo"' + (busy ? ' disabled' : '') + '>Undo</button>' +
+      '<button type="button" class="ctp-b" data-ctp="redo"' + (busy ? ' disabled' : '') + '>Everyone re-hit</button>' +
+      '<button type="button" class="ctp-b warn" data-ctp="end">End CTP</button></div>';
+    if (confirmEnd) html += '<div class="msg-confirm">End CTP for tonight?' + (st.pot ? ' The $' + st.pot + ' pot hasn\'t been won.' : '') +
+      '<div class="msg-btns"><button type="button" class="en-save" data-ctp="endyes">End it</button><button type="button" class="msg-cancel" data-ctp="endno">Keep playing</button></div></div>';
+    html += '<div class="ctp-help">Undo after a finished hole brings that hole back with every shot, so you can fix it.</div>' +
+      '<div class="esw-msg' + (err ? ' err' : '') + '">' + e(msg) + '</div></div>';
+    return html;
+  }
+
+  function ledger() {
+    var names = Object.keys(st.money || {});
+    if (!names.length) return '';
+    names.sort(function (a, b) { return (st.money[b] - st.money[a]) || ((st.wins[b] || 0) - (st.wins[a] || 0)) || (a < b ? -1 : 1); });
+    return '<h2>TONIGHT</h2><div class="card ctp-card"><table class="ctp-t"><tr><th>Player</th><th class="n">Wins</th><th class="n">Money</th></tr>' +
+      names.map(function (p) {
+        var m = st.money[p], gone = st.players.indexOf(p) < 0;
+        return '<tr' + (gone ? ' class="gone"' : '') + '><td>' + e(p) + (gone ? ' <i>left</i>' : '') + '</td><td class="n">' + (st.wins[p] || 0) + '</td><td class="n ' + (m > 0 ? 'up' : m < 0 ? 'dn' : '') + '">' + money(m) + '</td></tr>';
+      }).join('') + '</table><div class="paykey">$1 a hole each. Money = winnings minus dollars put in' + (st.pot ? ', with $' + st.pot + ' in the pot now' : '') + '.</div></div>';
+  }
+
+  function history() {
+    var h = (st.hist || []).slice().reverse();
+    if (!h.length) return '';
+    return '<h2>HOLES</h2><div class="card ctp-card">' + h.map(function (r) { return '<div class="ctp-hist ' + r.r + '">' + resultLine(r) + '</div>'; }).join('') + '</div>';
+  }
+
+  function drawAdmin() {
+    var box = document.getElementById('adminctpbody'); if (!box) return;
+    if (!admin()) { box.innerHTML = ''; return; }
+    if (on()) {
+      box.innerHTML = '<div class="card esw"><div class="esw-top"><b>CTP is running</b><div class="esw-sub">Hole ' + (st ? st.n : '') + (st ? ', pot $' + st.pot : '') + '. Run it from the CTP tab: enter or fix shots, add or remove players, undo, end.</div></div>' +
+        '<button type="button" class="en-save ctp-go" data-gotab="ctp">Open the CTP tab</button></div>';
+      return;
+    }
+    var pl = players();
+    if (!pick) { pick = {}; }
+    var n = Object.keys(pick).filter(function (k) { return pick[k]; }).length;
+    box.innerHTML = '<div class="card esw msg"><div class="esw-top"><b>Closest to the Pin</b><div class="esw-sub">Pick who\'s playing. The first hole\'s order is random. $1 a hole each; closest on the green takes the pot. ' +
+      'Starting it shows the CTP tab to everyone.</div></div>' +
+      '<div class="msg-quick"><button type="button" data-ctp="pickall">Select all</button><button type="button" data-ctp="picknone">Clear</button></div>' +
+      (pl.length ? pl.map(function (p) {
+        var o = !!pick[p.name];
+        return '<div class="esw-row"><span>' + e(p.name) + (p.guest ? ' <i>guest</i>' : '') + '</span><button type="button" class="sw' + (o ? ' on' : '') + '" role="switch" aria-checked="' + o + '" aria-label="' + e(p.name) + ' plays" data-ctp="pick" data-v="' + e(p.name) + '"><i></i></button></div>';
+      }).join('') : '<div class="empty">Loading players…</div>') +
+      '<button type="button" class="en-save msg-go" data-ctp="start"' + (n >= 2 && !busy ? '' : ' disabled') + '>' + (n >= 2 ? 'Start CTP with ' + n + ' players' : 'Pick at least two players') + '</button>' +
+      '<div class="esw-msg' + (err ? ' err' : '') + '">' + e(msg) + '</div></div>' +
+      (st && st.ended && st.money ? ledger().replace('<h2>TONIGHT</h2>', '<h2>LAST CTP GAME</h2>') : '');
+  }
+
+  // ---------- taps ----------
+  function distIn() {
+    var f = document.getElementById('ctpft'), i = document.getElementById('ctpin');
+    var fv = f && f.value !== '' ? Number(f.value) : null, iv = i && i.value !== '' ? Number(i.value) : 0;
+    if (fv == null && !(iv > 0)) return null;
+    return (fv || 0) + Math.min(11, Math.max(0, iv)) / 12;
+  }
+  function move(p, d) {
+    var o = st.order.slice(), i = o.indexOf(p), j = i + d;
+    if (i < 0 || j < 0 || j >= o.length) return;
+    o[i] = o[j]; o[j] = p;
+    act({ op: 'order', order: o });
+  }
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-ctp]'); if (!b) return;
+    var k = b.getAttribute('data-ctp'), v = b.getAttribute('data-v');
+    if (k === 'open') { open = open === v ? '' : v; msg = ''; draw(); return; }
+    if (k === 'pick') { pick[v] = !pick[v]; msg = ''; draw(); return; }
+    if (k === 'pickall') { players().forEach(function (p) { pick[p.name] = true; }); draw(); return; }
+    if (k === 'picknone') { pick = {}; draw(); return; }
+    if (k === 'end') { confirmEnd = true; draw(); return; }
+    if (k === 'endno') { confirmEnd = false; draw(); return; }
+    if (b.disabled) return;
+    if (k === 'start') {
+      var names = players().map(function (p) { return p.name; }).filter(function (n) { return pick[n]; });
+      act({ op: 'start', players: names }, 'Started. Order is on the CTP tab.');
+      pick = null;
+      return;
+    }
+    if (k === 'endyes') { confirmEnd = false; act({ op: 'end' }, 'CTP ended.'); return; }
+    if (k === 'resolve') { act({ op: 'resolve' }); return; }
+    if (k === 'undo') { open = ''; act({ op: 'undo' }, 'Undone.'); return; }
+    if (k === 'redo') { act({ op: 'redo' }, 'Shots cleared. Everyone hits this hole again.'); return; }
+    if (k === 'add') { var sel = document.getElementById('ctpadd'); if (sel && sel.value) act({ op: 'add', name: sel.value }, sel.value + ' added ($1 in).'); return; }
+    if (k === 'green') {
+      var d = distIn();
+      open = '';
+      act(shotOf(v) ? { op: 'edit', name: v, green: true, ft: d } : { op: 'shot', name: v, green: true, ft: d }, v + ': on the green' + (d != null ? ', ' + ft(d) : ''));
+      return;
+    }
+    if (k === 'miss') { open = ''; act(shotOf(v) ? { op: 'edit', name: v, green: false } : { op: 'shot', name: v, green: false }, v + ': missed'); return; }
+    if (k === 'void') { open = ''; act({ op: 'void', name: v }, v + '\'s shot voided. ' + v + ' hits again.'); return; }
+    if (k === 'remove') { open = ''; act({ op: 'remove', name: v }, v + ' removed.'); return; }
+    if (k === 'up') { move(v, -1); return; }
+    if (k === 'down') { move(v, 1); return; }
+  });
+})();
