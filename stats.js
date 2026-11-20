@@ -28,6 +28,10 @@
     var v = y[i - 1] + (y[i] - y[i - 1]) * (idx - HCP_LV[i - 1]) / (HCP_LV[i] - HCP_LV[i - 1]);
     return Math.min(0, v);   // per 18 holes; never better than the Tour itself (plus handicaps)
   }
+  // Strokes gained from fewer than SG_MIN rounds is shown greyed: one 9-hole round doubled to 18 holes swings a lot (Ty, Nov 20)
+  var SG_MIN = 3;
+  function thin(a) { return (a.sgN || 0) < SG_MIN; }
+  function rds(n) { return n + ' rd' + (n === 1 ? '' : 's'); }
   function sgv(a, k) {
     if (!a.sgH) return null;
     var keys = k === 'sgt' ? ['ott', 'app', 'arg', 'putt'] : [k];
@@ -78,8 +82,9 @@
     f.rows.forEach(function (r) {
       if (nightFilter && r[ci.n] !== nightFilter) return;
       var p = r[ci.p], a = out[p];
-      if (!a) { a = out[p] = { p: p, nights: 0 }; f.cols.forEach(function (c) { if (c !== 'p' && c !== 'n') a[c] = 0; }); }
+      if (!a) { a = out[p] = { p: p, nights: 0, sgN: 0 }; f.cols.forEach(function (c) { if (c !== 'p' && c !== 'n') a[c] = 0; }); }
       a.nights++;
+      if (Number(r[ci.sgH]) > 0) a.sgN++;   // rounds with shot data (strokes gained)
       f.cols.forEach(function (c) { if (c === 'p' || c === 'n') return; if (c === 'ld') a.ld = Math.max(a.ld, r[ci.ld] || 0); else a[c] += Number(r[ci[c]]) || 0; });
     });
     return out;
@@ -153,10 +158,10 @@
         var v = sm.v(a);
         if (v === null) rank = ''; else if (prev === null || Math.abs(v - prev) > 1e-9) { rank = i + 1; prev = v; }
         return '<tr class="' + (a.p === u ? 'sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(cat.id === 'drive' ? short(a.p) : a.p) +
-          '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) : S.scope === 'night' ? a.holes + ' holes' : a.nights + ' rd' + (a.nights === 1 ? '' : 's')) + '</small></td>' +
-          cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (x >= 0 ? ' sx-pos' : ' sx-neg') : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
+          '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) + (S.scope === 'night' ? '' : ' · ' + rds(a.sgN)) : hasSg && S.scope !== 'night' ? rds(a.sgN) + ' of shots' : S.scope === 'night' ? a.holes + ' holes' : rds(a.nights)) + '</small></td>' +
+          cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (thin(a) ? ' sx-thin' : (x >= 0 ? ' sx-pos' : ' sx-neg')) : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
       }).join('') + '</table>';
-    html += '<div class="paykey">' + cat.key + (hasSg ? ' <b>SG ' + ({ tour: 'vs Tour', scratch: 'vs scratch golfer', hcp: 'vs my handicap' })[S.base] + ':</b> ' + BASE_KEY[S.base] : '') + ' Tap a column to sort.</div>';
+    html += '<div class="paykey">' + cat.key + (hasSg ? ' <b>SG ' + ({ tour: 'vs Tour', scratch: 'vs scratch golfer', hcp: 'vs my handicap' })[S.base] + ':</b> ' + BASE_KEY[S.base] + ' <b>Grey</b> = fewer than ' + SG_MIN + ' rounds with shot data (shot tracking started Nov 19): one 9-hole round doubled to 18 holes swings a lot.' : '') + ' Tap a column to sort.</div>';
     // Tonight's penalty / mulligan holes (Driving only)
     var ag = D.agentStats;
     if (cat.id === 'drive' && S.scope === 'night' && tonightHas && ag && ag.players) {
@@ -181,11 +186,12 @@
     var sgKeys = ['ott', 'app', 'arg', 'putt'];
     if (a.sgH) {
       var vals = sgKeys.map(function (k) { return M[k].v(a); }), mx = Math.max.apply(null, vals.map(function (v) { return Math.abs(v); }).concat([0.5]));
-      html += '<div class="sx-filt"><span>Strokes gained</span>' + baseSel() + '</div><div class="card sx-sg"><div class="pp-t">Strokes gained per 18 holes <span class="sx-tot ' + (M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
+      var th = thin(a);
+      html += '<div class="sx-filt"><span>Strokes gained</span>' + baseSel() + '</div><div class="card sx-sg' + (th ? ' sx-thin-card' : '') + '"><div class="pp-t">Strokes gained per 18 holes <span class="sx-tot ' + (th ? 'sx-thin' : M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
         sgKeys.map(function (k, i) {
           var v = vals[i], w = Math.round(Math.abs(v) / mx * 50);
-          return '<div class="sx-bar"><span class="sx-bl">' + M[k].t.replace('SG: ', '') + '</span><span class="sx-bt"><i class="' + (v >= 0 ? 'p' : 'n') + '" style="' + (v >= 0 ? 'left:50%' : 'right:50%') + ';width:' + w + '%"></i></span><b class="' + (v >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M[k], v) + '</b></div>';
-        }).join('') + '<div class="paykey">' + BASE_KEY[S.base] + ' Bars left = strokes lost.' + (S.base === 'hcp' && hcpIndex(who) !== null ? ' Your index: ' + hcpIndex(who) + '.' : '') + '</div></div>';
+          return '<div class="sx-bar"><span class="sx-bl">' + M[k].t.replace('SG: ', '') + '</span><span class="sx-bt"><i class="' + (v >= 0 ? 'p' : 'n') + '" style="' + (v >= 0 ? 'left:50%' : 'right:50%') + ';width:' + w + '%"></i></span><b class="' + (th ? 'sx-thin' : v >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M[k], v) + '</b></div>';
+        }).join('') + '<div class="paykey">' + (th ? '<b>Based on ' + rds(a.sgN) + ' of shot data</b>, so greyed until ' + SG_MIN + ': one round doubled to 18 holes swings a lot. ' : 'Based on ' + rds(a.sgN) + ' of shot data. ') + BASE_KEY[S.base] + ' Bars left = strokes lost.' + (S.base === 'hcp' && hcpIndex(who) !== null ? ' Your index: ' + hcpIndex(who) + '.' : '') + '</div></div>';
     } else {
       html += '<div class="card sx-sg"><div class="pp-t">Strokes gained</div><div class="paykey">Starts with your next round once the GSPro agent update is in.</div></div>';
     }

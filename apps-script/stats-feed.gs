@@ -46,10 +46,15 @@ function sgExpected_(lie, yd) {
   return sgInterp_(SG_D_, t, yd);
 }
 // One hole's shots -> approach list and strokes gained by category.
-function statHole_(shots, par) {
+// gross (Nov 20): GSPro sometimes writes a penalty record it doesn't add to the score (Nov 19: Ty, Mike and Schertzer
+// on 11), so penalty strokes are trimmed, latest first, until swings + penalties = the hole score.
+function statHole_(shots, par, gross) {
   var out = { ap: [], sg: { ott: 0, app: 0, arg: 0, putt: 0 } };
+  var pens = shots.map(function (s) { return Number(s[4]) || 0; });
+  var extra = gross > 0 ? shots.length + pens.reduce(function (t, x) { return t + x; }, 0) - gross : 0;
+  for (var j = pens.length - 1; j >= 0 && extra > 0; j--) { var cut = Math.min(pens[j], extra); pens[j] -= cut; extra -= cut; }
   shots.forEach(function (s, i) {
-    var sl = String(s[0]), sd = Number(s[1]) || 0, el = String(s[2]), ed = Number(s[3]) || 0, pen = Number(s[4]) || 0;
+    var sl = String(s[0]), sd = Number(s[1]) || 0, el = String(s[2]), ed = Number(s[3]) || 0, pen = pens[i];
     var cat = sl === 'G' ? 'putt' : (i === 0 && par >= 4) ? 'ott' : sd > STAT_ARG_YD_ ? 'app' : 'arg';
     out.sg[cat] += sgExpected_(sl, sd) - sgExpected_(el, ed) - 1 - pen;
     if (cat === 'app' && (el === 'H' || el === 'G' || ed <= STAT_ARG_YD_)) out.ap.push([sd, el === 'H' ? 0 : ed * 3]);
@@ -90,7 +95,7 @@ function statsFeed_() {
     var shots = null;
     if (w >= 18 && r[17]) { try { shots = JSON.parse(String(r[17])); } catch (e) { shots = null; } }
     if (shots && shots.length) {
-      var hs = statHole_(shots, par);
+      var hs = statHole_(shots, par, gross);
       a.sgH++; a.ott += hs.sg.ott; a.app += hs.sg.app; a.arg += hs.sg.arg; a.putt += hs.sg.putt;
       hs.ap.forEach(function (x) { a.apN++; a.apYd += x[0]; a.apFt += x[1]; });
     }

@@ -618,3 +618,7 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .bio-c .bio-add .en-save { margin-top: 10px; }
 .bio-tip { margin: 6px 0 0 !important; font-size: 12.5px !important; }
 .bio-msg { margin-top: 12px; }
+
+/* Strokes gained from fewer than 3 rounds of shot data (Nov 20) */
+.sx-thin { color: #9BA59E !important; opacity: .55; }
+.sx-thin-card .sx-bt i { opacity: .35; }
