@@ -685,3 +685,15 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .ctp-up.chal small { color: var(--win); }
 .ctp-chal .ctp-ans { margin: 0 0 10px; }
 .ctp-b.sel { background: var(--card2); box-shadow: inset 0 0 0 2px var(--line2); }
+
+/* Handicaps > Everyone (Nov 20) */
+.hx-cap { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; }
+.hx-tbl { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14px; }
+.hx-tbl th { text-align: left; color: var(--muted); font: 600 11.5px Inter, sans-serif; text-transform: uppercase; letter-spacing: .04em; padding: 4px 4px 6px; border-bottom: 1px solid var(--line); }
+.hx-tbl th:nth-child(1) { width: 34%; } .hx-tbl th:nth-child(2), .hx-tbl th:nth-child(3) { width: 19%; text-align: right; } .hx-tbl th:nth-child(4) { text-align: right; }
+.hx-tbl td { padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; cursor: pointer; }
+.hx-tbl tr.me td { background: rgba(245,177,60,.08); }
+.hx-tbl td small { display: block; color: var(--muted); font: 500 11px Inter, sans-serif; margin-top: 1px; }
+.hx-p { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hx-n, .hx-t { text-align: right; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 600; }
+.hx-t .dn { color: #8FD19E; } .hx-t .up { color: #F28B7C; } .hx-st { color: var(--muted); }

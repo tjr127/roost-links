@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=70">
-<link rel="stylesheet" href="theme.css?v=70">
+<link rel="stylesheet" href="app.css?v=71">
+<link rel="stylesheet" href="theme.css?v=71">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=70"></script>
-<script src="rules.js?v=70"></script>
+<script src="app.js?v=71"></script>
+<script src="rules.js?v=71"></script>
 </head>
 <body>
 <header>
@@ -314,8 +314,8 @@
   <section id="adminctp" class="hide"><div id="adminctpbody"></div></section>
   <section id="ctp" class="hide"><div id="ctpbody"></div></section>
   <section id="hcp" class="hide">
-    <h2>Player handicaps</h2>
-    <div class="card picker"><label for="hcpwho">Player</label><select id="hcpwho"></select></div>
+    <div class="fhead"><h2>Player handicaps</h2><div class="seg" role="group" aria-label="Handicap view"><button type="button" data-hv="one">Individual</button><button type="button" data-hv="all">Everyone</button></div></div>
+    <div class="card picker" id="hcppick"><label for="hcpwho">Player</label><select id="hcpwho"></select></div>
     <div id="hcpbody"></div>
   </section>
   <footer>Updated <span id="updated">…</span> · refreshes every minute</footer>
@@ -977,8 +977,56 @@
       '<div class="hs-r"><div>' + sub + '</div>' + (trend ? '<div>' + trend + '</div>' : '') + '</div></div>' + hcGoal(p) + '</div>';
   }
 
+  // ---- Handicaps: Individual / Everyone (Ty, Nov 20) ----
+  var hcView = store('hcView') || 'one';
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-hv]');
+    if (b) { hcView = b.getAttribute('data-hv'); store('hcView', hcView); renderHcp(); return; }
+    var r = ev.target.closest && ev.target.closest('[data-hcrow]');
+    if (r) { hcView = 'one'; store('hcView', hcView); hcpSel = null; setMe(r.getAttribute('data-hcrow')); renderHcp(); window.scrollTo(0, 0); }
+  });
+  // Change in index over the last (up to) 5 rounds, from the index-after-each-round values (same as the Individual strip)
+  function hcTrend(p) {
+    if (p.source === 'Manual') return null;
+    var ix = (p.diffs || []).map(function (x) { return num(x.ix); });
+    if (ix.length < 2 || ix[0] === null) return null;
+    var back = Math.min(5, ix.length - 1);
+    while (back > 0 && ix[back] === null) back--;
+    if (!back) return null;
+    return { d: Math.round((ix[0] - ix[back]) * 10) / 10, n: back };
+  }
+  // Course handicap for the scheduled night (Handicaps card's night: tonight if it's today, else the next league night) at the tees he's playing
+  function hcCourse(p) {
+    var tp = data && data.teePick, me0 = tp && tp.players && tp.players[p.name];
+    if (me0) { var t = tpPend[p.name] || me0.pick || me0.def; return { ch: me0.chs[t], tee: t, picked: !!me0.pick }; }
+    var c = (p.chs || []).filter(function (x) { return x.tee === p.tees; })[0];
+    return c ? { ch: c.ch, tee: c.tee, picked: false } : { ch: '', tee: p.tees || '', picked: false };
+  }
+  function renderHcpAll(h) {
+    var list = (h.players || []).slice();
+    var tp = data && data.teePick;
+    var where = tp ? esc(tp.course) + (tp.nine === 'Front' || tp.nine === 'Back' ? ' · ' + esc(tp.nine) + ' 9' : tp.nine === '18' ? ' · 18 holes' : '') + (tp.label ? ' · ' + esc(tp.label.replace(/^(\w{3})\w*/, '$1')) : '')
+      : (h.course ? esc(h.course) + (h.nine ? ' · ' + esc(h.nine) + (h.nine === '18' ? ' holes' : ' 9') : '') : '');
+    list.sort(function (a, b) { var x = num(a.index), y = num(b.index); if (x === null) return 1; if (y === null) return -1; return x - y || a.name.localeCompare(b.name); });
+    var mine = me();
+    var rows = list.map(function (p) {
+      var c = hcCourse(p), t = hcTrend(p);
+      var tr = !t ? '<span class="muted">–</span>' : t.d === 0 ? '<span class="hx-st">● Steady</span>' :
+        '<span class="' + (t.d < 0 ? 'dn' : 'up') + '">' + (t.d < 0 ? '▼ Down ' : '▲ Up ') + Math.abs(t.d).toFixed(1) + '</span>';
+      return '<tr data-hcrow="' + esc(p.name) + '"' + (p.name === mine ? ' class="me"' : '') + '><td class="hx-p">' + esc(p.name) + (p.source === 'Manual' ? '<small>set manually</small>' : '') + '</td>' +
+        '<td class="hx-n">' + esc(p.index === '' ? '–' : plus(p.index)) + '</td>' +
+        '<td class="hx-n">' + esc(c.ch === '' || c.ch == null ? '–' : plus(c.ch)) + '<small>' + esc(c.tee) + '</small></td>' +
+        '<td class="hx-t">' + tr + (t ? '<small>last ' + t.n + ' rds</small>' : '') + '</td></tr>';
+    }).join('');
+    document.getElementById('hcpbody').innerHTML = '<div class="card hx"><div class="hx-cap">Course handicap for ' + (where || 'the next round') + ', at each player\'s tees for that night.</div>' +
+      '<table class="hx-tbl"><thead><tr><th>Player</th><th>Index</th><th>Course</th><th>Trend</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="paykey">Sorted by index, lowest first. Trend = change in index over the last 5 rounds (▼ better, ▲ worse). Tap a player for his chart.</div></div>';
+  }
   function renderHcp() {
     var h = (data && data.handicaps) || { players: [] };
+    document.querySelectorAll('[data-hv]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-hv') === hcView); });
+    document.getElementById('hcppick').classList.toggle('hide', hcView === 'all');
+    if (hcView === 'all') { renderHcpAll(h); return; }
     var list = h.players || [];
     var sel = document.getElementById('hcpwho');
     var want = me();
@@ -1404,14 +1452,14 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=70"></script>
-<script src="settings.js?v=70"></script>
-<script src="flip.js?v=70"></script>
-<script src="match.js?v=70"></script>
-<script src="msg.js?v=70"></script>
-<script src="puttstand.js?v=70"></script>
-<script src="stats.js?v=70"></script>
-<script src="bios.js?v=70"></script>
-<script src="ctp.js?v=70"></script>
+<script src="tee.js?v=71"></script>
+<script src="settings.js?v=71"></script>
+<script src="flip.js?v=71"></script>
+<script src="match.js?v=71"></script>
+<script src="msg.js?v=71"></script>
+<script src="puttstand.js?v=71"></script>
+<script src="stats.js?v=71"></script>
+<script src="bios.js?v=71"></script>
+<script src="ctp.js?v=71"></script>
 </body>
 </html>
