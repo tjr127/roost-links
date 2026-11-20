@@ -79,7 +79,7 @@
     if (!s) return p === st.up ? '<span class="ctp-st up">Up</span>' : '<span class="ctp-st wait">–</span>';
     if (s.g === 1) {
       var best = lead && (lead.p === p || (lead.tie || []).indexOf(p) >= 0);
-      return '<span class="ctp-st green' + (best ? ' best' : '') + '">' + (s.ft != null ? ft(s.ft) : 'Green, distance?') + '</span>';
+      return '<span class="ctp-st green' + (best ? ' best' : '') + '">' + (s.ft != null ? ft(s.ft) : s.over != null ? 'Green, over ' + ft(s.over) : 'Green, distance?') + '</span>';
     }
     if (s.g === 0) return '<span class="ctp-st miss">' + (s.water ? 'Water' : 'Missed') + '</span>';
     return '<span class="ctp-st wait">Green or not?</span>';

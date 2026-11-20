@@ -92,6 +92,13 @@ function ctpResolve_(st, now, rnd) {
   if (!greens.length) res.r = 'noqualy';
   else if (greens.length === 1) { res.r = 'win'; res.w = greens[0].p; res.ft = greens[0].ft; }
   else {
+    // A green ball the watcher couldn't see on the full Quick CTP panel is farther than s.over; it can't win if a
+    // ball on this hole is known to be at s.over or closer (Nov 20).
+    var known = greens.filter(function (s) { return s.ft != null; });
+    greens = greens.filter(function (s) {
+      if (s.ft != null) return true;
+      return !(s.over != null && known.some(function (k) { return ctpIn_(k.ft) <= ctpIn_(s.over); }));
+    });
     if (greens.some(function (s) { return s.ft == null; })) { st.need = 'distance'; return null; }
     var best = Math.min.apply(null, greens.map(function (s) { return ctpIn_(s.ft); }));
     var at = greens.filter(function (s) { return ctpIn_(s.ft) === best; });
@@ -138,6 +145,7 @@ function ctpApply_(st, b, isAdmin, now, rnd) {
     var shot = { p: p, g: g, ft: ft, src: isAdmin ? 'ty' : 'pc', t: now };
     if (b.surf != null) shot.surf = Number(b.surf);
     if (b.water) shot.water = 1;
+    if (g === 1 && ft == null && b.over != null && !isNaN(Number(b.over))) shot.over = Number(b.over);   // farther than this (full panel)
     if (b.sp != null) shot.sp = Math.round(Number(b.sp) * 10) / 10;
     st.hole.shots.push(shot);
   } else if (op === 'edit') {
@@ -146,6 +154,7 @@ function ctpApply_(st, b, isAdmin, now, rnd) {
     if (b.green !== undefined) s0.g = b.green === true || b.green === 1 ? 1 : b.green === false || b.green === 0 ? 0 : null;
     if (b.ft !== undefined) s0.ft = b.ft === '' || b.ft == null || isNaN(Number(b.ft)) ? null : Math.max(0, Number(b.ft));
     if (s0.g !== 1) s0.ft = null;
+    if (s0.ft != null || s0.g !== 1) delete s0.over;
     s0.src = 'ty';
   } else if (op === 'void') {
     if (!ctpShotOf_(st, name)) throw new Error(name + ' hasn\'t hit yet.');
