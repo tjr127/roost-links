@@ -121,10 +121,11 @@
     } else {
       var who = ch.phase === 'free' ? [ch.leader] : ch.order;
       if (ch.phase === 'free') html += '<div class="ctp-help">Challengers: ' + Object.keys(ch.cost).map(function (p) { return e(p) + ' $' + ch.cost[p]; }).join(' · ') + '</div>';
+      if (A && ch.phase === 'shoot' && (ch.hidden || []).length) html += '<button type="button" class="ctp-b ctp-reveal" data-ctp="reveal"' + (busy ? ' disabled' : '') + '>Reveal all buy-ins now</button>';
       who.forEach(function (p, i) {
         var s = shotOf(p);
         html += '<div class="ctp-p' + (p === st.up ? ' isup' : '') + (A ? ' tap' : '') + '"' + (A ? ' data-ctp="open" data-v="' + e(p) + '"' : '') + '><span class="ctp-n">' + (i + 1) + '</span><span class="ctp-name">' + e(p) +
-          ' <i>' + (ch.phase === 'free' ? 'free shot' : 'paid $' + ch.cost[p] + (ch.fixed ? ' flat' : '')) + '</i></span>' + statusOf(p) + '</div>';
+          ' <i>' + (ch.phase === 'free' ? 'free shot' : ch.cost[p] == null ? 'spinning the randomizer…' : 'paid $' + ch.cost[p] + (ch.fixed ? ' flat' : '')) + '</i></span>' + statusOf(p) + '</div>';
         if (A && open === p) html += adminRow(p, i, s, true);
       });
     }
@@ -152,7 +153,7 @@
       html += '<div class="ctp-up chal"><small>Challenge round ' + ch.k + '</small>' + e(ch.leader) + ' leads at ' + ft(ch.ft) + '</div>' +
         '<div class="ctp-sub">Think you can get closer? One more shot costs a random <b>$' + ch.min + ' to $' + ch.max + '</b>, drawn after everyone answers. No backing out once it\'s drawn.</div>';
     } else if (ch && ch.phase === 'shoot' && up) {
-      html += '<div class="ctp-up chal"><small>Challenger up · paid $' + (ch.cost[up] || '?') + '</small>' + e(up) + '</div>' +
+      html += '<div class="ctp-up chal"><small>Challenger up · ' + (ch.cost[up] == null ? 'buy-in spinning…' : 'paid $' + ch.cost[up]) + '</small>' + e(up) + '</div>' +
         '<div class="ctp-sub">Has to beat ' + e(ch.leader) + ' at ' + ft(ch.ft) + '.' + (st.next ? ' On deck: ' + e(st.next) + '.' : '') + '</div>';
     } else if (ch && ch.phase === 'free' && up) {
       html += '<div class="ctp-up chal"><small>Free shot</small>' + e(up) + '</div>' +
@@ -286,6 +287,7 @@
     if (k === 'resolve') { act({ op: 'resolve' }); return; }
     if (k === 'chyes') { act({ op: 'answer', name: v, yes: true }, v + ' is challenging.'); return; }
     if (k === 'chno') { act({ op: 'answer', name: v, yes: false }, v + ' declined.'); return; }
+    if (k === 'reveal') { act({ op: 'reveal', all: true }, 'Buy-ins revealed.'); return; }
     if (k === 'chgo') { act({ op: 'continue' }, 'Challenge answers closed.'); return; }
     if (k === 'lead0') { act({ op: 'leadopt', amount: 0 }, 'Pot taken.'); return; }
     if (k === 'lead1' || k === 'lead2') { var amt = k === 'lead1' ? 1 : 2; act({ op: 'leadopt', amount: amt }, '$' + amt + ' challenge offered.'); return; }

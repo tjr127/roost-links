@@ -181,7 +181,8 @@ function ctpResolve_(st, now, rnd) {
         ch.cost[p] = c; st.money[p] = (st.money[p] || 0) - c; st.pot += c;
       });
       ch.order = yes; ch.shots = []; ch.phase = 'shoot';
-      return { e: 'draws', k: ch.k, cost: ch.cost, pot: st.pot, leader: ch.leader, ft: ch.ft, fixed: ch.fixed || 0 };
+      ch.reveal = ch.fixed ? yes.slice() : [];   // randomizer buy-ins stay hidden in the app until the host reveals them (Nov 20)
+      return { e: 'draws', k: ch.k, pot: st.pot, leader: ch.leader, ft: ch.ft, fixed: ch.fixed || 0, order: yes };
     }
     if (ctpUp_(st)) return null;
     if (ch.shots.some(function (s) { return s.g == null; })) { st.need = 'green'; return null; }
@@ -266,6 +267,12 @@ function ctpApply_(st, b, isAdmin, now, rnd, who) {
     var amt = Number(b.amount) || 0;
     if (amt === 1 || amt === 2) ctpOffer_(st, st.ch.leader, st.ch.ft, now, amt);
     else { var r0 = { n: st.hole.n, t: now, shots: st.hole.shots.map(function (s) { return { p: s.p, g: s.g, ft: s.ft }; }) }; ctpWin_(st, r0, st.ch.leader, st.ch.ft, now, rnd); return { st: st, res: st.last, pre: null }; }
+  } else if (op === 'reveal') {
+    // The watcher (after the host's wheel spin) or Ty: show these buy-ins in the app. all = every one.
+    if (!st.ch || st.ch.phase !== 'shoot') throw new Error('No buy-ins to reveal.');
+    var rv = st.ch.reveal || (st.ch.reveal = []);
+    (b.all ? st.ch.order : [].concat(b.names || [])).forEach(function (p) { if (st.ch.cost[p] != null && rv.indexOf(p) < 0) rv.push(p); });
+    return { st: st, res: null, pre: null };
   } else if (op === 'continue') {
     if (!isAdmin) throw new Error('Only Ty can do that.');
     if (!st.ch || (st.ch.phase !== 'offer' && st.ch.phase !== 'lead')) throw new Error('No challenge is open right now.');
@@ -294,6 +301,7 @@ function ctpApply_(st, b, isAdmin, now, rnd, who) {
       if (b.sp != null) shot.sp = Math.round(Number(b.sp) * 10) / 10;
       list.push(shot);
       if (act.kind === 'hole') st.hole.shots = list; else st.ch.shots = list;
+      if (act.kind === 'challenge') st.ch.reveal = st.ch.order.slice();
     } else if (op === 'edit') {
       var s0 = ctpShotOf_(st, name);
       if (!s0) throw new Error(name + ' hasn\'t hit yet.');
@@ -352,7 +360,16 @@ function ctpViewOf_(st) {
   var a = ctpActive_(st);
   v.phase = a.kind;
   v.next = v.up ? (function () { var i = a.order.indexOf(v.up); for (var k = i + 1; k < a.order.length; k++) if (!ctpShotOf_(st, a.order[k])) return a.order[k]; return ''; })() : '';
-  if (st.ch) { v.ch.eligible = ctpEligible_(st); v.ch.min = st.ch.fixed || 2; v.ch.max = st.ch.fixed || st.ch.pot0 + 1; }
+  if (st.ch) {
+    v.ch.eligible = ctpEligible_(st); v.ch.min = st.ch.fixed || 2; v.ch.max = st.ch.fixed || st.ch.pot0 + 1;
+    if (st.ch.phase === 'shoot' && st.ch.reveal) {
+      Object.keys(st.ch.cost).forEach(function (p) {
+        if (st.ch.reveal.indexOf(p) >= 0) return;
+        v.money[p] = (v.money[p] || 0) + st.ch.cost[p]; v.pot -= st.ch.cost[p]; v.ch.cost[p] = null;   // still spinning
+      });
+      v.ch.hidden = st.ch.order.filter(function (p) { return st.ch.reveal.indexOf(p) < 0; });
+    }
+  }
   return v;
 }
 
@@ -382,7 +399,12 @@ function apiCtp0_(b) {
   if (b.op === 'state') return { ok: true, ctp: ctpView_() };
   var isPlayer = !!(user && (b.op === 'answer' || b.op === 'leadopt'));
   if (!isAdmin && !isAgent && !isPlayer) return { ok: false, code: user ? 'denied' : 'auth', error: user ? 'Only Ty can run CTP.' : 'Please sign in again.' };
-  if (isAgent && !isAdmin && b.op !== 'shot') return { ok: false, error: 'The watcher can only report shots.' };
+  if (isAgent && !isAdmin && ['shot', 'reveal', 'peek'].indexOf(b.op) < 0) return { ok: false, error: 'The watcher can only report shots and reveal buy-ins.' };
+  if (b.op === 'peek') {   // the watcher needs the real buy-ins for the host's reveal, before the app shows them
+    if (!isAgent && !isAdmin) return { ok: false, error: 'Not allowed.' };
+    var stp = ctpLoad_();
+    return { ok: true, cost: stp && stp.ch ? stp.ch.cost : {}, order: stp && stp.ch ? stp.ch.order : [], max: stp && stp.ch ? (stp.ch.fixed || stp.ch.pot0 + 1) : 0, fixed: stp && stp.ch ? (stp.ch.fixed || 0) : 0, k: stp && stp.ch ? stp.ch.k : 0 };
+  }
   var lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {

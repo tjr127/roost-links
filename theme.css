@@ -697,3 +697,4 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .hx-p { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hx-n, .hx-t { text-align: right; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 600; }
 .hx-t .dn { color: #8FD19E; } .hx-t .up { color: #F28B7C; } .hx-st { color: var(--muted); }
+.ctp-reveal { width: 100%; margin-top: 10px; }
