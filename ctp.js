@@ -97,8 +97,16 @@
 
   // The challenge: answers (offer), challengers and their buy-ins (shoot), the leader's free shot (free).
   function challengeCard(A, ch) {
-    var html = '<h2>CHALLENGE ' + ch.k + '</h2><div class="card ctp-card ctp-chal">', mine = me();
-    if (ch.phase === 'offer') {
+    var html = '<h2>' + (ch.phase === 'lead' ? 'LEADER\'S CALL' : ch.fixed ? '$' + ch.fixed + ' CHALLENGE' : 'CHALLENGE ' + ch.k) + '</h2><div class="card ctp-card ctp-chal">', mine = me();
+    if (ch.phase === 'lead') {
+      // The leader (or Ty) chooses: take the pot, or a flat $1 / $2 challenge.
+      if (A || mine === ch.leader) {
+        html += '<div class="ctp-p"><span class="ctp-name">' + e(ch.leader) + (mine === ch.leader ? ' <i>you</i>' : '') + '</span><span class="ctp-st up">Choosing</span></div>' +
+          '<div class="ctp-btns ctp-ans"><button type="button" class="ctp-b pri" data-ctp="lead0"' + (busy ? ' disabled' : '') + '>Take the $' + st.pot + '</button>' +
+          '<button type="button" class="ctp-b" data-ctp="lead1"' + (busy ? ' disabled' : '') + '>$1 challenge</button>' +
+          '<button type="button" class="ctp-b" data-ctp="lead2"' + (busy ? ' disabled' : '') + '>$2 challenge</button></div>';
+      } else html += '<div class="ctp-help">Waiting on ' + e(ch.leader) + ': take the pot, or a $1 / $2 challenge.</div>';
+    } else if (ch.phase === 'offer') {
       var el = ch.eligible || [];
       el.forEach(function (p) {
         var a = ch.ans[p], can = A || p === mine;
@@ -116,7 +124,7 @@
       who.forEach(function (p, i) {
         var s = shotOf(p);
         html += '<div class="ctp-p' + (p === st.up ? ' isup' : '') + (A ? ' tap' : '') + '"' + (A ? ' data-ctp="open" data-v="' + e(p) + '"' : '') + '><span class="ctp-n">' + (i + 1) + '</span><span class="ctp-name">' + e(p) +
-          ' <i>' + (ch.phase === 'free' ? 'free shot' : 'paid $' + ch.cost[p]) + '</i></span>' + statusOf(p) + '</div>';
+          ' <i>' + (ch.phase === 'free' ? 'free shot' : 'paid $' + ch.cost[p] + (ch.fixed ? ' flat' : '')) + '</i></span>' + statusOf(p) + '</div>';
         if (A && open === p) html += adminRow(p, i, s, true);
       });
     }
@@ -134,7 +142,13 @@
     var up = st.up, first = st.order[0], picks = st.last && st.last.r === 'win' && st.last.w === first && !h.shots.length;
     var html = '<div class="card ctp-card ctp-head"><div class="ctp-row1"><span class="ctp-hole">Hole ' + h.n + '</span><span class="ctp-pot">Pot $' + st.pot + '</span></div>';
     var ch = st.ch;
-    if (ch && ch.phase === 'offer') {
+    if (ch && ch.phase === 'lead') {
+      html += '<div class="ctp-up chal"><small>No challengers</small>' + e(ch.leader) + '\'s call</div>' +
+        '<div class="ctp-sub">' + e(ch.leader) + ' leads at ' + ft(ch.ft) + '. He can take the $' + st.pot + ' pot, or put up a flat $1 or $2 challenge to everyone else.</div>';
+    } else if (ch && ch.phase === 'offer' && ch.fixed) {
+      html += '<div class="ctp-up chal"><small>' + e(ch.leader) + '\'s $' + ch.fixed + ' challenge</small>' + e(ch.leader) + ' leads at ' + ft(ch.ft) + '</div>' +
+        '<div class="ctp-sub">Anyone can have another go for a flat <b>$' + ch.fixed + '</b>. If nobody takes it, ' + e(ch.leader) + ' wins the pot.</div>';
+    } else if (ch && ch.phase === 'offer') {
       html += '<div class="ctp-up chal"><small>Challenge round ' + ch.k + '</small>' + e(ch.leader) + ' leads at ' + ft(ch.ft) + '</div>' +
         '<div class="ctp-sub">Think you can get closer? One more shot costs a random <b>$' + ch.min + ' to $' + ch.max + '</b>, drawn after everyone answers. No backing out once it\'s drawn.</div>';
     } else if (ch && ch.phase === 'shoot' && up) {
@@ -150,7 +164,7 @@
     } else if (st.need === 'distance') html += '<div class="ctp-up wait">Waiting for a distance</div><div class="ctp-sub">More than one ball is on the green' + (A ? '. Enter the missing distance below.' : '. Ty is entering it.') + '</div>';
     else if (st.need === 'green') html += '<div class="ctp-up wait">Green or not?</div><div class="ctp-sub">A shot couldn\'t be read' + (A ? '. Mark it below.' : '. Ty is checking it.') + '</div>';
     else if (!ch) html += '<div class="ctp-up wait">Everyone has hit</div>' + (A ? '<button type="button" class="en-save ctp-go" data-ctp="resolve"' + (busy ? ' disabled' : '') + '>Decide this hole</button>' : '');
-    if (st.leader && !(ch && ch.phase === 'offer')) html += '<div class="ctp-lead">Leader: <b>' + e(st.leader.tie.length ? st.leader.tie.join(' & ') + ' (tied)' : st.leader.p) + '</b> ' + ft(st.leader.ft) + '</div>';
+    if (st.leader && !(ch && (ch.phase === 'offer' || ch.phase === 'lead'))) html += '<div class="ctp-lead">Leader: <b>' + e(st.leader.tie.length ? st.leader.tie.join(' & ') + ' (tied)' : st.leader.p) + '</b> ' + ft(st.leader.ft) + '</div>';
     if (st.last) html += '<div class="ctp-last ' + st.last.r + '">' + resultLine(st.last) + '</div>';
     html += '</div>';
 
@@ -273,6 +287,8 @@
     if (k === 'chyes') { act({ op: 'answer', name: v, yes: true }, v + ' is challenging.'); return; }
     if (k === 'chno') { act({ op: 'answer', name: v, yes: false }, v + ' declined.'); return; }
     if (k === 'chgo') { act({ op: 'continue' }, 'Challenge answers closed.'); return; }
+    if (k === 'lead0') { act({ op: 'leadopt', amount: 0 }, 'Pot taken.'); return; }
+    if (k === 'lead1' || k === 'lead2') { var amt = k === 'lead1' ? 1 : 2; act({ op: 'leadopt', amount: amt }, '$' + amt + ' challenge offered.'); return; }
     if (k === 'undo') { open = ''; act({ op: 'undo' }, 'Undone.'); return; }
     if (k === 'redo') { act({ op: 'redo' }, 'Shots cleared. Everyone hits this hole again.'); return; }
     if (k === 'add') { var sel = document.getElementById('ctpadd'); if (sel && sel.value) act({ op: 'add', name: sel.value }, sel.value + ' added ($1 in).'); return; }

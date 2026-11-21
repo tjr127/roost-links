@@ -25,9 +25,13 @@ var CTP_KEY_ = 'CTP_STATE', CTP_UNDO_N_ = 3, CTP_HIST_ = 12, CTP_LOG_TAB_ = 'CTP
 // hit one shot each (hole order). If one beats the leader, the leader gets one free shot; the closest ball is then the
 // leader. Either way a new challenge round is offered on the bigger pot; the hole ends when everyone declines (leader takes
 // the pot). Any exact tie during a challenge is "one tie, all tie": the pot rolls over to a new hole, same order.
+// Leader's option (Nov 20, Ty): when everyone declines a randomizer round, the leader (or Ty) chooses: take the pot, or
+// offer a flat $1 or $2 challenge to everyone else. If nobody accepts the flat challenge, the leader wins. A flat round
+// plays like any challenge (free shot if he's beaten); the next offer after it is the randomizer again.
 // st.ch while a challenge runs: { k (round), leader, ft, phase: 'offer'|'shoot'|'free', pot0 (pot when offered),
 //   ans {name: 'yes'|'no'}, cost {name: dollars}, order [challengers], shots [], best [names closest among challengers],
-//   bestFt, hist [{k, cost, shots, free, out}] }
+//   bestFt, fixed (1 or 2 for the leader's flat challenge, else absent), hist [{k, cost, shots, free, fixed}] }
+//   phase 'lead' = waiting for the leader's choice (take the pot / $1 / $2).
 
 function ctpNew_(players, now, rnd) {
   var st = { v: 2, on: true, id: String(now), started: now, rev: 0, n: 0, players: [], order: [], hole: null, pot: 0,
@@ -146,9 +150,10 @@ function ctpFinish_(st, res, next, now) {
   if (st.hist.length > CTP_HIST_) st.hist = st.hist.slice(-CTP_HIST_);
   ctpStartHole_(st, next, now);
 }
-function ctpOffer_(st, leader, ft, now) {
+function ctpOffer_(st, leader, ft, now, fixed) {
   var k = st.ch ? st.ch.k + 1 : 1, hist = st.ch ? st.ch.hist : [];
   st.ch = { k: k, leader: leader, ft: ft, phase: 'offer', pot0: st.pot, ans: {}, cost: {}, order: [], shots: [], best: [], bestFt: null, hist: hist, t: now };
+  if (fixed) st.ch.fixed = fixed;
 }
 
 /**
@@ -161,17 +166,22 @@ function ctpResolve_(st, now, rnd) {
   var res = { n: st.hole.n, t: now, shots: st.hole.shots.map(function (s) { return { p: s.p, g: s.g, ft: s.ft }; }) };
   if (st.ch) {
     var ch = st.ch;
+    if (ch.phase === 'lead') return null;   // waiting for the leader's choice
     if (ch.phase === 'offer') {
       var el = ctpEligible_(st);
       if (el.some(function (p) { return !ch.ans[p]; })) return null;
       var yes = el.filter(function (p) { return ch.ans[p] === 'yes'; });
-      if (!yes.length) { ctpWin_(st, res, ch.leader, ch.ft, now, rnd); return st.last; }
-      yes.forEach(function (p) {   // each challenger's own draw: 2 .. pot + 1 dollars
-        var c = 2 + Math.floor((rnd || Math.random)() * ch.pot0);
+      if (!yes.length) {
+        // Nobody took the randomizer: the leader gets his option ($1 / $2 / take the pot). Nobody took his flat one: he wins.
+        if (!ch.fixed && st.out.indexOf(ch.leader) < 0 && st.players.indexOf(ch.leader) >= 0) { ch.phase = 'lead'; return { e: 'lead', leader: ch.leader, ft: ch.ft, pot: st.pot }; }
+        ctpWin_(st, res, ch.leader, ch.ft, now, rnd); return st.last;
+      }
+      yes.forEach(function (p) {   // each challenger's own draw: 2 .. pot + 1 dollars (or the leader's flat price)
+        var c = ch.fixed ? ch.fixed : 2 + Math.floor((rnd || Math.random)() * ch.pot0);
         ch.cost[p] = c; st.money[p] = (st.money[p] || 0) - c; st.pot += c;
       });
       ch.order = yes; ch.shots = []; ch.phase = 'shoot';
-      return { e: 'draws', k: ch.k, cost: ch.cost, pot: st.pot, leader: ch.leader, ft: ch.ft };
+      return { e: 'draws', k: ch.k, cost: ch.cost, pot: st.pot, leader: ch.leader, ft: ch.ft, fixed: ch.fixed || 0 };
     }
     if (ctpUp_(st)) return null;
     if (ch.shots.some(function (s) { return s.g == null; })) { st.need = 'green'; return null; }
@@ -180,6 +190,7 @@ function ctpResolve_(st, now, rnd) {
     st.need = '';
     if (ch.phase === 'shoot') {
       var round = { k: ch.k, cost: ch.cost, shots: ch.shots.map(function (s) { return { p: s.p, g: s.g, ft: s.ft }; }) };
+      if (ch.fixed) round.fixed = ch.fixed;
       if (!live.length) { ch.hist.push(round); ctpOffer_(st, ch.leader, ch.ft, now); return { e: 'offer', k: st.ch.k, held: true, leader: ch.leader, ft: ch.ft, pot: st.pot }; }
       var bi = Math.min.apply(null, live.map(function (s) { return ctpIn_(s.ft); }));
       var at = live.filter(function (s) { return ctpIn_(s.ft) === bi; });
@@ -248,9 +259,17 @@ function ctpApply_(st, b, isAdmin, now, rnd, who) {
     if (!isAdmin && name !== who) throw new Error('You can only answer for yourself.');
     if (ctpEligible_(st).indexOf(name) < 0) throw new Error(name + ' can\'t challenge this one.');
     st.ch.ans[name] = b.yes ? 'yes' : 'no';
+  } else if (op === 'leadopt') {
+    // The leader's choice after nobody took the randomizer: amount 0 = take the pot, 1 or 2 = flat challenge.
+    if (!st.ch || st.ch.phase !== 'lead') throw new Error('That choice isn\'t open right now.');
+    if (!isAdmin && who !== st.ch.leader) throw new Error('Only ' + st.ch.leader + ' can choose.');
+    var amt = Number(b.amount) || 0;
+    if (amt === 1 || amt === 2) ctpOffer_(st, st.ch.leader, st.ch.ft, now, amt);
+    else { var r0 = { n: st.hole.n, t: now, shots: st.hole.shots.map(function (s) { return { p: s.p, g: s.g, ft: s.ft }; }) }; ctpWin_(st, r0, st.ch.leader, st.ch.ft, now, rnd); return { st: st, res: st.last, pre: null }; }
   } else if (op === 'continue') {
     if (!isAdmin) throw new Error('Only Ty can do that.');
-    if (!st.ch || st.ch.phase !== 'offer') throw new Error('No challenge is open right now.');
+    if (!st.ch || (st.ch.phase !== 'offer' && st.ch.phase !== 'lead')) throw new Error('No challenge is open right now.');
+    if (st.ch.phase === 'lead') { var r1 = { n: st.hole.n, t: now, shots: st.hole.shots.map(function (s) { return { p: s.p, g: s.g, ft: s.ft }; }) }; ctpWin_(st, r1, st.ch.leader, st.ch.ft, now, rnd); return { st: st, res: st.last, pre: null }; }
     ctpEligible_(st).forEach(function (p) { if (!st.ch.ans[p]) st.ch.ans[p] = 'no'; });
   } else {
     if (op !== 'shot' && !isAdmin) throw new Error('Only Ty can change CTP.');
@@ -318,7 +337,7 @@ function ctpApply_(st, b, isAdmin, now, rnd, who) {
       return { st: st, res: null };
     } else throw new Error('Unknown CTP action.');
   }
-  var pre = (ctpUp_(st) || (st.ch && st.ch.phase === 'offer')) ? null : JSON.stringify(st);   // Undo comes back to here, with every shot kept
+  var pre = (ctpUp_(st) || (st.ch && (st.ch.phase === 'offer' || st.ch.phase === 'lead'))) ? null : JSON.stringify(st);   // Undo comes back to here, with every shot kept
   res = ctpResolve_(st, now, rnd);
   return { st: st, res: res, pre: res ? pre : null };
 }
@@ -333,7 +352,7 @@ function ctpViewOf_(st) {
   var a = ctpActive_(st);
   v.phase = a.kind;
   v.next = v.up ? (function () { var i = a.order.indexOf(v.up); for (var k = i + 1; k < a.order.length; k++) if (!ctpShotOf_(st, a.order[k])) return a.order[k]; return ''; })() : '';
-  if (st.ch) { v.ch.eligible = ctpEligible_(st); v.ch.min = 2; v.ch.max = st.ch.pot0 + 1; }
+  if (st.ch) { v.ch.eligible = ctpEligible_(st); v.ch.min = st.ch.fixed || 2; v.ch.max = st.ch.fixed || st.ch.pot0 + 1; }
   return v;
 }
 
@@ -361,7 +380,7 @@ function apiCtp0_(b) {
   var user = apiUser_(b.token), isAdmin = !!(user && user.admin);
   var isAgent = String(b.key || '') === AGENT_KEY_;
   if (b.op === 'state') return { ok: true, ctp: ctpView_() };
-  var isPlayer = !!(user && (b.op === 'answer'));
+  var isPlayer = !!(user && (b.op === 'answer' || b.op === 'leadopt'));
   if (!isAdmin && !isAgent && !isPlayer) return { ok: false, code: user ? 'denied' : 'auth', error: user ? 'Only Ty can run CTP.' : 'Please sign in again.' };
   if (isAgent && !isAdmin && b.op !== 'shot') return { ok: false, error: 'The watcher can only report shots.' };
   var lock = LockService.getScriptLock();
@@ -413,7 +432,7 @@ function ctpLogHole_(st, res) {
   var label = { win: 'Win', noqualy: 'No qualy', tie: 'Tie (push)' }[res.r] || res.r;
   var shots = res.shots.map(function (s) { return s.p + ': ' + (s.g === 1 ? (s.ft == null ? 'green' : ctpFt_(s.ft)) : 'missed'); }).join(' · ');
   (res.ch || []).forEach(function (c) {
-    shots += ' | Challenge ' + c.k + ': ' + c.shots.map(function (x) { return x.p + ' ($' + (c.cost || {})[x.p] + ') ' + (x.g === 1 ? (x.ft == null ? 'green' : ctpFt_(x.ft)) : 'missed'); }).join(', ') +
+    shots += ' | ' + (c.fixed ? '$' + c.fixed + ' challenge ' : 'Challenge ') + c.k + ': ' + c.shots.map(function (x) { return x.p + ' ($' + (c.cost || {})[x.p] + ') ' + (x.g === 1 ? (x.ft == null ? 'green' : ctpFt_(x.ft)) : 'missed'); }).join(', ') +
       (c.free ? '; free shot ' + (c.free.g === 1 && c.free.ft != null ? ctpFt_(c.free.ft) : 'missed') : '');
   });
   sh.appendRow([new Date(res.t), st.id, res.n, label, res.w || (res.tied || []).join(' & '), res.ft == null ? '' : ctpFt_(res.ft), res.pot, shots]);
