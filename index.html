@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=75">
-<link rel="stylesheet" href="theme.css?v=75">
+<link rel="stylesheet" href="app.css?v=76">
+<link rel="stylesheet" href="theme.css?v=76">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=75"></script>
-<script src="rules.js?v=75"></script>
+<script src="app.js?v=76"></script>
+<script src="rules.js?v=76"></script>
 </head>
 <body>
 <header>
@@ -521,7 +521,8 @@
     }
     var where = esc(d.course) + (d.nine === 'Front' || d.nine === 'Back' ? ' · ' + esc(d.nine) + ' 9' : d.nine === '18' ? ' · 18 holes' : '');
     body.innerHTML = '<div class="card nm">' + (where ? '<div class="nm-cap">' + where + '</div>' : '') +
-      d.matches.map(function (m) { return '<div class="nm-row">' + side(m.a) + '<div class="nm-vs">vs</div>' + side(m.b, true) + '</div>'; }).join('') +
+      d.matches.map(function (m) { var ow = m.kind === 'oneway' ? 'One-Way Match' : m.kind === 'makeup' ? 'One-Way Makeup' : '';
+        return '<div class="nm-row">' + side(m.a) + '<div class="nm-vs">vs' + (ow ? '<div class="nm-ow">' + ow + '<span aria-hidden="true">→</span></div>' : '') + '</div>' + side(m.b, true) + '</div>'; }).join('') +
       (d.byes && d.byes.length ? '<div class="nm-bye">Bye: ' + d.byes.map(esc).join(', ') + '</div>' : '') +
       '<div class="paykey">HDCP = course handicap for this night\'s course and nine at the tees each player is playing (his pick for the night, else his usual tees). Index is his current index.</div></div>';
   }
@@ -1518,14 +1519,14 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=75"></script>
-<script src="settings.js?v=75"></script>
-<script src="flip.js?v=75"></script>
-<script src="match.js?v=75"></script>
-<script src="msg.js?v=75"></script>
-<script src="puttstand.js?v=75"></script>
-<script src="stats.js?v=75"></script>
-<script src="bios.js?v=75"></script>
-<script src="ctp.js?v=75"></script>
+<script src="tee.js?v=76"></script>
+<script src="settings.js?v=76"></script>
+<script src="flip.js?v=76"></script>
+<script src="match.js?v=76"></script>
+<script src="msg.js?v=76"></script>
+<script src="puttstand.js?v=76"></script>
+<script src="stats.js?v=76"></script>
+<script src="bios.js?v=76"></script>
+<script src="ctp.js?v=76"></script>
 </body>
 </html>

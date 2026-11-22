@@ -712,5 +712,7 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .nm-ch b { font: 700 24px var(--num); color: var(--ink); line-height: 1.1; }
 .nm-ch small { color: var(--muted); font-size: 10px; letter-spacing: .06em; }
 .nm-sub { color: var(--muted); font-size: 12px; margin-top: 1px; }
-.nm-vs { color: var(--muted); font: 600 12px var(--num); text-transform: uppercase; }
+.nm-vs { color: var(--muted); font: 600 12px var(--num); text-transform: uppercase; text-align: center; }
+.nm-ow { margin-top: 4px; color: var(--amber); font: 600 10px Inter, sans-serif; text-transform: none; line-height: 1.2; max-width: 74px; }
+.nm-ow span { display: block; font-size: 18px; line-height: 1; margin-top: 1px; }
 .nm-bye { color: var(--muted); font-size: 13px; padding: 10px 2px 0; border-top: 1px solid var(--line); }

@@ -5,7 +5,7 @@
 // Returns { nights: [{ night, label }], night, label, course, nine, holes, matches: [{ a, b }], byes: [names] }
 // where a / b = { name, index, tee, ch }. Index = the player's current index (Players I); tee = his Tee Choices
 // pick for that night, else his Players-tab tees; ch = course handicap for that night's course and nine at that
-// tee (same formula as tpBuild_ / Tonight column D). Pairs come from teePairs_ (regular, one-way and makeups).
+// tee (same formula as tpBuild_ / Tonight column D). Pairs: regular, one-way and makeups (kind 'oneway' / 'makeup', A gets the result).
 // Wired in apiGet_: else if (p.api === 'nightly') out = nightly_(p.night);
 // Cached 5 minutes per night.
 // ===================================================================
@@ -42,13 +42,26 @@ function nightly_(want) {
     var tee = p ? (p.pick || p.def) : '';
     return { name: name, index: idx[name] === undefined ? '' : idx[name], tee: tee, ch: p && tee ? p.chs[tee] : '' };
   }
-  var pairs = teePairs_(ss, n.night), playing = {};
+  // Same rows as teePairs_, but keeps Player A on the left and the kind: 'oneway' (One-way row on the date)
+  // or 'makeup' (row whose "plays on" is this night). Only Player A gets a result in both, so the arrow points A -> B.
+  var pairs = [], seen = {}, playing = {};
+  function k(v) { return v instanceof Date ? Utilities.formatDate(v, tz, 'yyyy-MM-dd') : ''; }
+  ss.getSheetByName('Matches').getRange('A2:F200').getValues().forEach(function (m) {
+    if (!m[2] || !m[3]) return;
+    var onDate = k(m[0]) === n.night && !m[4] && !m[5];
+    var makeup = k(m[4]) === n.night || k(m[5]) === n.night;
+    if (!onDate && !makeup) return;
+    var id = [m[2], m[3]].sort().join('|');
+    if (seen[id]) return;
+    seen[id] = true;
+    pairs.push([String(m[2]), String(m[3]), makeup ? 'makeup' : /^one.?way$/i.test(String(m[1]).trim()) ? 'oneway' : '']);
+  });
   pairs.forEach(function (x) { playing[x[0]] = 1; playing[x[1]] = 1; });
   var out = {
     ok: true,
     nights: nights.map(function (x) { return { night: x.night, label: x.label }; }),
     night: n.night, label: n.label, course: n.course, nine: n.nine, holes: b ? b.holes : '',
-    matches: pairs.map(function (x) { return { a: side(x[0]), b: side(x[1]) }; }),
+    matches: pairs.map(function (x) { return { a: side(x[0]), b: side(x[1]), kind: x[2] }; }),
     byes: pairs.length ? teeLeague_(ss).filter(function (name) { return !playing[name]; }) : []
   };
   cache.put(ckey, JSON.stringify(out), 300);
