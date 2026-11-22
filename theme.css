@@ -718,3 +718,12 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .nm-bye { color: var(--muted); font-size: 13px; padding: 10px 2px 0; border-top: 1px solid var(--line); }
 .nm-res b { color: var(--muted); }
 .nm-res.win b { color: #101412; background: var(--amber); border-radius: 8px; padding: 0 8px; }
+
+/* Board history (Nov 22) */
+.pastbd { display: none; }
+body.bpast .pastbd { display: block; }
+body.bpast .livebd { display: none !important; }
+#bnpick { margin-bottom: 12px; }
+.bp-tbl { width: 100%; }
+.bp-tbl td { padding: 9px 4px; border-top: 1px solid var(--line); }
+.bp-win td { color: var(--amber); font-weight: 600; }

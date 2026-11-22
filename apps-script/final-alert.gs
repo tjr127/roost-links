@@ -43,7 +43,7 @@ function notifyFinal_(ss) {
   // Team results: 10 minutes after the end, built then so team fixes are included.
   if (props.getProperty('ntf:final3:' + c.key) || now < at) return;
   var tm = faTeams_();
-  if (tm) notifyOnce_('final3:' + c.key, tm.heading, tm.body, to);
+  if (tm) { try { teamSnapSave_(ss, c.key, tm.snap); } catch (e) { console.error(e); } notifyOnce_('final3:' + c.key, tm.heading, tm.body, to); }
 }
 
 /** One-off timers set when the night ends (2 and 10 minutes); the 5-minute notifyTick is the backup. */
@@ -159,7 +159,9 @@ function faTeams_() {
       : who(w) + ' wins by ' + gap + '. ' + faPick_(FA_TEAMWIN_, w.team + gap));
     if (ok.length >= 3 || gap > 0) lines.push(who(last) + ' brought up the rear. ' + faPick_(FA_TEAMLAST_, last.team + last.score));
   }
-  return { heading: 'Team game: ' + g.game + ' (' + g.scoring + ')', body: lines.join('\n') };
+  var snap = { game: g.game, scoring: g.scoring, lowWins: lowWins,
+    teams: ok.map(function (t) { return { players: who(t), score: Number(t.score) }; }).concat(out.map(function (t) { return { players: who(t), score: '' }; })) };
+  return { heading: 'Team game: ' + g.game + ' (' + g.scoring + ')', body: lines.join('\n'), snap: snap };
 }
 
 var FA_BIG_ = ['slaughtered', 'demolished', 'took a flamethrower to', 'sent home crying', 'embarrassed'];
