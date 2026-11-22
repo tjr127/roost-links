@@ -698,3 +698,19 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .hx-n, .hx-t { text-align: right; font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 600; }
 .hx-t .dn { color: #8FD19E; } .hx-t .up { color: #F28B7C; } .hx-st { color: var(--muted); }
 .ctp-reveal { width: 100%; margin-top: 10px; }
+
+/* Schedule > Nightly (Nov 22) */
+#schedule .fhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.nm-cap { color: var(--muted); font-size: 13px; padding: 2px 2px 10px; }
+.nm-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 12px 2px; border-top: 1px solid var(--line); }
+.nm-p { min-width: 0; }
+.nm-p.r { text-align: right; }
+.nm-p.me .nm-name { color: var(--amber); }
+.nm-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nm-ch { display: flex; align-items: baseline; gap: 4px; margin-top: 2px; }
+.nm-p.r .nm-ch { justify-content: flex-end; }
+.nm-ch b { font: 700 24px var(--num); color: var(--ink); line-height: 1.1; }
+.nm-ch small { color: var(--muted); font-size: 10px; letter-spacing: .06em; }
+.nm-sub { color: var(--muted); font-size: 12px; margin-top: 1px; }
+.nm-vs { color: var(--muted); font: 600 12px var(--num); text-transform: uppercase; }
+.nm-bye { color: var(--muted); font-size: 13px; padding: 10px 2px 0; border-top: 1px solid var(--line); }

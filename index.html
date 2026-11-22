@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=74">
-<link rel="stylesheet" href="theme.css?v=74">
+<link rel="stylesheet" href="app.css?v=75">
+<link rel="stylesheet" href="theme.css?v=75">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=74"></script>
-<script src="rules.js?v=74"></script>
+<script src="app.js?v=75"></script>
+<script src="rules.js?v=75"></script>
 </head>
 <body>
 <header>
@@ -269,10 +269,16 @@
   <section id="puttstand" class="hide"><h2>Putt standings</h2><div id="puttleaders"></div><div class="card" id="putttable"></div><div class="card" id="putteven"></div><div class="card" id="puttrules"></div></section>
   <section id="schedule" class="hide">
     <div id="teecard"></div>
-    <h2>Schedule</h2>
-    <div class="card picker"><label for="who">Player</label><select id="who"></select></div>
-    <div class="summary" id="schedsum"></div>
-    <div class="card" id="weeks"></div>
+    <div class="fhead"><h2>Schedule</h2><div class="seg" role="group" aria-label="Schedule view"><button type="button" data-sv="night">Nightly</button><button type="button" data-sv="player">Player</button></div></div>
+    <div id="svnight">
+      <div class="card picker"><label for="nightsel">Night</label><select id="nightsel"></select></div>
+      <div id="nightbody"></div>
+    </div>
+    <div id="svplayer">
+      <div class="card picker"><label for="who">Player</label><select id="who"></select></div>
+      <div class="summary" id="schedsum"></div>
+      <div class="card" id="weeks"></div>
+    </div>
   </section>
   <section id="cards" class="hide">
     <h2>ScoreCards</h2>
@@ -467,7 +473,64 @@
   }
   document.getElementById('who').addEventListener('change', function () { setMe(this.value); });
 
+  // Nightly view (Nov 22): pick a night, see its head-to-head matches with each player's index, tees and course handicap.
+  // Data from ?api=nightly[&night=yyyy-MM-dd] (apps-script/nightly.gs).
+  var schedView = store('schedView') || 'night';
+  var nightPick = '';
+  var nly = { list: null, by: {}, busy: {} };
+  document.querySelectorAll('[data-sv]').forEach(function (b) {
+    b.addEventListener('click', function () { schedView = b.getAttribute('data-sv'); store('schedView', schedView); renderSchedule(); });
+  });
+  document.getElementById('nightsel').addEventListener('change', function () { nightPick = this.value; renderNightly(); });
+  function nightLoad(night) {
+    var k = night || '_';
+    var c = nly.by[k];
+    if (c && Date.now() - c.at < 300000) return c.d;
+    if (!nly.busy[k] && window.RL && RL.get) {
+      nly.busy[k] = true;
+      RL.get('nightly', night ? '&night=' + encodeURIComponent(night) : '').then(function (j) {
+        nly.by[k] = { d: j, at: Date.now() };
+        if (j.night) nly.by[j.night] = nly.by[k];
+        if (j.nights) nly.list = j.nights;
+        if (!nightPick && j.night) nightPick = j.night;
+      }, function () { nly.by[k] = { d: c ? c.d : { err: true }, at: Date.now() - 240000 }; })
+        .then(function () { nly.busy[k] = false; if (schedView === 'night') renderNightly(); });
+    }
+    return c ? c.d : null;
+  }
+  function renderNightly() {
+    var d = nightLoad(nightPick);
+    var sel = document.getElementById('nightsel'), body = document.getElementById('nightbody');
+    var list = nly.list || [];
+    var okey = list.map(function (x) { return x.night; }).join('|');
+    if (sel.dataset.opts !== okey) {
+      sel.innerHTML = list.map(function (x) { return '<option value="' + esc(x.night) + '">' + esc(x.label) + '</option>'; }).join('');
+      sel.dataset.opts = okey;
+    }
+    if (nightPick) sel.value = nightPick;
+    if (!d) { body.innerHTML = '<div class="card empty">Loading that night…</div>'; return; }
+    if (d.err) { body.innerHTML = '<div class="card empty">Couldn\'t load that night. Pull to refresh and try again.</div>'; return; }
+    if (!d.matches || !d.matches.length) { body.innerHTML = '<div class="card empty">No matches set for this night.</div>'; return; }
+    var mine = me();
+    function hc(v) { return v === '' || v == null ? '–' : plus(v); }
+    function side(p, right) {
+      return '<div class="nm-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '') + '">' +
+        '<div class="nm-name">' + esc(p.name) + '</div>' +
+        '<div class="nm-ch"><b>' + esc(hc(p.ch)) + '</b><small>HDCP</small></div>' +
+        '<div class="nm-sub">Index ' + esc(hc(p.index)) + (p.tee ? ' · ' + esc(p.tee) : '') + '</div></div>';
+    }
+    var where = esc(d.course) + (d.nine === 'Front' || d.nine === 'Back' ? ' · ' + esc(d.nine) + ' 9' : d.nine === '18' ? ' · 18 holes' : '');
+    body.innerHTML = '<div class="card nm">' + (where ? '<div class="nm-cap">' + where + '</div>' : '') +
+      d.matches.map(function (m) { return '<div class="nm-row">' + side(m.a) + '<div class="nm-vs">vs</div>' + side(m.b, true) + '</div>'; }).join('') +
+      (d.byes && d.byes.length ? '<div class="nm-bye">Bye: ' + d.byes.map(esc).join(', ') + '</div>' : '') +
+      '<div class="paykey">HDCP = course handicap for this night\'s course and nine at the tees each player is playing (his pick for the night, else his usual tees). Index is his current index.</div></div>';
+  }
+
   function renderSchedule() {
+    document.querySelectorAll('[data-sv]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sv') === schedView); });
+    document.getElementById('svnight').classList.toggle('hide', schedView !== 'night');
+    document.getElementById('svplayer').classList.toggle('hide', schedView !== 'player');
+    if (schedView === 'night') renderNightly();
     var list = (data && data.schedule) || [];
     var sel = document.getElementById('who');
     var want = me();
@@ -1455,14 +1518,14 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=74"></script>
-<script src="settings.js?v=74"></script>
-<script src="flip.js?v=74"></script>
-<script src="match.js?v=74"></script>
-<script src="msg.js?v=74"></script>
-<script src="puttstand.js?v=74"></script>
-<script src="stats.js?v=74"></script>
-<script src="bios.js?v=74"></script>
-<script src="ctp.js?v=74"></script>
+<script src="tee.js?v=75"></script>
+<script src="settings.js?v=75"></script>
+<script src="flip.js?v=75"></script>
+<script src="match.js?v=75"></script>
+<script src="msg.js?v=75"></script>
+<script src="puttstand.js?v=75"></script>
+<script src="stats.js?v=75"></script>
+<script src="bios.js?v=75"></script>
+<script src="ctp.js?v=75"></script>
 </body>
 </html>
