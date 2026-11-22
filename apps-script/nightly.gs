@@ -7,14 +7,16 @@
 // pick for that night, else his Players-tab tees; ch = course handicap for that night's course and nine at that
 // tee (same formula as tpBuild_ / Tonight column D). Pairs: regular, one-way and makeups (kind 'oneway' / 'makeup', A gets the result).
 // Wired in apiGet_: else if (p.api === 'nightly') out = nightly_(p.night);
-// Cached 5 minutes per night.
+// Cached 5 minutes per night (key includes the Round Log row count, so posting scores shows results at once).
+// Past nights (posted to the Round Log): each side also has pts = Stableford total; posted = true.
 // ===================================================================
+function rlLast0_(ss) { return ss.getSheetByName('Round Log').getLastRow(); }
 function nightly_(want) {
   var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
   var tz = ss.getSpreadsheetTimeZone();
   var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
   var cache = CacheService.getScriptCache();
-  var ckey = 'nightly|' + (want || today);
+  var ckey = 'nightly3|' + rlLast0_(ss) + '|' + (want || today);
   var hit = cache.get(ckey);
   if (hit) return JSON.parse(hit);
 
@@ -37,10 +39,18 @@ function nightly_(want) {
   ss.getSheetByName('Players').getRange('A2:I40').getDisplayValues().forEach(function (p) {
     if (p[0]) idx[p[0]] = p[8] === '' ? '' : Number(p[8]);
   });
+  // Posted results: Stableford per player from the Round Log rows for this night (column AD).
+  var pts = {}, posted = false;
+  var rl = ss.getSheetByName('Round Log'), rlLast = rl.getLastRow();
+  if (rlLast > 1) rl.getRange(2, 1, rlLast - 1, 30).getValues().forEach(function (r) {
+    if (!(r[0] instanceof Date) || !r[1] || Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') !== n.night) return;
+    posted = true;
+    if (r[29] !== '') pts[String(r[1])] = Number(r[29]);
+  });
   function side(name) {
     var p = b && b.players[name];
     var tee = p ? (p.pick || p.def) : '';
-    return { name: name, index: idx[name] === undefined ? '' : idx[name], tee: tee, ch: p && tee ? p.chs[tee] : '' };
+    return { name: name, index: idx[name] === undefined ? '' : idx[name], tee: tee, ch: p && tee ? p.chs[tee] : '', pts: pts[name] === undefined ? '' : pts[name] };
   }
   // Same rows as teePairs_, but keeps Player A on the left and the kind: 'oneway' (One-way row on the date)
   // or 'makeup' (row whose "plays on" is this night). Only Player A gets a result in both, so the arrow points A -> B.
@@ -60,7 +70,7 @@ function nightly_(want) {
   var out = {
     ok: true,
     nights: nights.map(function (x) { return { night: x.night, label: x.label }; }),
-    night: n.night, label: n.label, course: n.course, nine: n.nine, holes: b ? b.holes : '',
+    night: n.night, label: n.label, course: n.course, nine: n.nine, holes: b ? b.holes : '', posted: posted,
     matches: pairs.map(function (x) { return { a: side(x[0]), b: side(x[1]), kind: x[2] }; }),
     byes: pairs.length ? teeLeague_(ss).filter(function (name) { return !playing[name]; }) : []
   };

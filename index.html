@@ -229,11 +229,11 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=76">
-<link rel="stylesheet" href="theme.css?v=76">
+<link rel="stylesheet" href="app.css?v=77">
+<link rel="stylesheet" href="theme.css?v=77">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="app.js?v=76"></script>
-<script src="rules.js?v=76"></script>
+<script src="app.js?v=77"></script>
+<script src="rules.js?v=77"></script>
 </head>
 <body>
 <header>
@@ -513,7 +513,10 @@
     if (!d.matches || !d.matches.length) { body.innerHTML = '<div class="card empty">No matches set for this night.</div>'; return; }
     var mine = me();
     function hc(v) { return v === '' || v == null ? '–' : plus(v); }
-    function side(p, right) {
+    function side(p, right, res) {
+      if (res) return '<div class="nm-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '') + '">' +
+        '<div class="nm-name">' + esc(p.name) + '</div>' +
+        '<div class="nm-ch nm-res' + (res === 'W' ? ' win' : '') + '"><b>' + esc(p.pts === '' ? '–' : p.pts) + '</b><small>STBF</small></div></div>';
       return '<div class="nm-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '') + '">' +
         '<div class="nm-name">' + esc(p.name) + '</div>' +
         '<div class="nm-ch"><b>' + esc(hc(p.ch)) + '</b><small>HDCP</small></div>' +
@@ -522,9 +525,14 @@
     var where = esc(d.course) + (d.nine === 'Front' || d.nine === 'Back' ? ' · ' + esc(d.nine) + ' 9' : d.nine === '18' ? ' · 18 holes' : '');
     body.innerHTML = '<div class="card nm">' + (where ? '<div class="nm-cap">' + where + '</div>' : '') +
       d.matches.map(function (m) { var ow = m.kind === 'oneway' ? 'One-Way Match' : m.kind === 'makeup' ? 'One-Way Makeup' : '';
+        var res = d.posted && (m.a.pts !== '' || m.b.pts !== '');
+        if (res) {
+          var pa = m.a.pts === '' ? -1e9 : Number(m.a.pts), pb = m.b.pts === '' ? -1e9 : Number(m.b.pts);
+          return '<div class="nm-row">' + side(m.a, false, pa > pb ? 'W' : '-') + '<div class="nm-vs">' + (pa === pb ? 'Tie' : 'vs') + (ow ? '<div class="nm-ow">' + ow + '<span aria-hidden="true">→</span></div>' : '') + '</div>' + side(m.b, true, pb > pa ? 'W' : '-') + '</div>';
+        }
         return '<div class="nm-row">' + side(m.a) + '<div class="nm-vs">vs' + (ow ? '<div class="nm-ow">' + ow + '<span aria-hidden="true">→</span></div>' : '') + '</div>' + side(m.b, true) + '</div>'; }).join('') +
       (d.byes && d.byes.length ? '<div class="nm-bye">Bye: ' + d.byes.map(esc).join(', ') + '</div>' : '') +
-      '<div class="paykey">HDCP = course handicap for this night\'s course and nine at the tees each player is playing (his pick for the night, else his usual tees). Index is his current index.</div></div>';
+      (d.posted ? '<div class="paykey">Final Stableford totals. Winner highlighted.</div>' : '<div class="paykey">HDCP = course handicap for this night\'s course and nine at the tees each player is playing (his pick for the night, else his usual tees). Index is his current index.</div>') + '</div>';
   }
 
   function renderSchedule() {
@@ -1519,14 +1527,14 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=76"></script>
-<script src="settings.js?v=76"></script>
-<script src="flip.js?v=76"></script>
-<script src="match.js?v=76"></script>
-<script src="msg.js?v=76"></script>
-<script src="puttstand.js?v=76"></script>
-<script src="stats.js?v=76"></script>
-<script src="bios.js?v=76"></script>
-<script src="ctp.js?v=76"></script>
+<script src="tee.js?v=77"></script>
+<script src="settings.js?v=77"></script>
+<script src="flip.js?v=77"></script>
+<script src="match.js?v=77"></script>
+<script src="msg.js?v=77"></script>
+<script src="puttstand.js?v=77"></script>
+<script src="stats.js?v=77"></script>
+<script src="bios.js?v=77"></script>
+<script src="ctp.js?v=77"></script>
 </body>
 </html>

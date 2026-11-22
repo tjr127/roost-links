@@ -716,3 +716,5 @@ nav.tabbar.more { -webkit-mask-image: linear-gradient(to right, #000 82%, rgba(0
 .nm-ow { margin-top: 4px; color: var(--amber); font: 600 10px Inter, sans-serif; text-transform: none; line-height: 1.2; max-width: 74px; }
 .nm-ow span { display: block; font-size: 18px; line-height: 1; margin-top: 1px; }
 .nm-bye { color: var(--muted); font-size: 13px; padding: 10px 2px 0; border-top: 1px solid var(--line); }
+.nm-res b { color: var(--muted); }
+.nm-res.win b { color: #101412; background: var(--amber); border-radius: 8px; padding: 0 8px; }
