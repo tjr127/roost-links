@@ -14,7 +14,7 @@
 // Strokes gained vs PGA Tour (Broadie's ShotLink baseline, Interfaces 2012 Table B.1; putting = PGA TOUR 2010 baseline):
 //   SG = expected strokes before - expected after - 1 - penalty strokes. Categories: OTT (tee shots on par 4/5),
 //   APP (other shots from more than 40 yd), ARG (40 yd or less, off the green), PUTT (from the green).
-// Feed: getBoardData (perf.gs) adds d.statFeed = statsFeed_() (cached with the board).
+// Feed: GET ?api=stats (apiStats_ below; was d.statFeed in the board until Nov 23).
 // ===================================================================
 var SG_D_ = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400, 420, 440, 460, 480, 500, 520, 540, 560, 580, 600];
 var SG_BASE_ = {
@@ -62,22 +62,18 @@ function statHole_(shots, par, gross) {
   return out;
 }
 
-function statsFeed_() {
-  var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
-  var tz = ss.getSpreadsheetTimeZone();
-  var sh = ss.getSheetByName('GSPro Log');
-  if (!sh || sh.getLastRow() < 2) return { nights: [], rows: [] };
-  var w = Math.min(sh.getLastColumn(), 18);
-  var vals = sh.getRange(2, 1, sh.getLastRow() - 1, w).getValues();
+// Nov 23: Stats left the board feed (it was the part that grew all season) and has its own request, ?api=stats
+// (apiStats_, cached per board generation). Finished nights' rows are kept in Script Properties ('statN:<yyyy-MM-dd>',
+// with a fingerprint of that night's GSPro Log rows), so only tonight, or a past night whose rows changed, is recalculated.
+var STAT_COLS_ = ['p', 'n', 'holes', 'fw', 'fwn', 'gir', 'sandC', 'sandS', 'drSum', 'drN', 'ld', 'pen', 'mull', 'putts', 'three', 'scrC', 'scrS', 'gross', 'par', 'apN', 'apYd', 'apFt', 'sgH', 'ott', 'app', 'arg', 'putt'];
+function statRows_(vals, w, nk) {
   function num(v) { var n = Number(v); return isNaN(n) ? 0 : n; }
   function yes(v) { return v === true || String(v).toUpperCase() === 'TRUE' || v === 1 || v === '1'; }
-  function nk(v) { var d = v instanceof Date ? v : new Date(String(v)); return isNaN(d) ? String(v) : Utilities.formatDate(d, tz, 'yyyy-MM-dd'); }
-  var by = {}, nights = {};
+  var by = {};
   vals.forEach(function (r) {
     var player = String(r[2] || ''), round = String(r[1] || '');
     if (!player || !round) return;
     var night = nk(r[0]);
-    nights[night] = true;
     var k = player + '|' + night;
     var a = by[k] || (by[k] = { p: player, n: night, holes: 0, fw: 0, fwn: 0, gir: 0, sandC: 0, sandS: 0, drSum: 0, drN: 0, ld: 0,
       pen: 0, mull: 0, putts: 0, three: 0, scrC: 0, scrS: 0, gross: 0, par: 0, apN: 0, apYd: 0, apFt: 0, sgH: 0, ott: 0, app: 0, arg: 0, putt: 0 });
@@ -101,14 +97,52 @@ function statsFeed_() {
     }
   });
   var r2 = function (x) { return Math.round(x * 100) / 100; };
-  var cols = ['p', 'n', 'holes', 'fw', 'fwn', 'gir', 'sandC', 'sandS', 'drSum', 'drN', 'ld', 'pen', 'mull', 'putts', 'three', 'scrC', 'scrS', 'gross', 'par', 'apN', 'apYd', 'apFt', 'sgH', 'ott', 'app', 'arg', 'putt'];
-  var rows = Object.keys(by).map(function (k) {
+  return Object.keys(by).map(function (k) {
     var a = by[k];
-    return cols.map(function (c) { var v = a[c]; return typeof v === 'number' ? r2(v) : v; });
+    return STAT_COLS_.map(function (c) { var v = a[c]; return typeof v === 'number' ? r2(v) : v; });
   });
-  var keys = Object.keys(nights).sort();
+}
+
+function statsFeed_() {
+  var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
+  var tz = ss.getSpreadsheetTimeZone();
+  function nk(v) { var d = v instanceof Date ? v : new Date(String(v)); return isNaN(d) ? String(v) : Utilities.formatDate(d, tz, 'yyyy-MM-dd'); }
+  var t = ss.getSheetByName('Tonight').getRange('B1').getValue(), tk = t ? nk(t) : '';
+  var sh = ss.getSheetByName('GSPro Log');
+  if (!sh || sh.getLastRow() < 2) return { cols: STAT_COLS_, rows: [], nights: [], labels: {}, tonight: tk };
+  var w = Math.min(sh.getLastColumn(), 18);
+  var vals = sh.getRange(2, 1, sh.getLastRow() - 1, w).getValues();
+  var groups = {};
+  vals.forEach(function (r) {
+    if (!r[2] || !r[1]) return;
+    var k = nk(r[0]);
+    (groups[k] = groups[k] || []).push(r);
+  });
+  var props = PropertiesService.getScriptProperties(), rows = [];
+  Object.keys(groups).forEach(function (k) {
+    var g = groups[k];
+    var sig = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify(g), Utilities.Charset.UTF_8));
+    if (k !== tk) {
+      var c = props.getProperty('statN:' + k);
+      if (c) { try { var o = JSON.parse(c); if (o.s === sig) { rows = rows.concat(o.r); return; } } catch (e) {} }
+    }
+    var rr = statRows_(g, w, nk);
+    if (k !== tk) { try { props.setProperty('statN:' + k, JSON.stringify({ s: sig, r: rr })); } catch (e) { console.warn('statN store failed: ' + e); } }
+    rows = rows.concat(rr);
+  });
+  var keys = Object.keys(groups).sort();
   var labels = {};
   keys.forEach(function (k) { var d = new Date(k + 'T12:00:00'); labels[k] = isNaN(d) ? k : Utilities.formatDate(d, tz, 'MMM d'); });
-  var t = ss.getSheetByName('Tonight').getRange('B1').getValue();
-  return { cols: cols, rows: rows, nights: keys, labels: labels, tonight: t ? nk(t) : '' };
+  return { cols: STAT_COLS_, rows: rows, nights: keys, labels: labels, tonight: tk };
+}
+
+// GET ?api=stats -> { ok, stats } (same shape the board's statFeed had). Cached until the next save (board generation).
+// Routed in apiGet_ (app-api.gs): else if (p.api === 'stats') out = apiStats_();
+function apiStats_() {
+  var c = CacheService.getScriptCache(), key = 'stats|' + boardGen_(c);
+  var hit = c.get(key);
+  if (hit) { try { return JSON.parse(hit); } catch (e) {} }
+  var out = { ok: true, stats: statsFeed_() };
+  try { c.put(key, JSON.stringify(out), 600); } catch (e) {}
+  return out;
 }

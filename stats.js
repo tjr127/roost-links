@@ -4,13 +4,26 @@
  *             sortable by any column; Tonight (or the last round) or Season.
  *   Individual: one player (the signed-in player by default): every stat with the season value, league rank, last round
  *             and a trend line by round, plus strokes gained by category as bars.
- * Data: d.statFeed (apps-script/stats-feed.gs): one row per player per night from GSPro Log; columns in d.statFeed.cols.
+ * Data: ?api=stats (apps-script/stats-feed.gs): one row per player per night from GSPro Log; columns in feed.cols.
+ *   Nov 23: no longer part of the board feed (it was the part that kept growing); fetched when the Stats tab is open,
+ *   refreshed every minute on a live night and every 10 minutes otherwise. An older server's d.statFeed still works.
  * Tonight's penalty / mulligan holes still come from d.agentStats.
  */
 (function () {
   function e(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function st(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (x) { return null; } }
   var D = null;
+  var SF = null, sfAt = 0, sfBusy = false;
+  function feed() { return (D && D.statFeed) || SF; }
+  function loadFeed() {
+    if ((D && D.statFeed) || sfBusy || !window.RL || !RL.get) return;
+    var box = document.getElementById('sxbody');
+    if (!box || box.offsetParent === null) return;   // Stats tab not showing
+    if (SF && Date.now() - sfAt < (D && D.live ? 60000 : 600000)) return;
+    sfBusy = true;
+    RL.get('stats').then(function (j) { SF = j.stats; sfAt = Date.now(); }, function () { sfAt = Date.now() - 540000; })
+      .then(function () { sfBusy = false; window.renderStats(); });
+  }
 
   // "vs my handicap" (Nov 14): typical strokes gained vs the PGA Tour per 18 holes for each handicap, by category,
   // as published by golfity.com ("Strokes Gained Benchmarks for Every Handicap Level", based on Mark Broadie's research).
@@ -76,7 +89,7 @@
   ];
 
   function rowsByPlayer(nightFilter) {
-    var f = D.statFeed, out = {};
+    var f = feed(), out = {};
     if (!f || !f.rows) return out;
     var ci = {}; f.cols.forEach(function (c, i) { ci[c] = i; });
     f.rows.forEach(function (r) {
@@ -90,7 +103,7 @@
     return out;
   }
   function perNight(player) {
-    var f = D.statFeed, out = [];
+    var f = feed(), out = [];
     if (!f || !f.rows) return out;
     (f.nights || []).forEach(function (n) { var a = rowsByPlayer(n)[player]; if (a) out.push({ n: n, a: a }); });
     return out;
@@ -98,8 +111,8 @@
   function fmt(m, v) { if (v === null || v === undefined || isNaN(v)) return '–'; var s = m.f ? v.toFixed(m.f) : String(Math.round(v)); if (m.sg && v > 0) s = '+' + s; return s; }
   function short(n) { var sn = (D.shortNames || {})[n]; return sn || n; }
   function me() { var u = window.RL && RL.user(); return u ? u.name : ''; }
-  function nightLabel(k) { return (D.statFeed && D.statFeed.labels && D.statFeed.labels[k]) || k; }
-  function lastNight() { var f = D.statFeed; if (!f || !f.nights || !f.nights.length) return ''; return f.nights.indexOf(f.tonight) >= 0 ? f.tonight : f.nights[f.nights.length - 1]; }
+  function nightLabel(k) { var f = feed(); return (f && f.labels && f.labels[k]) || k; }
+  function lastNight() { var f = feed(); if (!f || !f.nights || !f.nights.length) return ''; return f.nights.indexOf(f.tonight) >= 0 ? f.tonight : f.nights[f.nights.length - 1]; }
   function rankOf(list, m, who) {
     var vals = list.map(function (a) { return { p: a.p, v: m.v(a) }; }).filter(function (x) { return x.v !== null; });
     var me0 = vals.filter(function (x) { return x.p === who; })[0];
@@ -129,7 +142,7 @@
     scratch: 'Against a typical scratch (0 handicap) golfer (0 = scratch level; + = better than scratch). Scratch benchmark: golfity.com, based on Mark Broadie\'s research.',
     hcp: 'Against a typical golfer with the same handicap index (0 = playing to your handicap; + = better than golfers at your level). Benchmarks by handicap: golfity.com, based on Mark Broadie\'s research; Handicaps tab index.' };
   function renderAll(box) {
-    var ln = lastNight(), tonightHas = D.statFeed && D.statFeed.tonight === ln;
+    var ln = lastNight(), tonightHas = !!feed() && feed().tonight === ln;
     var scopeNight = S.scope === 'night' ? ln : '';
     var data = rowsByPlayer(scopeNight), list = Object.keys(data).map(function (k) { return data[k]; });
     var cat = CATS.filter(function (c) { return c.id === S.cat; })[0] || CATS[0];
@@ -214,6 +227,8 @@
     if (d) D = d;
     var box = document.getElementById('sxbody');
     if (!box || !D) return;
+    loadFeed();
+    if (!feed()) { box.innerHTML = '<div class="card empty">Loading stats…</div>'; return; }
     document.querySelectorAll('[data-sxview]').forEach(function (b) { var on = b.getAttribute('data-sxview') === S.view; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
     if (S.view === 'me') renderMe(box); else renderAll(box);
   };
