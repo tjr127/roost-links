@@ -49,7 +49,9 @@
           var d = j.data;
           (d.same || []).forEach(function (k) { if (memo[k]) d[k] = memo[k].v; });
           Object.keys(d._h || {}).forEach(function (k) { if (d[k] !== undefined) memo[k] = { h: d._h[k], v: d[k] }; });
-          done(ok)(d);
+          // Live board (live.js): tonight's cards and Individual list from Supabase, re-drawn on every score change.
+          if (window.RLLive) window.RLLive.apply(d, done(ok)).then(done(ok), function () { done(ok)(d); });
+          else done(ok)(d);
         }, done(fail));
       },
       saveScore: function (name, hole, gross, putts) {
