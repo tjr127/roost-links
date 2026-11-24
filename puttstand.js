@@ -113,7 +113,7 @@
         var pace = p.n ? Math.round(p.avg * s.cap) : '';
         var paceHtml = p.n ? (isLow ? '<span class="putw">' + pace + '</span>' : isHigh ? '<span class="putw hi">' + pace + '</span>' : String(pace)) : '–';
         var tr = '<tr class="ps-row' + (p.n ? '' : ' none') + (open[p.name] ? ' open' : '') + '" data-ps="' + e(p.name) + '">' +
-          '<td class="n">' + (p.n ? r + 1 : '') + '</td>' +
+          '<td class="n">' + (p.n ? (rows.some(function (q) { return q !== p && q.n && q.total === p.total; }) ? 'T' : '') + (r + 1) : '') + '</td>' +   // Nov 24: ties show as T1
           '<td class="ps-pl"><div class="ps-nm' + (window.RL && RL.user && RL.user() && RL.user().name === p.name ? ' you' : '') + '" title="' + e(p.name) + '">' + e(p.name) + '</div>' + (tag ? '<div class="ps-tag">' + tag + '</div>' : '') + spark(p.rounds, lo, hi) + '</td>' +
           '<td class="n">' + (p.cut ? (p.n - p.cut) + '<span class="ps-cut">of ' + p.n + '</span>' : p.n + '<span class="ps-cap">/' + s.cap + '</span>') + '</td>' +
           '<td class="n b">' + (p.n ? p.total : '–') + '</td>' +
