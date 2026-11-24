@@ -69,7 +69,11 @@
     }
     return '<button type="button" class="card bbbc ' + st + '" id="bbbopen"><span class="bbb-k">' + head + (st === 'live' ? '<i>thru ' + s.holes.length + '</i>' : '') + '</span>' + body + '</button>';
   }
+  // Nov 24 (Ty): a BBB pill right of Individual on the Board while BBB is on; opens the BBB page.
+  function syncPill() { var b = document.getElementById('bbbpill'); if (b) b.classList.toggle('hide', !window.bbbOn()); }
+  window.bbbSyncPill = syncPill;
   window.bbbAfterField = function () {
+    syncPill();
     var row = document.getElementById('bbbrow'), bc = document.getElementById('bbbcard'), on = window.bbbOn();
     if (!row || !bc) return;
     row.classList.toggle('on', on);
@@ -130,7 +134,7 @@
         '<div class="bbba-f">' + sel.length + ' playing · pot $' + (sel.length + (Number(c.carry) || 0)) + ' ($1 each' + (Number(c.carry) ? ' + carry' : '') + ')' + (sel.length < 2 ? ' · needs at least 2' : '') + '. Preview: saved on this phone only, with demo points.</div>' : '<div class="bbba-f">Off. Turn it on to pick tonight\'s BBB players.</div>') + '</div>';
   }
   window.renderAdminBbb = renderAdmin;
-  function refresh() { renderAdmin(); if (typeof window.renderField === 'function') window.renderField(); renderPage(); }
+  function refresh() { syncPill(); renderAdmin(); if (typeof window.renderField === 'function') window.renderField(); renderPage(); }
 
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target : null; if (!t) return;

@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=116">
-<link rel="stylesheet" href="theme.css?v=116">
+<link rel="stylesheet" href="app.css?v=117">
+<link rel="stylesheet" href="theme.css?v=117">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=116"></script>
-<script src="app.js?v=116"></script>
-<script src="rules.js?v=116"></script>
+<script src="live.js?v=117"></script>
+<script src="app.js?v=117"></script>
+<script src="rules.js?v=117"></script>
 </head>
 <body>
 <header>
@@ -253,7 +253,7 @@
 </nav>
 <main>
   <div id="tncard" class="livebd hide"></div>
-  <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
+  <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button><button type="button" data-tab="bbb" id="bbbpill" class="hide">BBB</button></nav>
   <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
@@ -1796,18 +1796,18 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=116"></script>
-<script src="settings.js?v=116"></script>
-<script src="flip.js?v=116"></script>
-<script src="match.js?v=116"></script>
-<script src="msg.js?v=116"></script>
-<script src="puttstand.js?v=116"></script>
-<script src="stats.js?v=116"></script>
-<script src="bios.js?v=116"></script>
-<script src="ctp.js?v=116"></script>
-<script src="fine.js?v=116"></script>
-<script src="tonight.js?v=116"></script>
-<script src="anim.js?v=116"></script>
-<script src="bbb.js?v=116"></script>
+<script src="tee.js?v=117"></script>
+<script src="settings.js?v=117"></script>
+<script src="flip.js?v=117"></script>
+<script src="match.js?v=117"></script>
+<script src="msg.js?v=117"></script>
+<script src="puttstand.js?v=117"></script>
+<script src="stats.js?v=117"></script>
+<script src="bios.js?v=117"></script>
+<script src="ctp.js?v=117"></script>
+<script src="fine.js?v=117"></script>
+<script src="tonight.js?v=117"></script>
+<script src="anim.js?v=117"></script>
+<script src="bbb.js?v=117"></script>
 </body>
 </html>
