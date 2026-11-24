@@ -20,9 +20,16 @@ function getBoardData(fresh) {
   if (fresh !== true) {
     var hit = cache.get(BOARD_KEY_);
     if (hit) { try { return JSON.parse(hit); } catch (e) {} }
-    if (cache.get(BOARD_BUILD_KEY_)) {
-      var stale = cache.get(BOARD_STALE_KEY_);
-      if (stale) { try { return JSON.parse(stale); } catch (e) {} }
+    // Nov 24: the 20 s copy just expired (no save since): hand back the last copy right away, flagged _stale,
+    // and the phone fires a separate ?api=data&rebuild=1 that does the slow build. After a save (gen changed)
+    // nobody gets the old copy: the first request builds fresh as before.
+    var stale = cache.get(BOARD_STALE_KEY_);
+    if (stale) {
+      try {
+        var sd = JSON.parse(stale);
+        if (cache.get(BOARD_BUILD_KEY_)) return sd;
+        if (sd._gen === boardGen_(cache)) { sd._stale = true; return sd; }
+      } catch (e) {}
     }
   }
   cache.put(BOARD_BUILD_KEY_, '1', 30);
@@ -30,6 +37,7 @@ function getBoardData(fresh) {
   try {
     var d = buildBoardData_();
     d.live = boardLive_();
+    d._gen = gen;
     d._h = { handicaps: boardHash_(d.handicaps), schedule: boardHash_(d.schedule) };
     try { d.entry = entryInfo_(); } catch (x) { console.error(x); }
     try { d.seasonStats = seasonStats_(); } catch (x) { console.error(x); }  // Nov 13: Stats > Season stats
@@ -39,7 +47,7 @@ function getBoardData(fresh) {
     try {
       var s = JSON.stringify(d);
       // Nov 13: if a save cleared the board while this build ran, this copy may predate the save: return it, don't cache it.
-      if (s.length < 98000 && boardGen_(cache) === gen) { cache.put(BOARD_KEY_, s, BOARD_TTL_); cache.put(BOARD_STALE_KEY_, s, 600); }
+      if (s.length < 98000 && boardGen_(cache) === gen) { cache.put(BOARD_KEY_, s, BOARD_TTL_); cache.put(BOARD_STALE_KEY_, s, 21600); }
     } catch (e) {}
     return d;
   } finally { cache.remove(BOARD_BUILD_KEY_); }
@@ -65,6 +73,11 @@ function boardLive_() {
 
 /** App data feed: leaves out handicaps / schedule when the phone already has the same version. */
 function apiBoard_(p) {
+  if (p.rebuild) {  // Nov 24: background rebuild kicked off by a phone that got a _stale copy
+    var c = CacheService.getScriptCache();
+    if (!c.get(BOARD_KEY_) && !c.get(BOARD_BUILD_KEY_)) getBoardData(true);
+    return { ok: true };
+  }
   var d = getBoardData();
   var have = String(p.have || '');
   if (!have) return d;

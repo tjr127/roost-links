@@ -47,6 +47,8 @@
         var have = Object.keys(memo).map(function (k) { return k + ':' + memo[k].h; }).join(',');
         apiGet('data', have ? '&have=' + encodeURIComponent(have) : '').then(function (j) {
           var d = j.data;
+          // Nov 24: the server sent its last copy without waiting for a rebuild; ask it to rebuild now (don't wait).
+          if (d && d._stale) { try { fetch(API_URL + '?api=data&rebuild=1&_=' + Date.now()).catch(function () {}); } catch (x) {} }
           (d.same || []).forEach(function (k) { if (memo[k]) d[k] = memo[k].v; });
           Object.keys(d._h || {}).forEach(function (k) { if (d[k] !== undefined) memo[k] = { h: d._h[k], v: d[k] }; });
           // Live board (live.js): tonight's cards and Individual list from Supabase, re-drawn on every score change.
