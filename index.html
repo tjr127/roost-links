@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=108">
-<link rel="stylesheet" href="theme.css?v=108">
+<link rel="stylesheet" href="app.css?v=109">
+<link rel="stylesheet" href="theme.css?v=109">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=108"></script>
-<script src="app.js?v=108"></script>
-<script src="rules.js?v=108"></script>
+<script src="live.js?v=109"></script>
+<script src="app.js?v=109"></script>
+<script src="rules.js?v=109"></script>
 </head>
 <body>
 <header>
@@ -243,13 +243,13 @@
   <button type="button" class="menubtn" id="menubtn" aria-label="Menu" aria-expanded="false">☰</button>
 </header>
 <nav class="tabbar" aria-label="Main">
-  <button type="button" data-tab="board" data-group="tonight teams field" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Board</span></button>
+  <button type="button" data-tab="board" data-group="tonight teams field bbb" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Board</span></button>
   <button type="button" data-tab="stand" data-group="standings puttstand"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Standings</span></button>
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
   <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Stats</span></button>
   <button type="button" data-tab="news" data-group="newsres newsann newsbio"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg><span>News</span></button>
   <button type="button" data-tab="ctp" id="ctpbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V3"/><path d="M12 3l7 3-7 3"/><ellipse cx="12" cy="21" rx="6" ry="1.5"/></svg><span>CTP</span></button>
-  <button type="button" data-tab="admin" data-group="adminenter adminsched adminmsg adminctp" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
+  <button type="button" data-tab="admin" data-group="adminenter adminsched adminmsg adminctp adminbbb" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
 </nav>
 <main>
   <div id="tncard" class="livebd hide"></div>
@@ -258,7 +258,7 @@
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
-  <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button><button type="button" data-tab="adminctp">CTP</button></nav>
+  <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button><button type="button" data-tab="adminctp">CTP</button><button type="button" data-tab="adminbbb">BBB</button></nav>
   <section id="tonight">
     <div id="teestrip" class="teestrip hide livebd"></div>
     <div id="pastH2H" class="pastbd"></div>
@@ -266,7 +266,7 @@
   </section>
   <section id="field" class="hide">
     <div id="pastField" class="pastbd"></div>
-    <div id="puttbanner" class="livebd"></div>
+    <div id="bbbrow" class="bbbrow livebd"><div id="puttbanner"></div><div id="bbbcard"></div></div>
     <div class="card livebd" id="fieldcard"></div>
   </section>
   <section id="teams" class="hide"><div id="pastTeam" class="pastbd"></div><div class="livebd"><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></div></section>
@@ -321,6 +321,8 @@
   <section id="newsbio" class="hide"><div id="newsbiobody"></div></section>
   <section id="adminsched" class="hide"><div id="adminteecard"></div></section>
   <section id="adminmsg" class="hide"><div id="msgbody"></div></section>
+  <section id="adminbbb" class="hide"><div id="adminbbbbody"></div></section>
+  <section id="bbb" class="hide"><div id="bbbbody"></div></section>
   <section id="adminctp" class="hide"><div id="adminctpbody"></div></section>
   <section id="ctp" class="hide"><div id="ctpbody"></div></section>
   <section id="hcp" class="hide">
@@ -424,6 +426,8 @@
       if (tab === 'adminmsg' && window.renderMsg) renderMsg(true);
     }
     if (tab === 'newsbio' && window.renderBios) renderBios();
+    if (tab === 'adminbbb' && window.renderAdminBbb) renderAdminBbb();   // Nov 24: BBB preview
+    if (tab === 'bbb' && window.renderBbb) renderBbb();
     if (show.indexOf('stats') >= 0 && window.renderStats) renderStats();   // Nov 23: Stats loads its own data (?api=stats)
     if (window.ctpShown) ctpShown(tab);
     var on = document.querySelector('nav.subnav button[data-tab="' + tab + '"]') || document.querySelector('nav.tabbar button[data-tab="' + tab + '"]');
@@ -1519,6 +1523,7 @@ function renderField() {
           '</td><td class="n' + (by === 'net' ? ' b' : '') + '"' + fx('net') + '>' + bv(x, 'net', bestNet) +
           '</td><td class="n' + (by === 'pts' ? ' b' : '') + '"' + fx('pts') + '>' + bv(x, 'pts', bestPts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '"' + fx('putts') + '>' + (win[x.player] ? '<span class="putw" title="Putting challenge leader">' + esc(x.putts) + '</span>' : esc(x.putts)) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores yet</div>';
+    if (window.bbbAfterField) bbbAfterField();   // Nov 24: Bingo Bango Bongo card + column (bbb.js)
   }
   (function () {
     var sel = document.getElementById('fieldsort');
@@ -1788,17 +1793,18 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=108"></script>
-<script src="settings.js?v=108"></script>
-<script src="flip.js?v=108"></script>
-<script src="match.js?v=108"></script>
-<script src="msg.js?v=108"></script>
-<script src="puttstand.js?v=108"></script>
-<script src="stats.js?v=108"></script>
-<script src="bios.js?v=108"></script>
-<script src="ctp.js?v=108"></script>
-<script src="fine.js?v=108"></script>
-<script src="tonight.js?v=108"></script>
-<script src="anim.js?v=108"></script>
+<script src="tee.js?v=109"></script>
+<script src="settings.js?v=109"></script>
+<script src="flip.js?v=109"></script>
+<script src="match.js?v=109"></script>
+<script src="msg.js?v=109"></script>
+<script src="puttstand.js?v=109"></script>
+<script src="stats.js?v=109"></script>
+<script src="bios.js?v=109"></script>
+<script src="ctp.js?v=109"></script>
+<script src="fine.js?v=109"></script>
+<script src="tonight.js?v=109"></script>
+<script src="anim.js?v=109"></script>
+<script src="bbb.js?v=109"></script>
 </body>
 </html>
