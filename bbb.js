@@ -120,6 +120,8 @@
   function renderPage() {
     var el = document.getElementById('bbbbody'); if (!el) return;
     if (!window.bbbOn()) { el.innerHTML = '<div class="card empty">Garbage isn\'t on tonight.</div>'; return; }
+    // A past night picked in the Night chip: nothing is saved yet (history comes with real scoring).
+    if (document.body.classList.contains('bpast')) { el.innerHTML = '<div class="card empty">No Garbage results saved for this night.<br><small>Past nights will show here once real Garbage scoring is on.</small></div>'; return; }
     var s = compute(), last = s.holes[s.holes.length - 1], me = meName(), L = leaders(s), top = L.length ? s.pts[L[0]].t : 0;
     if (selHole === null || selHole >= s.holes.length) selHole = s.holes.length - 1;
     var mine = s.pts[me] ? placeOf(s, me) : '';
@@ -186,6 +188,7 @@
     else if (t.closest('[data-gbh]')) { selHole = Number(t.closest('[data-gbh]').getAttribute('data-gbh')); renderPage(); }
   });
   document.addEventListener('change', function (ev) {
+    if (ev.target.id === 'bnsel') { setTimeout(renderPage, 50); setTimeout(renderPage, 1500); return; }
     var cr = ev.target.closest && ev.target.closest('[data-bbbcarry]');
     if (cr) { var cc = cfg(); cc.carry = Math.max(0, Math.round(Number(cr.value) || 0)); save(cc); refresh(); return; }
     var b = ev.target.closest && ev.target.closest('[data-bbbp]'); if (!b) return;

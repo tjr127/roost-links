@@ -1061,4 +1061,5 @@ table.gb-g .sel { background: #2a2414; }
 .gb-rules p { margin: 0 0 8px; } .gb-rules b { color: var(--ink); }
 .gb-demo { font-size: 11px; color: var(--muted); text-align: center; padding: 2px 0 14px; }
 table.gb-g td + td, table.gb-g th + th { border-left: 1px solid #222a25; }
-body.ongarb #bnrow { display: none !important; }
+/* Nov 24: night picker stays on the Garbage page (past nights planned); only the sort control is hidden there */
+body.ongarb #bnrow .fsort { display: none !important; }
