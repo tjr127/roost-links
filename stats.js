@@ -45,11 +45,22 @@
   var SG_MIN = 3;
   function thin(a) { return (a.sgN || 0) < SG_MIN; }
   function rds(n) { return n + ' rd' + (n === 1 ? '' : 's'); }
+  // "vs league average" (Nov 23, the default): each category's strokes gained per 18 holes pooled over everyone with shot data
+  // in the rounds being shown (season, or the one round), weighted by holes. A player's number = theirs minus that.
+  var LG = null;
+  function leagueAvg(rows) {
+    var H = 0, t = { ott: 0, app: 0, arg: 0, putt: 0 };
+    Object.keys(rows).forEach(function (k) { var a = rows[k]; if (!a.sgH) return; H += a.sgH; for (var c in t) t[c] += a[c] || 0; });
+    if (!H) return null;
+    for (var c in t) t[c] = t[c] / H * 18;
+    return t;
+  }
   function sgv(a, k) {
     if (!a.sgH) return null;
     var keys = k === 'sgt' ? ['ott', 'app', 'arg', 'putt'] : [k];
     var raw = keys.reduce(function (t, c) { return t + a[c]; }, 0) / a.sgH * 18;
     if (S.base === 'tour') return raw;
+    if (S.base === 'league') return LG ? raw - keys.reduce(function (t, c) { return t + (LG[c] || 0); }, 0) : null;
     var idx = S.base === 'scratch' ? 0 : hcpIndex(a.p); if (idx === null) return null;   // scratch = the 0-handicap benchmark
     return raw - keys.reduce(function (t, c) { return t + benchAt(c, idx); }, 0);
   }
@@ -130,16 +141,17 @@
     return '<svg class="sx-spark" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" aria-hidden="true"><polyline points="' + xy.map(function (p) { return p.join(','); }).join(' ') + '"/><circle cx="' + l[0] + '" cy="' + l[1] + '" r="2"/></svg>';
   }
 
-  var S = { base: ['hcp', 'scratch'].indexOf(st('sxBase')) >= 0 ? st('sxBase') : 'tour', view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: st('sxWho') || '' };
+  var S = { base: ['hcp', 'scratch', 'tour'].indexOf(st('sxBase')) >= 0 ? st('sxBase') : 'league', view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: st('sxWho') || '' };
   var CARD_T = { drive: 'Driving', appr: 'Approach', short: 'Short game', putt: 'Putting' };
   try { S.sort = JSON.parse(st('sxSort') || '{}') || {}; } catch (x) { S.sort = {}; }
 
   function baseSel() {
-    return '<label class="sx-sel"><select id="sxbase" aria-label="Strokes gained compared with"><option value="tour"' + (S.base === 'tour' ? ' selected' : '') + '>vs PGA Tour</option>' +
+    return '<label class="sx-sel"><select id="sxbase" aria-label="Strokes gained compared with"><option value="league"' + (S.base === 'league' ? ' selected' : '') + '>vs league avg</option><option value="tour"' + (S.base === 'tour' ? ' selected' : '') + '>vs PGA Tour</option>' +
       '<option value="scratch"' + (S.base === 'scratch' ? ' selected' : '') + '>vs scratch golfer</option>' +
       '<option value="hcp"' + (S.base === 'hcp' ? ' selected' : '') + '>vs my handicap</option></select></label>';
   }
-  var BASE_KEY = { tour: 'Against the average PGA Tour player (ShotLink baseline; 0 = Tour average, negative = strokes lost to a Tour pro).',
+  var BASE_KEY = { league: 'Against the league average for the rounds shown (0 = league average; + = gaining strokes on the field). Everyone with shot data counts, weighted by holes played.',
+    tour: 'Against the average PGA Tour player (ShotLink baseline; 0 = Tour average, negative = strokes lost to a Tour pro).',
     scratch: 'Against a typical scratch (0 handicap) golfer (0 = scratch level; + = better than scratch). Scratch benchmark: golfity.com, based on Mark Broadie\'s research.',
     hcp: 'Against a typical golfer with the same handicap index (0 = playing to your handicap; + = better than golfers at your level). Benchmarks by handicap: golfity.com, based on Mark Broadie\'s research; Handicaps tab index.' };
   // Nov 23: one set of controls for both views. Category tabs, then one row: player picker (Everyone or a name),
@@ -160,6 +172,7 @@
     var ln = lastNight(), tonightHas = !!feed() && feed().tonight === ln;
     var scopeNight = S.scope === 'night' ? ln : '';
     var data = rowsByPlayer(scopeNight), list = Object.keys(data).map(function (k) { return data[k]; });
+    LG = leagueAvg(data);
     var cat = CATS.filter(function (c) { return c.id === S.cat; })[0] || CATS[0];
     var sk = S.sort[cat.id] || cat.m[0], sm = M[sk];
     var dir = sm.b === 0 ? -1 : sm.b;   // approach distance: longest first
@@ -183,7 +196,7 @@
           '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) + (S.scope === 'night' ? '' : ' · ' + rds(a.sgN)) : hasSg && S.scope !== 'night' ? rds(a.sgN) + ' of shots' : S.scope === 'night' ? a.holes + ' holes' : rds(a.nights)) + '</small></td>' +
           cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (thin(a) ? ' sx-thin' : (x >= 0 ? ' sx-pos' : ' sx-neg')) : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
       }).join('') + '</table>';
-    html += '<div class="paykey">' + cat.cap + '. ' + cat.key + (hasSg ? ' <b>SG ' + ({ tour: 'vs Tour', scratch: 'vs scratch golfer', hcp: 'vs my handicap' })[S.base] + ':</b> ' + BASE_KEY[S.base] + ' <b>Grey</b> = fewer than ' + SG_MIN + ' rounds with shot data (shot tracking started Nov 19): one 9-hole round doubled to 18 holes swings a lot.' : '') + ' Tap a column to sort, tap a player for their stats.</div>';
+    html += '<div class="paykey">' + cat.cap + '. ' + cat.key + (hasSg ? ' <b>SG ' + ({ league: 'vs league average', tour: 'vs Tour', scratch: 'vs scratch golfer', hcp: 'vs my handicap' })[S.base] + ':</b> ' + BASE_KEY[S.base] + ' <b>Grey</b> = fewer than ' + SG_MIN + ' rounds with shot data (shot tracking started Nov 19): one 9-hole round doubled to 18 holes swings a lot.' : '') + ' Tap a column to sort, tap a player for their stats.</div>';
     // Tonight's penalty / mulligan holes (Driving only)
     var ag = D.agentStats;
     if (cat.id === 'drive' && S.scope === 'night' && tonightHas && ag && ag.players) {
@@ -198,6 +211,7 @@
   function renderMe(box) {
     var ln = lastNight(), scopeNight = S.scope === 'night' ? ln : '';
     var season = rowsByPlayer(scopeNight), list = Object.keys(season).map(function (k) { return season[k]; });
+    LG = leagueAvg(season);
     var who = S.who, cat = CATS.filter(function (c) { return c.id === S.cat; })[0] || CATS[0];
     var html = controls(allNames(), cat, false);
     var a = season[who], nights = perNight(who), last = nights.length ? nights[nights.length - 1] : null;
