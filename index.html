@@ -229,16 +229,16 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=105">
-<link rel="stylesheet" href="theme.css?v=105">
+<link rel="stylesheet" href="app.css?v=106">
+<link rel="stylesheet" href="theme.css?v=106">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=105"></script>
-<script src="app.js?v=105"></script>
-<script src="rules.js?v=105"></script>
+<script src="live.js?v=106"></script>
+<script src="app.js?v=106"></script>
+<script src="rules.js?v=106"></script>
 </head>
 <body>
 <header>
-  <div class="brand"><img src="icons/icon-192.png" alt=""><div><h1>Roost Golf</h1><div class="sub" id="title">Loading…</div></div></div>
+  <div class="brand"><img src="icons/icon-192.png" alt=""><div><h1>Roost Golf</h1><div class="pgname" id="pgname"></div><div class="sub" id="title">Loading…</div></div></div>
   <div class="curtab" id="curtab">Leaderboard</div>
   <button type="button" class="menubtn" id="menubtn" aria-label="Menu" aria-expanded="false">☰</button>
 </header>
@@ -270,7 +270,7 @@
     <div class="card livebd" id="fieldcard"></div>
   </section>
   <section id="teams" class="hide"><div id="pastTeam" class="pastbd"></div><div class="livebd"><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></div></section>
-  <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div><div class="card" id="seasonpay"></div><div class="card" id="playoffpay"></div></section>
+  <section id="standings" class="hide"><div class="card" id="table"></div><div class="card" id="seasonpay"></div><div class="card" id="playoffpay"></div></section>
   <section id="puttstand" class="hide"><h2>Putt standings</h2><div id="puttleaders"></div><div class="card" id="putttable"></div><div class="card" id="putteven"></div><div class="card" id="puttrules"></div></section>
   <section id="schedule" class="hide">
     <div id="teecard"></div>
@@ -401,6 +401,9 @@
     document.querySelectorAll('nav.subnav').forEach(function (n) { n.classList.toggle('hide', n.dataset.for !== grp); });
     document.querySelectorAll('nav.subnav button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab); });
     document.querySelectorAll('main section').forEach(function (s) { s.classList.toggle('hide', show.indexOf(s.id) < 0); });
+    // Nov 24: the page name sits under "Roost Golf" in the header (Ty's names).
+    var pgn = { board: 'Leaderboard', stand: 'Season Standings', schedule: 'Schedule', scores: 'Statistics', news: 'News & Announcements', ctp: 'Closest to the Pin', admin: 'Admin' }[grp] || '';
+    document.getElementById('pgname').textContent = pgn;
     var bnr = document.getElementById('bnrow'); bnr.classList.toggle('hide', grp !== 'board'); bnr.dataset.tab = tab; document.getElementById('tncard').classList.toggle('hide', grp !== 'board');
     if (grp === 'board' && window.renderBoardPast) renderBoardPast();
     store('tab', tab);
@@ -1716,17 +1719,17 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=105"></script>
-<script src="settings.js?v=105"></script>
-<script src="flip.js?v=105"></script>
-<script src="match.js?v=105"></script>
-<script src="msg.js?v=105"></script>
-<script src="puttstand.js?v=105"></script>
-<script src="stats.js?v=105"></script>
-<script src="bios.js?v=105"></script>
-<script src="ctp.js?v=105"></script>
-<script src="fine.js?v=105"></script>
-<script src="tonight.js?v=105"></script>
-<script src="anim.js?v=105"></script>
+<script src="tee.js?v=106"></script>
+<script src="settings.js?v=106"></script>
+<script src="flip.js?v=106"></script>
+<script src="match.js?v=106"></script>
+<script src="msg.js?v=106"></script>
+<script src="puttstand.js?v=106"></script>
+<script src="stats.js?v=106"></script>
+<script src="bios.js?v=106"></script>
+<script src="ctp.js?v=106"></script>
+<script src="fine.js?v=106"></script>
+<script src="tonight.js?v=106"></script>
+<script src="anim.js?v=106"></script>
 </body>
 </html>

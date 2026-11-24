@@ -930,3 +930,7 @@ td.fx-flash, .match .pts.fx-flash { display: revert; }
   .fx-flash, .fx-pop, .pc.fx-pulse, .fx-glow, .fx-in, .fx-shake, .tn-live, #matches .match.fx-just * { animation: none !important; }
   .tn .tn-g, .tn-chev, .fine-t::after { transition: none !important; }
 }
+
+/* Nov 24: page name under "Roost Golf" in the header (option B). */
+header .pgname { font: 700 12px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--amber); margin-top: 2px; line-height: 1.2; }
+header .pgname:empty { display: none; }
