@@ -340,12 +340,12 @@ nav.subnav button { white-space: nowrap; padding: 0 4px; }
 .seg button.on { background: var(--card2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line2); }
 .seg button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 #matchwrap .fhead h2 { white-space: nowrap; }
-.h2h-basic .match { padding: 8px 14px; gap: 6px; margin-bottom: 6px; align-items: center; }
-.h2h-basic .match .stk, .h2h-basic .match .thru, .h2h-basic .match .mstory, .h2h-basic .match .mtarget { display: none !important; }
-.h2h-basic .match .name { font-size: 15px; }
-.h2h-basic .match .thr { font-size: 12px; margin-top: 0; }
-.h2h-basic .match .pts { font-size: 22px; }
-.h2h-basic .match .ow { margin-top: 2px; font-size: 10px; }
+#matches .match:not(.open) { padding: 8px 14px; gap: 6px; margin-bottom: 6px; align-items: center; }
+#matches .match:not(.open) .stk, #matches .match:not(.open) .thru, #matches .match:not(.open) .mstory, #matches .match:not(.open) .mtarget { display: none !important; }
+#matches .match:not(.open) .name { font-size: 15px; }
+#matches .match:not(.open) .thr { font-size: 12px; margin-top: 0; }
+#matches .match:not(.open) .pts { font-size: 22px; }
+#matches .match:not(.open) .ow { margin-top: 2px; font-size: 10px; }
 
 /* Nov 13: Team Basic / Detailed */
 .tbasic { padding: 4px 14px; }
@@ -815,7 +815,7 @@ body.tposted #pastTeam { display: block; }
 
 /* Nov 23: bigger small text. Labels are at least 12 px; table headings 11.5; secondary lines, tabs and notes one step up to 13.
    Left small on purpose (dense grids with no room): bottom tab bar labels, scorecard grid, Enter-score hole grid, handicap chart labels, team hole-by-hole tags. */
-.nm-ch small, .sx-t td.sx-pl small, .sx-u, .tt-tbtns .tt-hc small, .h2h-basic .match .ow, .match .ow, .nm-ow,
+.nm-ch small, .sx-t td.sx-pl small, .sx-u, .tt-tbtns .tt-hc small, #matches .match:not(.open) .ow, .match .ow, .nm-ow,
 .ps-lk, .ps-tie, .ps-tr, .ps-evk, .ps-cut, .ps-cap, .ps-tag .pay, .stand .pay,
 .sx-rl small, .sx-rv small, .sx-rt small, .bio-chips button small, .bio-k, .bio-by,
 .ctp-up small, .ctp-name i, .ctp-t i, .hx-tbl td small, .hs-goal span, .hc-strip .hs-l .k,
@@ -868,3 +868,20 @@ table.stt.sst td:first-child small, .hc-axis { font-size: 12px; }
 /* Nov 23 (later): on match cards the chip always sits above the name, so every player's chip is in the same place whatever the name's length. */
 .match .name .pn, .match .name .pn.r { flex-direction: column; flex-wrap: nowrap; gap: 4px; align-items: flex-start; }
 .match .name.r .pn, .match .name.r .pn.r { align-items: flex-end; }
+
+/* Nov 23 (later): match cards are compact and open on tap (replaces the Basic / Detailed switch). */
+#matches .match { cursor: pointer; }
+.h2h-hint { text-align: center; }
+/* Sign-in chip in the header (replaces the cog). */
+.st-cog.st-out { width: auto; padding: 0 14px; border-radius: 999px; background: var(--amber); color: #101412; font: 700 13px Inter, sans-serif; border: 0; }
+.st-cog.st-in { width: auto; max-width: 150px; padding: 0 10px 0 4px; gap: 6px; border-radius: 999px; color: var(--ink); font: 600 13px Inter, sans-serif; }
+.st-cog.st-in .pc { width: 26px; height: 26px; background: var(--amber); color: #101412; box-shadow: none; font-size: 11px; }
+.st-cog.st-in .pc.pc3 { font-size: 9px; }
+.st-cog.st-in .st-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+header .brand { padding-right: 160px; }
+#rl-who { display: none; }
+.st-acct { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.st-acct .st-note { margin: 0; }
+.st-out-btn { all: unset; box-sizing: border-box; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line2); color: var(--ink); font: 600 13px Inter, sans-serif; cursor: pointer; flex: none; }
+/* Streak column in Season standings. */
+.stk-w { color: var(--win); font-weight: 700; } .stk-l { color: var(--loss); font-weight: 700; } .stk-t { color: var(--muted); font-weight: 700; }

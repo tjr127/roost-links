@@ -16,9 +16,10 @@
     var hdr = document.querySelector('header');
     var cog = document.createElement('button');
     cog.type = 'button'; cog.id = 'stbtn'; cog.className = 'st-cog'; cog.setAttribute('aria-label', 'Settings');
-    cog.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+    // Nov 23: the header button is the sign-in chip. Signed out: an amber "Sign in" button. Signed in: your initials and name; tap for Settings.
     hdr.appendChild(cog);
-    cog.addEventListener('click', open);
+    cog.addEventListener('click', function () { if (RL.user()) open(); else RL.signIn(); });
+    chipDraw();
     ov = document.createElement('div');
     ov.className = 'st-ov hide';
     ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Settings');
@@ -26,6 +27,16 @@
     ov.addEventListener('click', onClick);
   }
 
+  function chipDraw() {
+    var cog = document.getElementById('stbtn'); if (!cog) return;
+    var a = RL.user();
+    if (!a) { cog.className = 'st-cog st-out'; cog.setAttribute('aria-label', 'Sign in'); cog.textContent = 'Sign in'; return; }
+    var t = ((window.data && window.data.shortNames) || {})[a.name] || String(a.name).slice(0, 2).toUpperCase();
+    var key = a.name + '|' + t; if (cog.dataset.who === key && cog.classList.contains('st-in')) return;
+    cog.dataset.who = key; cog.className = 'st-cog st-in'; cog.setAttribute('aria-label', 'Signed in as ' + a.name + '. Open settings');
+    cog.innerHTML = '<span class="pc' + (t.length > 2 ? ' pc3' : '') + '" aria-hidden="true">' + e(t) + '</span><span class="st-nm">' + e(a.name) + '</span>';
+  }
+  window.updateHeaderChip = function () { build(); chipDraw(); };
   function open() {
     build();
     ov.classList.remove('hide');
@@ -69,6 +80,7 @@
           return '<button type="button" data-stee="' + e(t) + '" class="' + (st.tees === t ? 'on' : '') + '">' + e(t) + '</button>';
         }).join('') + '</div></div>';
     }
+    if (a) html += '<div class="st-card st-acct"><p class="st-note">Signed in as <b>' + e(a.name) + '</b>' + (a.admin ? ' (can edit all scores)' : '') + '</p><button type="button" class="st-out-btn" data-st="signout">Sign out</button></div>';
     if (msg.text) html += '<div class="st-msg' + (msg.err ? ' err' : '') + '">' + e(msg.text) + '</div>';
     html += '</div>';
     ov.innerHTML = html;
@@ -97,6 +109,7 @@
     var act = b.getAttribute('data-st');
     if (act === 'close') { close(); return; }
     if (act === 'signin') { close(); RL.signIn(); return; }
+    if (act === 'signout') { close(); RL.signOut(); return; }
     if (b.hasAttribute('data-time') && st && !st.loading) {
       var v = b.getAttribute('data-time'), was = st.teeTime;
       if (v === was) return;

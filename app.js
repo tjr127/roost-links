@@ -197,7 +197,8 @@
     b.addEventListener('click', a ? window.RL.signOut : window.RL.signIn);
     if (typeof window.renderEntry === 'function' && window.data) window.renderEntry();
     if (typeof window.updateNav === 'function') window.updateNav();
-    if (typeof window.rerenderYou === 'function') window.rerenderYou();   // Nov 23: your match first, your name highlighted
+    if (typeof window.rerenderYou === 'function') window.rerenderYou();
+    if (typeof window.updateHeaderChip === 'function') window.updateHeaderChip();   // Nov 23: your match first, your name highlighted
     if (typeof window.renderTee === 'function' && window.data) window.renderTee();
   }
 

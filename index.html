@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=102">
-<link rel="stylesheet" href="theme.css?v=102">
+<link rel="stylesheet" href="app.css?v=103">
+<link rel="stylesheet" href="theme.css?v=103">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=102"></script>
-<script src="app.js?v=102"></script>
-<script src="rules.js?v=102"></script>
+<script src="live.js?v=103"></script>
+<script src="app.js?v=103"></script>
+<script src="rules.js?v=103"></script>
 </head>
 <body>
 <header>
@@ -254,7 +254,7 @@
 <main>
   <div id="tncard" class="livebd hide"></div>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
-  <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><div class="seg livebd" data-ctl="tonight" role="group" aria-label="Match view"><button type="button" data-h2h="basic">Basic</button><button type="button" data-h2h="detailed">Detailed</button></div><div class="seg livebd" data-ctl="teams" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
+  <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><div class="seg livebd" data-ctl="teams" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
@@ -436,6 +436,17 @@
     if (b) { b.setAttribute('aria-expanded', window.rulesOpen); b.querySelector('.gmore').textContent = window.rulesOpen ? 'Hide rules ▴' : 'Rules ›'; }
   });
   // Head2Head view: Basic (names, Thru and scores only, so every match fits on one screen) or Detailed. Per phone; starts Detailed.
+  // Nov 23: match cards are compact and open on tap; which ones are open is kept while the app is open.
+  var h2hOpen = {};
+  function h2hToggle(card) { var k = card.getAttribute('data-mk'); h2hOpen[k] = !h2hOpen[k]; card.classList.toggle('open', !!h2hOpen[k]); card.setAttribute('aria-expanded', !!h2hOpen[k]); }
+  document.getElementById('matches').addEventListener('click', function (ev) {
+    var card = ev.target.closest && ev.target.closest('.match[data-mk]');
+    if (!card || ev.target.closest('.mstory.tap, .mtarget, a, button')) return;
+    h2hToggle(card);
+  });
+  document.getElementById('matches').addEventListener('keydown', function (ev) {
+    if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('.match[data-mk]')) { ev.preventDefault(); h2hToggle(ev.target); }
+  });
   function setH2hView(v) {
     v = v === 'basic' ? 'basic' : 'detailed'; store('h2hView', v);
     document.getElementById('matches').classList.toggle('h2h-basic', v === 'basic');
@@ -1594,8 +1605,8 @@ function renderField() {
       var x = w.x;
       var a = num(x.ap), b = num(x.bp);
       var la = a !== null && b !== null && a > b, lb = a !== null && b !== null && b > a;
-      var fin = x.aThru === 'F' && x.bThru === 'F';
-      return '<div class="card match' + (w.mine ? '' : ' mine') + (fin ? ' done' : '') + '">' +
+      var fin = x.aThru === 'F' && x.bThru === 'F', mk = x.a + '|' + x.b;
+      return '<div class="card match' + (w.mine ? '' : ' mine') + (fin ? ' done' : '') + (h2hOpen[mk] ? ' open' : '') + '" data-mk="' + esc(mk) + '" role="button" tabindex="0" aria-expanded="' + !!h2hOpen[mk] + '">' +
         '<div class="name' + (fin && la ? ' won' : '') + '">' + pn(x.a) + thr(x.aThru) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
         '<div class="mid"><div class="scores">' +
         '<div class="pts' + (la ? ' lead' : '') + '">' + esc(x.ap || '–') + '</div>' +
@@ -1607,10 +1618,11 @@ function renderField() {
         (window.matchStory ? window.matchStory(x) : '') +
         '</div>';
     }).join('');
-    document.getElementById('matches').innerHTML = m || '<div class="card empty">' + (d.roundType === 'Casual' ? 'Casual round: no head-to-head matches tonight' : 'No matches tonight') + '</div>';
+    document.getElementById('matches').innerHTML = (m ? m + '<div class="tleg h2h-hint">Tap a match for strokes and details.</div>' : '') || '<div class="card empty">' + (d.roundType === 'Casual' ? 'Casual round: no head-to-head matches tonight' : 'No matches tonight') + '</div>';
 
     renderField();
     if (window.renderTonightCard) try { renderTonightCard(d); } catch (x) { console.error(x); }
+    if (window.updateHeaderChip) try { updateHeaderChip(); } catch (x) { console.error(x); }
     if (groupOf(curTab) === 'board') renderBoardPast();
 
     // Stats > Stats (Nov 14 redesign): Everyone / Individual, in stats.js.
@@ -1629,6 +1641,16 @@ function renderField() {
       (g.desc ? '<div class="gdesc">' + esc(g.desc) + '</div>' : '') +
       '<div class="grules' + (window.rulesOpen ? '' : ' hide') + '" id="grules">' + (window.gameRules ? gameRules(g.game, g.scoring, tdx.minPlayers, tdx.counted) : '') + '</div></div>' : '';
 
+    // Current streak (Nov 23): W2, L3, T1 = the player's most recent results in a row, from the schedule's played matches.
+    var stkBy = {};
+    (d.schedule || []).forEach(function (p) {
+      var res = (p.weeks || []).filter(function (wk) { return wk.past && /^[WLT]$/.test(wk.status || ''); }).map(function (wk) { return wk.status; });
+      if (!res.length) return;
+      var last = res[res.length - 1], n = 0;
+      for (var q = res.length - 1; q >= 0 && res[q] === last; q--) n++;
+      stkBy[p.name] = { r: last, n: n };
+    });
+    function streak(name) { var s = stkBy[name]; return s ? '<span class="stk-' + s.r.toLowerCase() + '">' + s.r + s.n + '</span>' : '<span class="muted">–</span>'; }
     var pay = seasonPay(d.standings);
     // # column: players level on points share the place (1, 1, 3…); seed order and the top-4 shading stay as the sheet has them.
     var rank = d.standings.map(function (x, i, a) {
@@ -1638,11 +1660,11 @@ function renderField() {
       return r + 1;
     });
     document.getElementById('table').innerHTML =
-      '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +
+      '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Strk</th><th class="n">Pts</th></tr>' +
       d.standings.map(function (x, i) {
         return '<tr class="' + ([1, 2, 3].indexOf(rank[i]) >= 0 ? 'place p' + rank[i] : '') + '"><td class="n">' + esc(num(x.pts) !== null && rank.filter(function (r, j) { return r === rank[i] && num(d.standings[j].pts) !== null; }).length > 1 ? 'T' + rank[i] : rank[i]) +
           '</td><td>' + pn(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') +
-          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
+          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n">' + streak(x.player) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
       }).join('') + '</table>' +
       '<div class="paykey">Green = payout if the regular season ended today. Players tied on points split the combined pot for the places they share.</div>';
     var payCard = function (title, amts, labels, key) {
@@ -1701,16 +1723,16 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=102"></script>
-<script src="settings.js?v=102"></script>
-<script src="flip.js?v=102"></script>
-<script src="match.js?v=102"></script>
-<script src="msg.js?v=102"></script>
-<script src="puttstand.js?v=102"></script>
-<script src="stats.js?v=102"></script>
-<script src="bios.js?v=102"></script>
-<script src="ctp.js?v=102"></script>
-<script src="fine.js?v=102"></script>
-<script src="tonight.js?v=102"></script>
+<script src="tee.js?v=103"></script>
+<script src="settings.js?v=103"></script>
+<script src="flip.js?v=103"></script>
+<script src="match.js?v=103"></script>
+<script src="msg.js?v=103"></script>
+<script src="puttstand.js?v=103"></script>
+<script src="stats.js?v=103"></script>
+<script src="bios.js?v=103"></script>
+<script src="ctp.js?v=103"></script>
+<script src="fine.js?v=103"></script>
+<script src="tonight.js?v=103"></script>
 </body>
 </html>
