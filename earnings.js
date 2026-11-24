@@ -93,7 +93,11 @@
     var SK = { p: function (r) { return r.p; }, won: function (r) { return r.won; }, paid: function (r) { return r.paid; }, net: function (r) { return r.won - r.paid; } };
     // Nov 24: every header sorts; tap the same header again to flip the order.
     rows.sort(function (a, b) { return (b.won - b.paid) - (a.won - a.paid) || b.won - a.won || a.p.localeCompare(b.p); });
-    rows.forEach(function (r, i) { r.rk = i + 1; });
+    // Nov 24: ties share a place, shown T# like the other leaderboards (same net = tied, to the cent).
+    rows.forEach(function (r, i) {
+      var v = Math.round((r.won - r.paid) * 100), same = rows.filter(function (o) { return Math.round((o.won - o.paid) * 100) === v; }).length;
+      r.rk = i + 1; r.pl = rows.filter(function (o) { return Math.round((o.won - o.paid) * 100) > v; }).length + 1; r.pll = (same > 1 ? 'T' : '') + r.pl;
+    });
     if (st.sort !== 'net' || st.dir !== -1) rows.sort(function (a, b) {
       var k = st.sort === 'rk' ? function (r) { return r.rk; } : SK[st.sort], x = k(a), z = k(b);
       var c = typeof x === 'string' ? x.localeCompare(z) : x - z;
@@ -105,12 +109,13 @@
       var rk = rows.slice().sort(function (a, b) { return (b.won - b.paid) - (a.won - a.paid); }), pos = rk.filter(function (r) { return r.won - r.paid > my.won - my.paid; }).length + 1, nv = my.won - my.paid;
       var nights = {}; my.rows.forEach(function (r) { if (r.n) { nights[r.n] = nights[r.n] || { l: r.l, v: 0 }; nights[r.n].v += r.won - r.paid; } });
       var bn = Object.keys(nights).map(function (k) { return nights[k]; }).sort(function (a, b) { return b.v - a.v; })[0];
+      var myr = rows.filter(function (r) { return r.p === y; })[0]; if (myr && myr.pll) pos = myr.pll;
       hero = '<div class="gb-lead ern-hero' + (nv >= 0 ? ' fin' : ' dn') + '"><div><span class="gb-k">Your season · ' + e(y) + '</span><small>Won ' + usd(my.won) + ' · paid in ' + usd(my.paid) + '</small><small>' + pos + ' of ' + rows.length + (bn && bn.v > 0 ? ' · best night ' + e(String(bn.l).split(' · ')[0]) + ' (+' + usd(bn.v) + ')' : '') + '</small></div><div class="gb-big">' + (nv > 0 ? '+' : nv < 0 ? '−' : '') + usd(nv) + '<small>net</small></div></div>';
     }
     var seg = '';
     function th(k, lab, cls) { var on = st.sort === k; return '<th' + (cls ? ' class="' + cls + '"' : '') + (on ? ' aria-sort="' + (st.dir > 0 ? 'ascending' : 'descending') + '"' : '') + '><button type="button" data-earnsort="' + k + '"' + (on ? ' class="on"' : '') + '>' + lab + (on ? (st.dir > 0 ? ' ▲' : ' ▼') : '') + '</button></th>'; }
     var tbl = '<table class="ern-t"><tr>' + th('rk', '#', 'l p') + th('p', 'Player', 'l') + th('won', 'Won') + th('paid', 'Paid in') + th('net', 'Net') + '</tr>' + rows.map(function (r, i) {
-      return '<tr' + (r.p === y ? ' class="me"' : '') + '><td class="l p">' + r.rk + '</td><td class="l"><button type="button" data-earn="' + e(r.p) + '">' + e(r.p) + ' <i>›</i></button></td><td>' + usd(r.won) + '</td><td class="m">' + usd(r.paid) + '</td><td class="b">' + net$(r.won - r.paid) + '</td></tr>';
+      return '<tr' + (r.p === y ? ' class="me"' : '') + '><td class="l p">' + r.pll + '</td><td class="l"><button type="button" data-earn="' + e(r.p) + '">' + e(r.p) + ' <i>›</i></button></td><td>' + usd(r.won) + '</td><td class="m">' + usd(r.paid) + '</td><td class="b">' + net$(r.won - r.paid) + '</td></tr>';
     }).join('') + '</table>';
     var pool = BUY.season * c.members.length;
     var left = (c.carry ? '<div class="card ern-left"><div class="bbb-sh">Still to be won</div><div><span>Putting pot carried over</span><b>' + usd(c.carry) + '</b></div></div>' : '') +

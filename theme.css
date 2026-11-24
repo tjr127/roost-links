@@ -1076,7 +1076,7 @@ body.ongarb #bnrow .fsort { display: none !important; }
 table.ern-t { width: 100%; border-collapse: collapse; table-layout: fixed; }
 table.ern-t th { font: 600 10px Inter, sans-serif; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); text-align: right; padding: 8px 2px; width: 19%; }
 table.ern-t td { font: 600 13.5px 'Space Grotesk', sans-serif; text-align: right; padding: 0 2px; height: 40px; border-top: 1px solid #252D28; white-space: nowrap; }
-table.ern-t .l { text-align: left; width: auto; } table.ern-t .p { width: 24px; color: var(--muted); } table.ern-t .m { color: var(--muted); } table.ern-t td.b { font-size: 15px; }
+table.ern-t .l { text-align: left; width: auto; } table.ern-t .p { width: 32px; color: var(--muted); } table.ern-t .m { color: var(--muted); } table.ern-t td.b { font-size: 15px; }
 table.ern-t td.g { font: 500 13px Inter, sans-serif; } table.ern-t tr.me td { background: #232b26; } table.ern-t tr.tot td { border-top: 2px solid #39443d; }
 table.ern-t td button { background: none; border: 0; color: var(--ink); font: inherit; padding: 0; width: 100%; height: 40px; text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; }
 table.ern-t th button { background: none; border: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 4px 0; width: 100%; text-align: inherit; cursor: pointer; white-space: nowrap; }
