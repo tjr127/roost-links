@@ -67,8 +67,9 @@
     var me = rows.filter(function (r) { return r.player === y; })[0];
     var tp = function (v) { return v === 0 ? 'E' : v > 0 ? '+' + v : '−' + (-v); };
     var big = me ? (p ? ord(p) + ' · ' : '') + (done ? e(me.net) + ' net' : tp(me.nd) + ' net') : (done ? bestV + ' net' : tp(bestV));
-    var sub = done ? (lead.indexOf(y) >= 0 ? (lead.length > 1 ? 'Tied for low net' : 'Low net of the night') : names(lead) + ' won with ' + bestV)
-      : (lead.indexOf(y) >= 0 && lead.length === 1 ? 'You lead' : 'Leading: ' + names(lead) + ' ' + tp(bestV)) + (me ? ' · thru ' + me.thru : '');
+    var pot = BUYIN * (d.cards || []).length, share = pot / Math.max(1, lead.length), paid = d.roundType !== 'Casual';
+    var sub = done ? (lead.indexOf(y) >= 0 ? (lead.length > 1 ? (paid ? 'Split ' + money(pot) + ': you get ' + money(share) : 'Tied for low net') : (paid ? 'You won ' + money(pot) : 'Low net of the night')) : names(lead) + (paid ? ' won ' + money(share) + (lead.length > 1 ? ' each' : '') : ' won') + ' with ' + bestV)
+      : (lead.indexOf(y) >= 0 && lead.length === 1 ? 'You lead' : 'Leading: ' + names(lead) + ' ' + tp(bestV)) + (paid ? ' · pot ' + money(pot) : me ? ' · thru ' + me.thru : '');
     return tile('net', 'Low net', big, sub, done && lead.indexOf(y) >= 0 ? 'win' : '');
   }
   function bbbTile(y, done, d) {
@@ -82,6 +83,29 @@
       : (youLead && lead.length === 1 ? 'You lead' : 'Leading: ' + names(lead) + ' ' + top) + ' · ' + s.left + ' pts left';
     return tile('bbb', 'BBB', big, sub, fin && youLead ? 'win' : '');
   }
+
+  // Payouts (Ty, Nov 24): $5 a player for low net (winner takes all, ties split) and $5 a player for the team game
+  // (winning team splits it by team size). Team ties: lowest combined net, then lowest combined putts; say so.
+  var BUYIN = 5;
+  function money(v) { return '$' + (Math.round(v * 100) % 100 ? v.toFixed(2) : String(Math.round(v))); }
+  function fieldOf(d, n) { return (d.field || []).filter(function (x) { return x.player === n; })[0] || {}; }
+  function teamSum(d, t, k) { var s = 0, ok = true; (t.players || []).forEach(function (p) { var v = num(fieldOf(d, p.name)[k]); if (v === null) ok = false; else s += v; }); return ok ? s : null; }
+  function teamResult(d) {
+    var td = d.teamDetail, teams = (td && td.teams) || []; if (!teams.length || !window.tdOrder) return null;
+    var r = tdOrder(td).rank, top = teams.filter(function (t) { return r[t.name] && r[t.name].place === 1; });
+    if (!top.length) return null;
+    var players = teams.reduce(function (n, t) { return n + (t.players || []).length; }, 0), pot = BUYIN * players, how = '', vals = {};
+    [['net', 'combined net'], ['putts', 'combined putts']].forEach(function (k) {
+      if (top.length < 2) return;
+      var v = top.map(function (t) { return teamSum(d, t, k[0]); });
+      if (v.some(function (x) { return x === null; })) return;
+      var best = Math.min.apply(null, v); vals = { label: k[1], list: top.map(function (t, i) { return { t: t, v: v[i] }; }) };
+      top = top.filter(function (t, i) { return v[i] === best; }); how = k[1];
+    });
+    var size = top.length ? (top[0].players || []).length : 1;
+    return { winners: top, how: how, vals: vals, pot: pot, share: pot / top.length / Math.max(1, size), tiedTop: Object.keys(r).filter(function (n) { return r[n].place === 1; }).length };
+  }
+  function teamNames(t) { return (t.players || []).map(function (p) { return p.name; }).join(' & '); }
 
   // Season tile (Nov 24): your place and points in the regular-season standings (d.standings), gap to the leader / next.
   function seasonTile(d, y) {
@@ -168,6 +192,16 @@
       if (mine && window.tdOrder) {
         var r = tdOrder(td).rank[mine.name], gap = r && window.tdGapText ? tdGapText(r) : '';
         var mates = mine.players.map(function (p) { return p.name; }).filter(function (n) { return n !== y; });
+        var tr = done && d.roundType !== 'Casual' ? teamResult(d) : null;
+        if (tr) {
+          var iWon = tr.winners.indexOf(mine) >= 0, tbNote = tr.how ? 'Won on ' + tr.how + ' tiebreak' : '';
+          if (iWon) out.push(tile('team', 'Team game', '1st · won ' + money(tr.share), (tbNote ? tbNote + ' · ' : '') + (mates.length ? 'With ' + mates.map(e).join(', ') : game) + (tr.winners.length > 1 ? ' · split' : ''), 'win'));
+          else {
+            var lostTb = r && r.place === 1 && tr.how;
+            out.push(tile('team', 'Team game', lostTb ? 'T1 · lost tiebreak' : (r ? e(tdPlaceText(r)) : '–') + ' of ' + teams.length,
+              tr.winners.map(function (t) { return e(teamNames(t)); }).join(' / ') + ' won ' + money(tr.share) + ' each' + (tr.how ? ' (' + tr.how + ' tiebreak)' : ''), lostTb ? 'loss' : ''));
+          }
+        } else
         out.push(tile('team', 'Team game', (r ? e(tdPlaceText(r)) : '–') + (gap && !done ? ' · ' + e(gap) : done ? ' of ' + teams.length : ''), (mates.length ? 'With ' + mates.map(e).join(', ') + ' · ' : '') + game, r && r.place === 1 ? 'win' : ''));
       } else out.push(tile('team', 'Team game', game || 'Team game', teams.length + ' teams'));
     }
