@@ -47,7 +47,9 @@
     var pts = {}; ps.forEach(function (p) { pts[p] = { bi: 0, ba: 0, bo: 0, t: 0 }; });
     holes.forEach(function (h) { ['bi', 'ba', 'bo'].forEach(function (k) { if (h[k] && pts[h[k]]) { pts[h[k]][k]++; pts[h[k]].t++; } }); });
     var order = ps.slice().sort(function (a, b) { return pts[b].t - pts[a].t || a.localeCompare(b); });
-    return { ps: ps, total: total, holes: holes, pts: pts, order: order, left: (total - holes.length) * 3, final: holes.length === total, anyScores: anyScores };
+    // Ty, Nov 24: $1 a BBB player; the leader at the end of the night takes the pot; a tie carries it to next week.
+    var carry = Number(cfg().carry) || 0, pot = ps.length * 1 + carry;
+    return { ps: ps, total: total, holes: holes, pts: pts, order: order, left: (total - holes.length) * 3, final: holes.length === total, anyScores: anyScores, pot: pot, carry: carry };
   }
   window.bbbState = function () { return compute(); };
   function leaders(s) { var top = s.order.length ? s.pts[s.order[0]].t : 0; return s.order.filter(function (p) { return s.pts[p].t === top && top > 0; }); }
@@ -99,7 +101,7 @@
     el.innerHTML =
       '<div class="bbb-top"><button type="button" class="bbb-back" id="bbbback">‹ Board</button><b class="bbb-title">Bingo Bango Bongo</b><span>' + (s.final ? 'Final' : s.holes.length ? 'Thru ' + s.holes.length : 'Not started') + '</span></div>' +
       '<div class="bbb-demo">Demo points — real points come once the GSPro agent sends BBB data.</div>' +
-      '<div class="card"><div class="bbb-sh">Standings' + (s.final ? '' : ' · ' + s.left + ' pts left') + '</div><table class="bbbt"><colgroup><col style="width:9%"><col><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>' +
+      '<div class="card"><div class="bbb-sh">Standings' + (s.final ? '' : ' · ' + s.left + ' pts left') + ' · pot $' + s.pot + (s.carry ? ' (incl. $' + s.carry + ' carried)' : '') + '</div><table class="bbbt"><colgroup><col style="width:9%"><col><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>' +
       '<tr><th>#</th><th class="l">Player</th><th>Bingo</th><th>Bango</th><th>Bongo</th><th class="a">Tot</th></tr>' +
       s.order.map(function (p, i) { var x = s.pts[p]; return '<tr><td class="m">' + (i + 1) + '</td><td class="l">' + e(p) + '</td><td>' + x.bi + '</td><td>' + x.ba + '</td><td>' + x.bo + '</td><td class="a">' + x.t + '</td></tr>'; }).join('') + '</table></div>' +
       (last ? '<div class="card bbb-last"><div class="bbb-sh a">Latest · Hole ' + last.n + ' · par ' + last.par + '</div>' +
@@ -110,7 +112,7 @@
       (s.final ? '' : '<tr><td class="l m">' + (s.holes.length + 1) + '</td><td class="m">·</td><td class="m">·</td><td class="m">·</td><td class="m">·</td></tr>') + '</table>' +
       '<div class="bbb-key">★ par-3 tee shot takes Bingo + Bango · ⛳ chip-in takes Bango + Bongo · — nobody on from the tee</div></div>' +
       (s.holes.length ? '<div class="card bbb-best"><div class="bbb-sh">Tonight\'s bests</div>' + best('bi', 'Longest Bingo') + best('ba', 'Tightest Bango') + best('bo', 'Longest Bongo') + '</div>' : '') +
-      '<div class="bbb-rules"><b>Rules</b> · Bingo: first on the green from furthest away (the shot onto the green can\'t be a mulligan replay; penalty strokes are fine). Par 3: anyone on from the tee counts the same whatever the tee; closest takes Bingo and Bango. Bango: closest to the pin once everyone is on, played from off the green. Bongo: fewest putts, longest first putt breaks ties. A chip-in takes Bango and Bongo.</div>';
+      '<div class="bbb-rules"><b>Rules</b> · Bingo: first on the green from furthest away (the shot onto the green can\'t be a mulligan replay; penalty strokes are fine). Par 3: anyone on from the tee counts the same whatever the tee; closest takes Bingo and Bango. Bango: closest to the pin once everyone is on, played from off the green. Bongo: fewest putts, longest first putt breaks ties. A chip-in takes Bango and Bongo. $1 a player; the leader at the end of the night takes the pot, a tie carries it to next week.</div>';
   }
   window.renderBbb = renderPage;
 
@@ -124,7 +126,8 @@
       (c.on ? '<div class="bbba-l"><span>Who\'s playing (from Tonight)</span><span><button type="button" data-bbball="1">All</button> · <button type="button" data-bbball="0">None</button></span></div>' +
         ((d().cards || []).some(function (c) { return BBB_EXCLUDE.test(String(c.name).trim()); }) ? '<div class="bbba-f" style="border:0;padding:0">Jeff is left out of BBB for now (remote play).</div>' : '') +
         (all.length ? all.map(function (n) { return '<label class="bbba-p"><input type="checkbox" data-bbbp="' + e(n) + '"' + (sel.indexOf(n) >= 0 ? ' checked' : '') + '>' + e(n) + (guests[n] ? ' <i>guest</i>' : '') + '</label>'; }).join('') : '<div class="empty">Nobody on Tonight yet.</div>') +
-        '<div class="bbba-f">' + sel.length + ' playing' + (sel.length < 2 ? ' · needs at least 2' : '') + '. Preview: saved on this phone only, with demo points.</div>' : '<div class="bbba-f">Off. Turn it on to pick tonight\'s BBB players.</div>') + '</div>';
+        '<label class="bbba-p" style="justify-content:space-between">Carried over from last week <span>$ <input type="number" min="0" step="1" inputmode="numeric" data-bbbcarry="1" value="' + (Number(c.carry) || 0) + '" style="width:64px;height:36px;font-size:15px;background:#101412;color:inherit;border:1px solid #2c3530;border-radius:8px;padding:0 8px"></span></label>' +
+        '<div class="bbba-f">' + sel.length + ' playing · pot $' + (sel.length + (Number(c.carry) || 0)) + ' ($1 each' + (Number(c.carry) ? ' + carry' : '') + ')' + (sel.length < 2 ? ' · needs at least 2' : '') + '. Preview: saved on this phone only, with demo points.</div>' : '<div class="bbba-f">Off. Turn it on to pick tonight\'s BBB players.</div>') + '</div>';
   }
   window.renderAdminBbb = renderAdmin;
   function refresh() { renderAdmin(); if (typeof window.renderField === 'function') window.renderField(); renderPage(); }
@@ -138,6 +141,8 @@
     else if (t.closest('#bbbback')) { if (window.showTab) showTab('field'); }
   });
   document.addEventListener('change', function (ev) {
+    var cr = ev.target.closest && ev.target.closest('[data-bbbcarry]');
+    if (cr) { var cc = cfg(); cc.carry = Math.max(0, Math.round(Number(cr.value) || 0)); save(cc); refresh(); return; }
     var b = ev.target.closest && ev.target.closest('[data-bbbp]'); if (!b) return;
     var c = cfg(), cur = inPlayers(), n = b.getAttribute('data-bbbp');
     c.players = b.checked ? cur.concat([n]) : cur.filter(function (x) { return x !== n; }); save(c); refresh();

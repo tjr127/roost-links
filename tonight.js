@@ -79,9 +79,10 @@
     if (mine) { var better = s.order.filter(function (q) { return s.pts[q].t > mine.t; }).length, tie = s.order.filter(function (q) { return s.pts[q].t === mine.t; }).length > 1; p = (tie ? 'T' : '') + (better + 1); }
     var fin = done && s.final, youLead = lead.indexOf(y) >= 0;
     var big = mine ? ord(p) + ' · ' + mine.t + (mine.t === 1 ? ' pt' : ' pts') : (lead.length ? names(lead) + ' ' + top : 'Not started');
-    var sub = !s.holes.length ? s.ps.length + ' playing · ' + s.total * 3 + ' pts' : fin ? (youLead ? (lead.length > 1 ? 'Tied for the win' : 'You won BBB') : names(lead) + ' won with ' + top)
-      : (youLead && lead.length === 1 ? 'You lead' : 'Leading: ' + names(lead) + ' ' + top) + ' · ' + s.left + ' pts left';
-    return tile('bbb', 'BBB', big, sub, fin && youLead ? 'win' : '');
+    var pot = '$' + s.pot;
+    var sub = !s.holes.length ? s.ps.length + ' playing · pot ' + pot : fin ? (lead.length > 1 ? 'Tie (' + names(lead) + ') · ' + pot + ' carries to next week' : youLead ? 'You won ' + pot : names(lead) + ' won ' + pot + ' with ' + top)
+      : (youLead && lead.length === 1 ? 'You lead' : 'Leading: ' + names(lead) + ' ' + top) + ' · pot ' + pot;
+    return tile('bbb', 'BBB', big, sub, fin && youLead && lead.length === 1 ? 'win' : '');
   }
 
   // Payouts (Ty, Nov 24): $5 a player for low net (winner takes all, ties split) and $5 a player for the team game
