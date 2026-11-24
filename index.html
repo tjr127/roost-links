@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=107">
-<link rel="stylesheet" href="theme.css?v=107">
+<link rel="stylesheet" href="app.css?v=108">
+<link rel="stylesheet" href="theme.css?v=108">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=107"></script>
-<script src="app.js?v=107"></script>
-<script src="rules.js?v=107"></script>
+<script src="live.js?v=108"></script>
+<script src="app.js?v=108"></script>
+<script src="rules.js?v=108"></script>
 </head>
 <body>
 <header>
@@ -664,10 +664,11 @@
       RL.get('rounds', '&night=' + encodeURIComponent(night)).then(function (j) {
         past.cards[night] = { cards: j.cards || [], at: Date.now() };
       }, function () { past.cards[night] = { cards: c ? c.cards : [], at: Date.now(), err: true }; })
-        .then(function () { past.busy[night] = false; renderCard(); });
+        .then(function () { past.busy[night] = false; renderCard(); if (window.renderBoardPast) renderBoardPast(); });
     }
     return c ? c.cards : null;
   }
+  window.pastCardsFor = function (night) { return night ? pastCards(night) : null; };
   document.getElementById('cardnight').addEventListener('change', function () { cardNight = this.value; renderCard(); });
 
   function renderCard() {
@@ -719,13 +720,13 @@
     var played = p.holes.filter(function (h) { return h.g !== ''; }).length;
     var done = p.holes.filter(function (h) { return h.g !== ''; });
     var status = played >= p.holes.length && played > 0 ? 'F' : (done.length ? String(done[done.length - 1].hole) : '–');
-    var putts = sum(p.holes, 'pt');
+    var putts = sum(p.holes, 'pt'), tq = tpCard(p);
     if (putts === '' && p.puttsTotal !== undefined) putts = p.puttsTotal;
     var ty = useNight ? p.tee : teeOf(p.tees), yv = ty && ty.holes ? ty.holes : null;
 
     var html = '<div class="card sc-sum">' +
-      '<div><div class="v">' + esc(sum(p.holes, 'g')) + '</div><div class="k">Gross</div></div>' +
-      '<div><div class="v">' + esc(sum(p.holes, 'n')) + '</div><div class="k">Net</div></div>' +
+      '<div><div class="v">' + tpHtml(tq.played ? tq.sg - tq.pg : null, sum(p.holes, 'g'), tq.played >= tq.holes) + '</div><div class="k">Gross</div></div>' +
+      '<div><div class="v">' + tpHtml(tq.nn ? tq.sn - tq.pn : null, sum(p.holes, 'n'), tq.played >= tq.holes) + '</div><div class="k">Net</div></div>' +
       '<div><div class="v">' + esc(sum(p.holes, 'p')) + '</div><div class="k">Stableford</div></div>' +
       '<div><div class="v">' + esc(putts) + '</div><div class="k">Putts</div></div>' +
       '<div><div class="v">' + status + '</div><div class="k">Thru</div></div></div>' +
@@ -1217,6 +1218,41 @@ var teamSel = store('team') || '';
 function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
 function tdNum(s) { var x = parseFloat(s); return isNaN(x) ? null : x; }
 function tdFmt(x) { return Math.round(x * 10) / 10; }
+// Nov 24: scores relative to par, the Tour way. E = even, +3 over, −2 under (under par in red, like a Tour board).
+// Live rounds show just the to-par number; finished rounds add the total after it: +7(42).
+function tpTxt(d) { d = tdFmt(d); return d === 0 ? 'E' : d > 0 ? '+' + d : '−' + (-d); }
+function tpHtml(d, total, fin) {
+  if (d === null || d === undefined || isNaN(d)) return esc(total == null ? '' : total);
+  return '<span class="tp ' + (d < 0 ? 'u' : d === 0 ? 'e' : 'o') + '">' + tpTxt(d) + '</span>' +
+    (fin && total !== '' && total != null ? '<span class="tpt">(' + esc(total) + ')</span>' : '');
+}
+// Par over the holes a card has played: pg/sg = par and strokes on holes with a gross, pn/sn the same for net.
+function tpCard(c) {
+  var hs = (c && c.holes) || [], o = { pg: 0, sg: 0, pn: 0, sn: 0, played: 0, nn: 0, holes: hs.length };
+  hs.forEach(function (h) {
+    var p = tdNum(h.par), g = tdNum(h.g), n = tdNum(h.n); if (p === null) return;
+    if (g !== null) { o.pg += p; o.sg += g; o.played++; }
+    if (n !== null) { o.pn += p; o.sn += n; o.nn++; }
+  });
+  return o;
+}
+// Adds to-par fields to field rows: _gd / _nd (numbers or null) and _fin. posted = totals are the posted ones.
+function tpField(list, cards, posted) {
+  var by = {}; (cards || []).forEach(function (c) { by[c.name] = tpCard(c); });
+  return list.map(function (x) {
+    var o = by[x.player], y = {}; for (var k in x) y[k] = x[k];
+    y._gd = y._nd = null; y._fin = false;
+    if (!o || !o.played) return y;
+    var g = tdNum(x.gross), n = tdNum(x.net);
+    y._fin = o.holes > 0 && o.played >= o.holes;
+    if (g !== null) y._gd = g - o.pg;
+    // Live: net from the card's own net holes (a just-saved hole has no net until the refresh). Posted: total minus the round's par.
+    if (posted || y._fin) { if (n !== null) y._nd = n - o.pg; }
+    else if (o.nn) y._nd = o.sn - o.pn;
+    return y;
+  });
+}
+window.tpTxt = tpTxt; window.tpHtml = tpHtml; window.tpCard = tpCard;
 // Rank a list of {key, val}; returns map key -> {place, tied, gap}
 function tdRank(list, lowWins) {
   var out = {};
@@ -1286,6 +1322,23 @@ function tdOrder(td) {
   });
   return { list: list, rank: rank };
 }
+// Nov 24: Net team games show the team total to par. Each counted hole adds par once (Min, Max, Alt, Avg) or once per
+// player (Sum). Vegas numbers and Stableford points aren't strokes, so they stay as they are.
+function teamTp(td, t) {
+  if (!td || !/net/i.test(td.scoring || '') || !t || !t.eligible) return null;
+  var k = { 'Min': 1, 'Max': 1, 'Alt-Min-Max': 1, 'Min-Max': 1, 'Avg': 1, 'Sum': (t.players || []).length }[td.game];
+  if (!k) return null;
+  var par = 0, any = false, all = true;
+  td.holes.forEach(function (h, i) {
+    if (!h.counted) return;
+    var v = tdNum(t.team[i]), p = tdNum(h.par);
+    if (v === null || p === null) { all = false; return; }
+    par += p * k; any = true;
+  });
+  var tot = tdNum(t.total);
+  return any && tot !== null ? { d: tot - par, fin: all } : null;
+}
+function teamTotHtml(td, t) { var tp = teamTp(td, t); return tp ? tpHtml(tp.d, t.total, tp.fin) : esc(t.total || '–'); }
 function renderTeams(d) {
   try { teamPostedCheck(d); } catch (x) { console.error(x); }
   var td = d.teamDetail, listEl = document.getElementById('teamlist'), det = document.getElementById('teamdetail');
@@ -1304,7 +1357,7 @@ function renderTeams(d) {
     var r = o.rank[t.name], open = !!teamOpen[t.name]; if (open) anyOpen = true;
     return '<div class="card tbasic tacc' + (open ? ' open' : '') + '"><div class="trow tap' + (r && r.place === 1 ? ' first' : '') + '" data-team="' + esc(t.name) + '" role="button" tabindex="0" aria-expanded="' + open + '"><span class="tpl' + (r && r.place <= 3 ? ' m' + r.place : '') + '">' + (r ? tdPlaceText(r) : '–') + '</span>' +
       '<span class="tlab">' + ((t.players || []).length ? '<span class="tps">' + t.players.map(function (p) { return pn(p.name); }).join('') + '</span>' : esc(tLabel(t))) + (r && tdGapText(r) ? '<i>' + esc(tdGapText(r)) + '</i>' : '') + '</span>' +
-      '<span class="score" data-fx="t|' + esc(t.name) + '">' + (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + '</span>') + '</span></div></div>' +
+      '<span class="score" data-fx="t|' + esc(t.name) + '">' + (t.eligible ? teamTotHtml(td, t) : '<span class="inel">Needs ' + td.minPlayers + '</span>') + '</span></div></div>' +
       (open ? '<div class="tacc-body' + (teamJust === t.name ? ' fx-in' : '') + '">' + teamDetailHtml(td, t, o, thru, 'table') + '</div>' : '');
   }).join('') + (anyOpen ? teamLegend(td.game) : '') + '<div class="tleg">Tap a team for its hole-by-hole.</div>';
   teamJust = '';
@@ -1354,7 +1407,7 @@ function teamDetailHtml(td, t, o, thru, inline) {
     (prev ? '<button data-go="' + esc(prev.name) + '">‹</button>' : '') +
     (next ? '<button data-go="' + esc(next.name) + '">›</button>' : '') + '</span></div>') +
     '<div class="card gamecard thead' + (inline ? ' tinl' : '') + '"><div class="row"><span class="gname">' + (inline && r ? '<span class="tpl' + (r.place <= 3 ? ' m' + r.place : '') + '">' + tdPlaceText(r) + '</span>' : '') + esc(tLabel(t)) + '</span><span class="tbig">' +
-    (t.eligible ? esc(t.total || '–') : '') + '</span></div>' +
+    (t.eligible ? teamTotHtml(td, t) : '') + '</span></div>' +
     (inline ? (r && tdGapText(r) ? '<div class="tsub">' + esc(tdGapText(r)) + '</div>' : '') :
     '<div class="tsub">' + esc(game + ' · ' + td.scoring) + (td.counted !== 'Total' ? ' · ' + esc(td.counted) : '') +
     (r ? ' · <b>' + tdPlaceText(r) + '</b> ' + esc(tdGapText(r)) : '') + '</div>' +
@@ -1386,13 +1439,15 @@ function teamDetailHtml(td, t, o, thru, inline) {
   }).join('');
   var ptot = t.players.map(function (p) {
     var s = 0, any = false;
-    hs.forEach(function (x) { var v = tdNum(p.scores[x.i]); if (v !== null) { s += v; any = true; } });
-    return '<td class="n">' + (any ? tdFmt(s) : '') + '</td>';
+    var pp = 0, all = true;
+    hs.forEach(function (x) { var v = tdNum(p.scores[x.i]), hp = tdNum(x.h.par); if (v !== null) { s += v; any = true; if (hp !== null) pp += hp; } else all = false; });
+    var netTp = /net/i.test(td.scoring || '');
+    return '<td class="n">' + (any ? (netTp ? tpHtml(s - pp, tdFmt(s), all) : tdFmt(s)) : '') + '</td>';
   }).join('');
   var table = '<div class="card"><table class="tdt"><tr><th class="n">Hole</th><th class="n">Par</th>' +
     t.players.map(function (p) { return '<th class="n" title="' + esc(p.name) + '">' + esc(short(p.name)) + '</th>'; }).join('') +
     '<th class="n">Team</th><th class="n">Pos</th></tr>' + rows +
-    '<tr class="tot"><td colspan="2">Total</td>' + ptot + '<td class="n tv">' + esc(t.eligible ? t.total : '') + '</td><td></td></tr></table></div>';
+    '<tr class="tot"><td colspan="2">Total</td>' + ptot + '<td class="n tv">' + (t.eligible ? teamTotHtml(td, t) : '') + '</td><td></td></tr></table></div>';
   if (inline === 'table') return table;
   return head + table;
 }
@@ -1402,11 +1457,14 @@ function renderField() {
     // Gross isn't in the live feed: add it up from tonight's cards (posted nights already carry it).
     var gsum = {}; ((data && data.cards) || []).forEach(function (c) { var s = 0, any = false; (c.holes || []).forEach(function (hh) { var v = num(hh.g); if (v !== null) { s += v; any = true; } }); if (any) gsum[c.name] = s; });
     list = list.map(function (x) { if (num(x.gross) !== null || gsum[x.player] === undefined) return x; var y = cp(x); y.gross = String(gsum[x.player]); return y; });
+    list = tpField(list, data && data.cards, !!(data && data.posted));
     var sel = document.getElementById('fieldsort');
     var by = sel.value || 'net';
+    // Gross and Net sort by score to par (fair while rounds are in progress); same order as totals once everyone is done.
+    function kv(x, k) { k = k || by; if (k === 'gross' && x._gd !== null) return x._gd; if (k === 'net' && x._nd !== null) return x._nd; return num(x[k]); }
     var rows = list.map(function (x, i) { return { x: x, i: i }; });
     rows.sort(function (a, b) {
-      var va = num(a.x[by]), vb = num(b.x[by]);
+      var va = kv(a.x), vb = kv(b.x);
       if (va === null && vb === null) return a.i - b.i;
       if (va === null) return 1;
       if (vb === null) return -1;
@@ -1414,7 +1472,7 @@ function renderField() {
       return d || a.i - b.i;
     });
     function th(key, label) { return '<th class="n fs-h' + (by === key ? ' sorted' : '') + '" data-fsort="' + key + '">' + label + '</th>'; }
-    function posOf(rs, get) { return rs.map(function (r, i) { var v = num(get(r)[by]); if (v === null) return ''; var j = i; while (j > 0 && num(get(rs[j - 1])[by]) === v) j--; return (rs.filter(function (q) { return num(get(q)[by]) === v; }).length > 1 ? 'T' : '') + (j + 1); }); }
+    function posOf(rs, get) { return rs.map(function (r, i) { var v = kv(get(r)); if (v === null) return ''; var j = i; while (j > 0 && kv(get(rs[j - 1])) === v) j--; return (rs.filter(function (q) { return kv(get(q)) === v; }).length > 1 ? 'T' : '') + (j + 1); }); }
     // Putting challenge (Nov 13): Low or High putts, alternating each league night. Banner on top; on the challenge
     // night, the finished player(s) with the lowest (or highest) putts get their putts highlighted.
     var pc = data && data.putts, pb = document.getElementById('puttbanner'), win = {}, live = null;
@@ -1433,7 +1491,11 @@ function renderField() {
     var doneF = list.filter(function (x) { return holesF && num(x.thru) !== null && num(x.thru) >= holesF; });
     function bestOf(k, hi) { var v = doneF.map(function (x) { return num(x[k]); }).filter(function (v) { return v !== null; }); return v.length ? (hi ? Math.max : Math.min).apply(null, v) : null; }
     var bestNet = bestOf('net', false), bestPts = bestOf('pts', true), bestGross = bestOf('gross', false);
-    function bv(x, k, best) { return best !== null && doneF.indexOf(x) >= 0 && num(x[k]) === best ? '<span class="putw" title="Best so far">' + esc(x[k]) + '</span>' : esc(x[k]); }
+    function bv(x, k, best) {
+      var d = k === 'gross' ? x._gd : k === 'net' ? x._nd : null;
+      var v = d !== null && d !== undefined ? tpHtml(d, x[k], x._fin) : esc(x[k]);
+      return best !== null && doneF.indexOf(x) >= 0 && num(x[k]) === best ? '<span class="putw" title="Best so far">' + v + '</span>' : v;
+    }
     if (pb) {
       var line = '';
       if (pc && pc.carry !== undefined) {
@@ -1449,7 +1511,7 @@ function renderField() {
     }
     var pos = posOf(rows, function (r) { return r.x; });
     document.getElementById('fieldcard').innerHTML = list.length ?
-      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m"><col class="c-m"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
+      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m c-w"><col class="c-m c-w"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r, i) {
         var x = r.x, t = num(x.thru), st = t === null ? '' : (holesF && t >= holesF ? 'Finished' : 'Thru ' + t);
         function fx(k) { return ' data-fx="f|' + esc(x.player) + '|' + k + '"'; }
@@ -1541,18 +1603,25 @@ function renderField() {
     t.innerHTML = !tm ? '<div class="card empty">No team results saved for this night</div>' : teamPastHtml(tm);
     // Individual: sorted the same way as the live field (Sort by setting)
     var by = document.getElementById('fieldsort').value || 'net';
-    var rows = (d.field || []).slice().sort(function (x, y) {
-      var va = num(x[by]), vb = num(y[by]);
+    // Nov 24: to par needs the night's cards (par per hole); until they load the plain totals show.
+    var pcards = window.pastCardsFor ? pastCardsFor(bp.night) : null;
+    function kv(x) { if (by === 'gross' && x._gd !== null) return x._gd; if (by === 'net' && x._nd !== null) return x._nd; return num(x[by]); }
+    var rows = tpField(d.field || [], pcards || [], true).sort(function (x, y) {
+      var va = kv(x), vb = kv(y);
       if (va === null) return 1; if (vb === null) return -1;
       return by === 'pts' ? vb - va : va - vb;
     });
     function th(k, l) { return '<th class="n fs-h' + (by === k ? ' sorted' : '') + '" data-fsort="' + k + '">' + l + '</th>'; }
-    var ppos = rows.map(function (x, i) { var v = num(x[by]); if (v === null) return ''; var j = i; while (j > 0 && num(rows[j - 1][by]) === v) j--; return (rows.filter(function (q) { return num(q[by]) === v; }).length > 1 ? 'T' : '') + (j + 1); });
+    var ppos = rows.map(function (x, i) { var v = kv(x); if (v === null) return ''; var j = i; while (j > 0 && kv(rows[j - 1]) === v) j--; return (rows.filter(function (q) { return kv(q) === v; }).length > 1 ? 'T' : '') + (j + 1); });
     function pbest(k, hi) { var v = rows.map(function (x) { return num(x[k]); }).filter(function (v) { return v !== null; }); return v.length ? (hi ? Math.max : Math.min).apply(null, v) : null; }
     var pNet = pbest('net', false), pPts = pbest('pts', true), pGross = pbest('gross', false);
-    function pv(x, k, best) { return best !== null && num(x[k]) === best ? '<span class="putw">' + esc(x[k]) + '</span>' : esc(x[k]); }
+    function pv(x, k, best) {
+      var dd = k === 'gross' ? x._gd : k === 'net' ? x._nd : null;
+      var v = dd !== null && dd !== undefined ? tpHtml(dd, x[k], true) : esc(x[k]);
+      return best !== null && num(x[k]) === best ? '<span class="putw">' + v + '</span>' : v;
+    }
     f.innerHTML = '<div class="card">' + (rows.length ?
-      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m"><col class="c-m"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' + rows.map(function (x, i) {
+      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m c-w"><col class="c-m c-w"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' + rows.map(function (x, i) {
         return '<tr><td class="fld-p">' + ppos[i] + '</td><td class="fld-n">' + nm(x.player) + '</td><td class="n' + (by === 'gross' ? ' b' : '') + '">' + pv(x, 'gross', pGross) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + pv(x, 'net', pNet) + '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + pv(x, 'pts', pPts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + esc(x.putts) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores posted that night</div>') + '</div>';
   };
@@ -1719,17 +1788,17 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=107"></script>
-<script src="settings.js?v=107"></script>
-<script src="flip.js?v=107"></script>
-<script src="match.js?v=107"></script>
-<script src="msg.js?v=107"></script>
-<script src="puttstand.js?v=107"></script>
-<script src="stats.js?v=107"></script>
-<script src="bios.js?v=107"></script>
-<script src="ctp.js?v=107"></script>
-<script src="fine.js?v=107"></script>
-<script src="tonight.js?v=107"></script>
-<script src="anim.js?v=107"></script>
+<script src="tee.js?v=108"></script>
+<script src="settings.js?v=108"></script>
+<script src="flip.js?v=108"></script>
+<script src="match.js?v=108"></script>
+<script src="msg.js?v=108"></script>
+<script src="puttstand.js?v=108"></script>
+<script src="stats.js?v=108"></script>
+<script src="bios.js?v=108"></script>
+<script src="ctp.js?v=108"></script>
+<script src="fine.js?v=108"></script>
+<script src="tonight.js?v=108"></script>
+<script src="anim.js?v=108"></script>
 </body>
 </html>

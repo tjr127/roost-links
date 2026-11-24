@@ -935,3 +935,14 @@ td.fx-flash, .match .pts.fx-flash { display: revert; }
 header .pgname { font: 700 12px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--amber); margin-top: 2px; line-height: 1.2; }
 header .pgname:empty { display: none; }
 .st-cog.st-in { max-width: 124px; }
+
+/* Nov 24: scores to par, Tour colours. Under par red, even and over par in the normal text colour; total in brackets smaller. */
+.tp { font-weight: 700; white-space: nowrap; }
+.tp.u { color: #FF5A4E; }
+.tp.e, .tp.o { color: var(--ink); }
+.tpt { font-size: .72em; font-weight: 500; color: var(--muted); margin-left: 1px; white-space: nowrap; }
+.putw .tp.u { color: #B3261E; } .putw .tp.e, .putw .tp.o { color: #101412; } .putw .tpt { color: #2b3a2f; }
+.trow .score .tp.e, .trow .score .tp.o, .thead .tbig .tp.e, .thead .tbig .tp.o { color: var(--amber); }
+.tn-u { font: 500 11px Inter, sans-serif; color: var(--muted); }
+table.fld col.c-m { width: 12%; } table.fld col.c-m.c-w { width: 18.5%; }
+table.fld td.n { white-space: nowrap; }

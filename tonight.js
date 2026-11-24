@@ -65,6 +65,17 @@
         var lead = my === null || op === null ? '' : my > op ? 'You lead by ' + (my - op) : my < op ? e(opp) + ' leads by ' + (op - my) : 'Level';
         out.push(tile('match', 'Your match', (my === null ? '–' : my) + ' – ' + (op === null ? '–' : op) + ' vs ' + e(opp), where + (lead ? ' · ' + lead : ''), my !== null && op !== null && my > op ? 'win' : ''));
       } else out.push(tile('match', 'Your match', d.roundType === 'Casual' ? 'Casual round' : 'No match tonight', ''));
+      // Nov 24: your round so far, to par the Tour way (gross and net). Posted nights use the posted totals.
+      var mc = (d.cards || []).filter(function (x) { return x.name === y; })[0], fr = (d.field || []).filter(function (x) { return x.player === y; })[0];
+      if (mc && window.tpCard) {
+        var q = tpCard(mc), fin = q.holes > 0 && q.played >= q.holes;
+        if (q.played) {
+          var gt = fr && num(fr.gross) !== null ? num(fr.gross) : q.sg, nt = fr && num(fr.net) !== null ? num(fr.net) : null;
+          var nd = (d.posted || fin) && nt !== null ? nt - q.pg : (q.nn ? q.sn - q.pn : null);
+          var big = tpHtml(gt - q.pg, gt, fin) + ' <span class="tn-u">gross</span>' + (nd !== null ? ' · ' + tpHtml(nd, nt !== null ? nt : q.sn, fin) + ' <span class="tn-u">net</span>' : '');
+          out.push(tile('score', 'Your score', big, fin ? 'Finished' : 'Thru ' + q.played));
+        }
+      }
       var c = T && T.confirmed, grp = c ? ((c.early || []).indexOf(y) >= 0 ? 'Early' : (c.late || []).indexOf(y) >= 0 ? 'Late' : '') : '';
       var card = (d.cards || []).filter(function (x) { return x.name === y; })[0], tees = card && card.tees ? e(card.tees) + ' tees' : '';
       if (grp) out.push(tile('tee', 'Tee time', grp + ' · ' + e((T.times || {})[grp] || ''), tees));
@@ -105,7 +116,7 @@
     var k = b.getAttribute('data-tn');
     if (k === 'toggle') { st('tnOpen', st('tnOpen') === '0' ? '1' : '0'); var c = b.closest('.tn'), on = st('tnOpen') !== '0'; c.classList.toggle('open', on); b.setAttribute('aria-expanded', on); return; }
     if (k === 'signin') { if (window.RL && RL.signIn) RL.signIn(); return; }
-    var tab = { match: 'tonight', team: 'teams', pot: 'field', tee: 'schedule' }[k];
-    if (tab && window.showTab) { showTab(tab); if (k !== 'tee') { var el = document.querySelector(k === 'match' ? '.match.mine' : k === 'pot' ? '#puttbanner' : '#teamlist'); if (el && el.scrollIntoView) try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} } else window.scrollTo(0, 0); }
+    var tab = { match: 'tonight', team: 'teams', pot: 'field', tee: 'schedule', score: 'field' }[k];
+    if (tab && window.showTab) { showTab(tab); if (k !== 'tee') { var el = document.querySelector(k === 'match' ? '.match.mine' : k === 'pot' ? '#puttbanner' : k === 'score' ? '#fieldcard' : '#teamlist'); if (el && el.scrollIntoView) try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} } else window.scrollTo(0, 0); }
   });
 })();
