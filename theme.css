@@ -764,3 +764,14 @@ main { padding-top: 10px; }
 /* Nov 23: "you". The signed-in player's name is amber in tables and match cards; their match card gets an amber edge. */
 .you { color: var(--amber); font-weight: 700; }
 .match.mine { box-shadow: inset 0 0 0 1px rgba(245,177,60,.45); }
+
+/* Nov 23: fine print behind a tap (fine.js). One line with an info mark; tap to open. */
+.fine { cursor: pointer; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; }
+.fine::before { content: "\24D8\00A0"; color: var(--amber); font-weight: 700; }
+.fine.open { display: block; overflow: visible; }
+.fine:focus-visible, .fine-t:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 6px; }
+.fine-t { cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.fine-t::after { content: "\203A"; color: var(--muted); font-size: 18px; transition: transform .15s; }
+#puttrules.fine-open .fine-t::after { transform: rotate(90deg); }
+#puttrules:not(.fine-open) .ps-rules { display: none; }
+#puttrules:not(.fine-open) .pp-t { margin-bottom: 0; }
