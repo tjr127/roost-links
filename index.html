@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=80">
-<link rel="stylesheet" href="theme.css?v=80">
+<link rel="stylesheet" href="app.css?v=81">
+<link rel="stylesheet" href="theme.css?v=81">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=80"></script>
-<script src="app.js?v=80"></script>
-<script src="rules.js?v=80"></script>
+<script src="live.js?v=81"></script>
+<script src="app.js?v=81"></script>
+<script src="rules.js?v=81"></script>
 </head>
 <body>
 <header>
@@ -1394,16 +1394,28 @@ function renderField() {
     function th(key, label) { return '<th class="n' + (by === key ? ' sorted' : '') + '">' + label + '</th>'; }
     // Putting challenge (Nov 13): Low or High putts, alternating each league night. Banner on top; on the challenge
     // night, the finished player(s) with the lowest (or highest) putts get their putts highlighted.
-    var pc = data && data.putts, pb = document.getElementById('puttbanner'), win = {};
-    if (pb) pb.innerHTML = pc ? '<div class="card putb"><span class="putb-k">Putting challenge</span><b>' + (pc.tonight ? 'This week: ' : esc(pc.night) + ': ') +
-      (pc.mode === 'High' ? 'HIGH' : 'LOW') + ' putts</b></div>' : '';
+    var pc = data && data.putts, pb = document.getElementById('puttbanner'), win = {}, live = null;
     if (pc && pc.tonight) {
       var holesN = Math.max.apply(null, [0].concat(((data && data.cards) || []).map(function (c) { return (c.holes || []).length; })));
       var done = list.filter(function (x) { return holesN && num(x.thru) !== null && num(x.thru) >= holesN && num(x.putts) !== null; });
       if (done.length) {
         var best = done.reduce(function (m, x) { var v = num(x.putts); return m === null ? v : pc.mode === 'High' ? Math.max(m, v) : Math.min(m, v); }, null);
         done.forEach(function (x) { if (num(x.putts) === best) win[x.player] = true; });
+        // Putting pool (Nov 23): once everyone on Tonight has finished, the result is in.
+        if (pc.players && done.length >= pc.players) { var ws = Object.keys(win); live = ws.length > 1 ? { tie: true, winners: ws } : { winners: ws }; }
       }
+    }
+    if (pb) {
+      var line = '';
+      if (pc && pc.carry !== undefined) {
+        var res = live || pc.result;
+        if (pc.tonight && res && res.tie) line = 'Result: Tie · $' + pc.pot + ' pushes to ' + esc(pc.next || 'next league night');
+        else if (pc.tonight && res && res.winners && res.winners.length) line = 'Result: ' + esc(res.winners[0]) + ' wins $' + pc.pot;
+        else if (pc.tonight) line = 'Pot is $' + pc.pot;
+        else line = 'Pot is $' + pc.carry + ' + $1 per player';
+      }
+      pb.innerHTML = pc ? '<div class="card putb"><span class="putb-k">Putting challenge</span><b>' + (pc.tonight ? 'This week: ' : esc(pc.night) + ': ') +
+        (pc.mode === 'High' ? 'HIGH' : 'LOW') + ' putts</b>' + (line ? '<span class="putb-s putb-pot">' + line + '</span>' : '') + '</div>' : '';
     }
     document.getElementById('fieldcard').innerHTML = list.length ?
       '<table><tr><th>Player</th><th class="n">Thru</th>' + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
@@ -1600,14 +1612,14 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=80"></script>
-<script src="settings.js?v=80"></script>
-<script src="flip.js?v=80"></script>
-<script src="match.js?v=80"></script>
-<script src="msg.js?v=80"></script>
-<script src="puttstand.js?v=80"></script>
-<script src="stats.js?v=80"></script>
-<script src="bios.js?v=80"></script>
-<script src="ctp.js?v=80"></script>
+<script src="tee.js?v=81"></script>
+<script src="settings.js?v=81"></script>
+<script src="flip.js?v=81"></script>
+<script src="match.js?v=81"></script>
+<script src="msg.js?v=81"></script>
+<script src="puttstand.js?v=81"></script>
+<script src="stats.js?v=81"></script>
+<script src="bios.js?v=81"></script>
+<script src="ctp.js?v=81"></script>
 </body>
 </html>
