@@ -812,3 +812,17 @@ table.fld td.b { font-size: 16px; }
 /* Nov 23: night over and the recalculated team totals differ from the saved ones: show the saved results. */
 body.tposted #teams .livebd, body.tposted .bnrow [data-ctl="teams"] { display: none !important; }
 body.tposted #pastTeam { display: block; }
+
+/* Nov 23: bigger small text. Labels are at least 12 px; table headings 11.5; secondary lines, tabs and notes one step up to 13.
+   Left small on purpose (dense grids with no room): bottom tab bar labels, scorecard grid, Enter-score hole grid, handicap chart labels, team hole-by-hole tags. */
+.nm-ch small, .sx-t td.sx-pl small, .sx-u, .tt-tbtns .tt-hc small, .h2h-basic .match .ow, .match .ow, .nm-ow,
+.ps-lk, .ps-tie, .ps-tr, .ps-evk, .ps-cut, .ps-cap, .ps-tag .pay, .stand .pay,
+.sx-rl small, .sx-rv small, .sx-rt small, .bio-chips button small, .bio-k, .bio-by,
+.ctp-up small, .ctp-name i, .ctp-t i, .hx-tbl td small, .hs-goal span, .hc-strip .hs-l .k,
+.hc-tee small, .hc-tee em, .hc-tee.tp-row em, .tp-note, .tp-cell small, .tp-cell em, .teestrip .tn i,
+.tt-tbtns button small, .tt-btns button small, .tt-k, .tt-n, .tt-chip i, i.tt-tee, span.tt-np,
+.msg-k span, .msg-count, .putb-k, .grules h4, table.fld td.fld-n small, .wk .tag, .sc-sum .k,
+table.stt.sst td:first-child small, .hc-axis { font-size: 12px; }
+.nm-ow { max-width: 86px; }
+.ps-t th, .sx-t th, table.fld th, table.mplan th, table.stt th { font-size: 11.5px !important; }
+.nm-sub, .nm-vs, .sx-tabs button, .sx-sel select, .paykey, .seg button, .ps-note, .tleg, .sx-cap { font-size: 13px; }
