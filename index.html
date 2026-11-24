@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=119">
-<link rel="stylesheet" href="theme.css?v=119">
+<link rel="stylesheet" href="app.css?v=120">
+<link rel="stylesheet" href="theme.css?v=120">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=119"></script>
-<script src="app.js?v=119"></script>
-<script src="rules.js?v=119"></script>
+<script src="live.js?v=120"></script>
+<script src="app.js?v=120"></script>
+<script src="rules.js?v=120"></script>
 </head>
 <body>
 <header>
@@ -427,6 +427,7 @@
     }
     if (tab === 'newsbio' && window.renderBios) renderBios();
     if (tab === 'adminbbb' && window.renderAdminBbb) renderAdminBbb();   // Nov 24: BBB preview
+    document.body.classList.toggle('ongarb', tab === 'bbb');   // Nov 24: no night picker on the Garbage page (tonight only)
     if (tab === 'bbb' && window.renderBbb) { renderBbb(); if (window.tnAutoClose) tnAutoClose(); }
     if (show.indexOf('stats') >= 0 && window.renderStats) renderStats();   // Nov 23: Stats loads its own data (?api=stats)
     if (window.ctpShown) ctpShown(tab);
@@ -1796,18 +1797,18 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=119"></script>
-<script src="settings.js?v=119"></script>
-<script src="flip.js?v=119"></script>
-<script src="match.js?v=119"></script>
-<script src="msg.js?v=119"></script>
-<script src="puttstand.js?v=119"></script>
-<script src="stats.js?v=119"></script>
-<script src="bios.js?v=119"></script>
-<script src="ctp.js?v=119"></script>
-<script src="fine.js?v=119"></script>
-<script src="tonight.js?v=119"></script>
-<script src="anim.js?v=119"></script>
-<script src="bbb.js?v=119"></script>
+<script src="tee.js?v=120"></script>
+<script src="settings.js?v=120"></script>
+<script src="flip.js?v=120"></script>
+<script src="match.js?v=120"></script>
+<script src="msg.js?v=120"></script>
+<script src="puttstand.js?v=120"></script>
+<script src="stats.js?v=120"></script>
+<script src="bios.js?v=120"></script>
+<script src="ctp.js?v=120"></script>
+<script src="fine.js?v=120"></script>
+<script src="tonight.js?v=120"></script>
+<script src="anim.js?v=120"></script>
+<script src="bbb.js?v=120"></script>
 </body>
 </html>
