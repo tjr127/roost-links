@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=100">
-<link rel="stylesheet" href="theme.css?v=100">
+<link rel="stylesheet" href="app.css?v=101">
+<link rel="stylesheet" href="theme.css?v=101">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=100"></script>
-<script src="app.js?v=100"></script>
-<script src="rules.js?v=100"></script>
+<script src="live.js?v=101"></script>
+<script src="app.js?v=101"></script>
+<script src="rules.js?v=101"></script>
 </head>
 <body>
 <header>
@@ -252,13 +252,13 @@
   <button type="button" data-tab="admin" data-group="adminenter adminsched adminmsg adminctp" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
 </nav>
 <main>
+  <div id="tncard" class="livebd hide"></div>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
   <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><div class="seg livebd" data-ctl="tonight" role="group" aria-label="Match view"><button type="button" data-h2h="basic">Basic</button><button type="button" data-h2h="detailed">Detailed</button></div><div class="seg livebd" data-ctl="teams" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
   <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button><button type="button" data-tab="adminctp">CTP</button></nav>
-  <div id="tncard" class="livebd hide"></div>
   <section id="tonight">
     <div id="teestrip" class="teestrip hide livebd"></div>
     <div id="pastH2H" class="pastbd"></div>
@@ -476,13 +476,11 @@
   function you() { var a = window.RL && RL.user && RL.user(); return a ? a.name : ''; }
   function me() { return meName || you(); }
   function nm(name) { var y = you(); return y && name === y ? '<span class="you">' + esc(name) + '</span>' : esc(name); }
-  // Nov 23: player chips. A coloured circle with the player's initials; league members get a fixed colour each
-  // (by alphabetical place in the schedule's player list), guests are grey. pn() = chip + name; long names drop under the chip.
-  var PCOL = ['#7FB6E6', '#E6A3D0', '#9FD8C4', '#C9B3F2', '#F2C28B', '#8FC7D9', '#E8D97A', '#B4C98A', '#F2A39B', '#A8B8F0', '#D9A7F0', '#7FD1D1'];
+  // Nov 23: player chips. A neutral circle with the player's initials; the signed-in player's own chip is amber
+  // (Ty tried a colour per player and found it too busy for the theme). pn() = chip + name; long names drop under the chip.
   function chip(name) {
-    var lg = ((data && data.schedule) || []).map(function (p) { return p.name; }).sort(), i = lg.indexOf(name);
     var t = ((data && data.shortNames) || {})[name] || String(name || '').slice(0, 2).toUpperCase();
-    return '<span class="pc' + (t.length > 2 ? ' pc3' : '') + '" style="background:' + (i < 0 ? '#C8CEC9' : PCOL[i % PCOL.length]) + '" aria-hidden="true">' + esc(t) + '</span>';
+    return '<span class="pc' + (t.length > 2 ? ' pc3' : '') + (you() && name === you() ? ' pc-you' : '') + '" aria-hidden="true">' + esc(t) + '</span>';
   }
   function pn(name, right, plain) { return '<span class="pn' + (right ? ' r' : '') + '">' + chip(name) + '<span class="pn-t">' + (plain ? esc(name) : nm(name)) + '</span></span>'; }
   var youBusy = false;
@@ -1703,16 +1701,16 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=100"></script>
-<script src="settings.js?v=100"></script>
-<script src="flip.js?v=100"></script>
-<script src="match.js?v=100"></script>
-<script src="msg.js?v=100"></script>
-<script src="puttstand.js?v=100"></script>
-<script src="stats.js?v=100"></script>
-<script src="bios.js?v=100"></script>
-<script src="ctp.js?v=100"></script>
-<script src="fine.js?v=100"></script>
-<script src="tonight.js?v=100"></script>
+<script src="tee.js?v=101"></script>
+<script src="settings.js?v=101"></script>
+<script src="flip.js?v=101"></script>
+<script src="match.js?v=101"></script>
+<script src="msg.js?v=101"></script>
+<script src="puttstand.js?v=101"></script>
+<script src="stats.js?v=101"></script>
+<script src="bios.js?v=101"></script>
+<script src="ctp.js?v=101"></script>
+<script src="fine.js?v=101"></script>
+<script src="tonight.js?v=101"></script>
 </body>
 </html>
