@@ -199,7 +199,7 @@
     var ln = lastNight(), scopeNight = S.scope === 'night' ? ln : '';
     var season = rowsByPlayer(scopeNight), list = Object.keys(season).map(function (k) { return season[k]; });
     var who = S.who, cat = CATS.filter(function (c) { return c.id === S.cat; })[0] || CATS[0];
-    var html = controls(allNames(), cat, true);
+    var html = controls(allNames(), cat, false);
     var a = season[who], nights = perNight(who), last = nights.length ? nights[nights.length - 1] : null;
     if (!a) return box.innerHTML = html + '<div class="card empty">No stats for ' + e(who) + ' in this round.</div>';
     html += '<div class="sx-sum">' + e(who) + ' · ' + a.nights + ' round' + (a.nights === 1 ? '' : 's') + ' · ' + a.holes + ' holes' + (last ? ' · last round ' + e(nightLabel(last.n)) : '') + '</div>';
@@ -208,7 +208,7 @@
     if (a.sgH) {
       var vals = sgKeys.map(function (k) { return M[k].v(a); }), mx = Math.max.apply(null, vals.map(function (v) { return Math.abs(v); }).concat([0.5]));
       var th = thin(a);
-      html += '<div id="sxc-sg" class="card sx-sg' + (th ? ' sx-thin-card' : '') + '"><div class="pp-t">Strokes gained per 18 holes <span class="sx-tot ' + (th ? 'sx-thin' : M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
+      html += '<div id="sxc-sg" class="sx-filt sx-sgf"><span>Strokes gained</span>' + baseSel() + '</div><div class="card sx-sg' + (th ? ' sx-thin-card' : '') + '"><div class="pp-t">Strokes gained per 18 holes <span class="sx-tot ' + (th ? 'sx-thin' : M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
         sgKeys.map(function (k, i) {
           var v = vals[i], w = Math.round(Math.abs(v) / mx * 50);
           return '<div class="sx-bar"><span class="sx-bl">' + M[k].t.replace('SG: ', '') + '</span><span class="sx-bt"><i class="' + (v >= 0 ? 'p' : 'n') + '" style="' + (v >= 0 ? 'left:50%' : 'right:50%') + ';width:' + w + '%"></i></span><b class="' + (th ? 'sx-thin' : v >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M[k], v) + '</b></div>';
