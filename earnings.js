@@ -10,11 +10,11 @@
  * Members only (data.standings); guests' buy-ins and wins still count in the pots.
  */
 (function () {
-  var BUY = { net: 5, team: 5, putt: 1, season: 70 }, PUTT_START = '2026-11-12', SEASON_PAY = [180, 130, 80], PLAYOFF_POOL = 450, SEASON_PUTTS = 120;
-  var GAMES = [['net', 'Low net'], ['team', 'Team game'], ['putt', 'Putting pot (nightly)'], ['garb', 'Garbage'], ['ctp', 'CTP game'], ['sputt', 'Season putts'], ['season', 'Season & playoffs']];
+  var BUY = { net: 5, team: 5, putt: 1, season: 70 }, PUTT_START = '2026-11-12', SEASON_PAY = [180, 130, 80], PLAYOFF_POOL = 450;
+  var GAMES = [['net', 'Low net'], ['team', 'Team game'], ['putt', 'Putting pot (nightly)'], ['garb', 'Garbage'], ['ctp', 'CTP game'], ['season', 'Season & playoffs']];
   var SEASON_SETTLED = false;   // the $70 entry is counted in Net only once the season and playoff prizes are paid (and added below)
   var TEAM_FIX = {};   // night -> { lowWins, teams: [{ players: 'A/B', score }] } for nights with no Team Log snapshot
-  var EXTRA = [{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Clint","won":0,"paid":15},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Donnie","won":20,"paid":9},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Jeff","won":7,"paid":12},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"KOB","won":41,"paid":20},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Nick","won":0,"paid":3},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Schertzer","won":0,"paid":4},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Stonesniffer","won":7,"paid":1},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Sunderman","won":0,"paid":4},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Ty","won":16,"paid":19},{"n":"2026-11-20","l":"Fri Nov 20 \u00b7 CTP game","g":"ctp","p":"Walty","won":0,"paid":4}];
+  var EXTRA = [];   // hand-entered rows { n, l, g, p, won, paid }. Nov 20 CTP games were Ty testing: no CTP money has been won or lost yet.
   var st = { nights: null, by: {}, busy: false, sort: 'net', open: '', err: false };
   function e(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function num(v) { return v === '' || v === null || v === undefined || isNaN(Number(v)) ? null : Number(v); }
@@ -103,15 +103,19 @@
     var tbl = '<table class="ern-t"><tr><th class="l p">#</th><th class="l">Player</th><th>Won</th><th>Paid in</th><th>Net</th></tr>' + rows.map(function (r, i) {
       return '<tr' + (r.p === y ? ' class="me"' : '') + '><td class="l p">' + (i + 1) + '</td><td class="l"><button type="button" data-earn="' + e(r.p) + '">' + e(r.p) + ' <i>›</i></button></td><td>' + usd(r.won) + '</td><td class="m">' + usd(r.paid) + '</td><td class="b">' + net$(r.won - r.paid) + '</td></tr>';
     }).join('') + '</table>';
-    var left = '<div class="card ern-left"><div class="bbb-sh">Still to be won</div>' + (c.carry ? '<div><span>Putting pot carried over</span><b>' + usd(c.carry) + '</b></div>' : '') +
-      '<div><span>Season putts (Low + High)</span><b>' + usd(SEASON_PUTTS) + '</b></div><div><span>Regular season (1st / 2nd / 3rd)</span><b>' + usd(SEASON_PAY[0] + SEASON_PAY[1] + SEASON_PAY[2]) + '</b></div><div><span>Playoffs</span><b>' + usd(PLAYOFF_POOL) + '</b></div></div>';
-    var note = '<div class="ern-note">Net = money won minus money paid in. Counts low net, team game, nightly putting pot, CTP game (through Nov 20). The $70 season entry is counted when the season and playoff prizes are paid. Garbage joins once it is scored for real.' +
+    var pool = BUY.season * c.members.length;
+    var left = (c.carry ? '<div class="card ern-left"><div class="bbb-sh">Still to be won</div><div><span>Putting pot carried over</span><b>' + usd(c.carry) + '</b></div></div>' : '') +
+      '<div class="card ern-left"><div class="bbb-sh">Season prize pool</div><div><span>Entry: ' + usd(BUY.season) + ' × ' + c.members.length + ' players, all paid <i class="ern-ok">✓</i></span><b>' + usd(pool) + '</b></div>' +
+      '<div class="sub"><span>Regular season (1st / 2nd / 3rd)</span><span>' + usd(SEASON_PAY[0] + SEASON_PAY[1] + SEASON_PAY[2]) + '</span></div><div class="sub"><span>Playoffs</span><span>' + usd(PLAYOFF_POOL) + '</span></div>' +
+      '<small>Entries and prizes are added to everyone\'s Net when the prizes are paid.</small></div>';
+    var note = '<div class="ern-note">Net = money won minus money paid in. Counts low net, team game and the nightly putting pot. No CTP game money has been played for yet; Garbage joins once it is scored for real.' +
       (c.noTeam.length ? ' Team game results weren\'t saved for ' + c.noTeam.map(function (x) { return e(String(x.label).split(' · ')[0]); }).join(' and ') + ', so the team game isn\'t counted on ' + (c.noTeam.length > 1 ? 'those nights' : 'that night') + '.' : '') + ' Tap a player for the breakdown.' + (st.err ? ' Couldn\'t reach the server just now; showing what\'s saved on this phone.' : '') + '</div>';
     el.innerHTML = hero + '<div class="ern-h"><span class="bbb-sh">All players</span>' + seg + '</div><div class="card ern-c">' + tbl + '</div>' + left + note;
   }
   function detail(c, t) {
     var nv = t.won - t.paid;
     var g = '<table class="ern-t"><tr><th class="l">By game</th><th>Won</th><th>Paid in</th><th>Net</th></tr>' + GAMES.map(function (k) {
+      if (k[0] === 'season' && !SEASON_SETTLED) return '<tr><td class="l g">Season entry <i class="ern-ok">✓ paid</i></td><td class="m">–</td><td class="m">' + usd(BUY.season) + '</td><td class="m">later</td></tr>';
       var x = t.g[k[0]]; return '<tr><td class="l g">' + k[1] + '</td>' + (x ? '<td>' + (x.won ? usd(x.won) : '–') + '</td><td class="m">' + (x.paid ? usd(x.paid) : '–') + '</td><td class="b">' + net$(x.won - x.paid) + '</td>' : '<td class="m">–</td><td class="m">–</td><td class="m">–</td>') + '</tr>';
     }).join('') + '<tr class="tot"><td class="l">Total</td><td>' + usd(t.won) + '</td><td class="m">' + usd(t.paid) + '</td><td class="b">' + net$(nv) + '</td></tr></table>';
     var by = {}, keys = [];
@@ -119,7 +123,7 @@
     var nights = keys.map(function (k) { return by[k]; }).sort(function (a, b) { return (b.n || '0') < (a.n || '0') ? -1 : 1; }).map(function (x) {
       return '<div class="card ern-n"><div><b>' + e(x.l) + '</b><b class="num">' + net$(x.v) + '</b></div><small>' + x.parts.map(e).join(' · ') + '</small></div>';
     }).join('');
-    var pr = seasonProj(t.p), proj = pr ? '<div class="card ern-left ern-proj"><div class="bbb-sh">If the season ended today · not counted yet</div><div><span>Regular season: ' + e(pr.place) + '</span><b class="' + (pr.amt ? 'ern-up' : 'ern-0') + '">' + usd(pr.amt) + '</b></div></div>' : '';
+    var pr = seasonProj(t.p), proj = pr ? '<div class="card ern-left ern-proj"><div class="bbb-sh">Season money · not counted yet</div><div><span>Entry paid</span><b class="ern-0">−' + usd(BUY.season) + '</b></div><div><span>If it ended today: ' + e(pr.place) + ' in the regular season</span><b class="' + (pr.amt ? 'ern-up' : 'ern-0') + '">' + (pr.amt ? '+' : '') + usd(pr.amt) + '</b></div></div>' : '';
     return '<div class="ern-top"><button type="button" class="bbb-back" data-earn="">‹ All players</button><b>' + e(t.p) + '</b><b class="num">' + net$(nv) + '</b></div><div class="card ern-c">' + g + '</div><div class="gb-h">By night</div>' + nights + proj;
   }
   window.renderEarnings = function () { render(); if (!st.nights || Date.now() - (st.at || 0) > 300000) load(); };

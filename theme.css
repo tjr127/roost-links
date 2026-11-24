@@ -1087,3 +1087,4 @@ table.ern-t td button i { font-style: normal; color: var(--muted); font-weight: 
 .ern-n { margin-bottom: 8px; padding: 10px 12px !important; } .ern-n > div { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; } .ern-n small { display: block; color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 3px; }
 .ern-n .num { font: 700 15px 'Space Grotesk', sans-serif; }
 #earnbody .card { padding: 12px 14px; }
+.ern-ok { font-style: normal; color: var(--win); font-size: 12px; } .ern-left .sub { color: var(--muted); padding-left: 12px !important; } .ern-left small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 6px; }

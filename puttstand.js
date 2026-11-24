@@ -58,7 +58,7 @@
     return '<div class="card ps-lead ' + kind + '"><div class="ps-lk">' + head + '</div>' +
       '<div class="ps-ln">' + e(names(list)) + (list.length > 1 ? ' <span class="ps-tie">tied</span>' : '') + '</div>' +
       '<div class="ps-ls">' + line + '</div>' + (gap ? '<div class="ps-ls">' + gap + '</div>' : '') +
-      '<div class="ps-la">' + money(amt) + (list.length > 1 ? ' each' : '') + '</div></div>';
+      '</div>';   // Nov 24 (Ty): no money on season putts this year, just for fun
   }
 
   window.renderPuttStand = function (d) {
@@ -109,7 +109,7 @@
         var r = i;
         if (p.n) { while (r > 0 && rows[r - 1].n && rows[r - 1].total === p.total) r--; }
         var isLow = lowL.indexOf(p) >= 0, isHigh = highL.indexOf(p) >= 0;
-        var tag = isLow ? '<span class="pay">Low ' + money(s.pay / lowL.length) + '</span>' : isHigh ? '<span class="pay hi">High ' + money(s.pay / highL.length) + '</span>' : '';
+        var tag = isLow ? '<span class="pay">Low</span>' : isHigh ? '<span class="pay hi">High</span>' : '';
         var pace = p.n ? Math.round(p.avg * s.cap) : '';
         var paceHtml = p.n ? (isLow ? '<span class="putw">' + pace + '</span>' : isHigh ? '<span class="putw hi">' + pace + '</span>' : String(pace)) : '–';
         var tr = '<tr class="ps-row' + (p.n ? '' : ' none') + (open[p.name] ? ' open' : '') + '" data-ps="' + e(p.name) + '">' +
@@ -157,7 +157,7 @@
 
     document.getElementById('puttrules').innerHTML = '<div class="pp-t">Season putting rules</div><ul class="ps-rules">' +
       '<li>Each player\'s total putts from their <b>first ' + s.cap + ' league rounds</b> of the season count. Rounds after the ' + s.cap + 'th don\'t count.</li>' +
-      '<li><b>Fewest total putts wins ' + money(s.pay) + '</b>. <b>Most total putts wins ' + money(s.pay) + '</b>. Ties split the money.</li>' +
+      '<li><b>Fewest total putts</b> and <b>most total putts</b> are the two titles. Just for fun this season: no money on it.</li>' +
       '<li>Regular-season rounds count first. Tiebreaker week and playoff rounds count only for a player who missed regular-season rounds and is still short of ' + s.cap + '.</li>' +
       '<li>One round per night: playing two opponents on a makeup night is still one round.</li>' +
       '<li>Casual rounds never count.</li>' +
