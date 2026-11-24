@@ -997,3 +997,9 @@ table.bbbt td.bbb-x { color: var(--win); }
 #bbbbody .card, #adminbbbbody .card { padding: 12px 14px; }
 table.bbbt.hh td { font-size: 13px; }
 .bbb-title { font: 700 16px var(--num, "Space Grotesk"), sans-serif; color: var(--ink); }
+/* Nov 24: BBB on → stack the score total under the to-par number so Gross/Net fit */
+table.fld.bbb col.c-p { width: 7%; } table.fld.bbb col.c-m { width: 11%; } table.fld.bbb col.c-m.c-w { width: 13.5%; }
+table.fld.bbb .tpt { display: block; font-size: 10.5px; line-height: 1.1; margin: 1px 0 0; }
+table.fld.bbb .putw { padding: 2px 5px; display: inline-block; line-height: 1.15; }
+table.fld.bbb th { font-size: 10.5px !important; letter-spacing: -.2px; }
+table.fld.bbb th:last-child, table.fld.bbb td:last-child { padding-right: 8px; }
