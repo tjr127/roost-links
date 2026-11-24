@@ -864,3 +864,7 @@ table.stt.sst td:first-child small, .hc-axis { font-size: 12px; }
 .pc { background: var(--card2); color: #C8CEC9; box-shadow: inset 0 0 0 1px var(--line2); }
 .pc.pc-you { background: var(--amber); color: #101412; box-shadow: none; }
 #tncard .tn { margin-bottom: 8px; }
+
+/* Nov 23 (later): on match cards the chip always sits above the name, so every player's chip is in the same place whatever the name's length. */
+.match .name .pn, .match .name .pn.r { flex-direction: column; flex-wrap: nowrap; gap: 4px; align-items: flex-start; }
+.match .name.r .pn, .match .name.r .pn.r { align-items: flex-end; }
