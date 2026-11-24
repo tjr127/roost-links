@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=121">
-<link rel="stylesheet" href="theme.css?v=121">
+<link rel="stylesheet" href="app.css?v=122">
+<link rel="stylesheet" href="theme.css?v=122">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=121"></script>
-<script src="app.js?v=121"></script>
-<script src="rules.js?v=121"></script>
+<script src="live.js?v=122"></script>
+<script src="app.js?v=122"></script>
+<script src="rules.js?v=122"></script>
 </head>
 <body>
 <header>
@@ -243,20 +243,20 @@
   <button type="button" class="menubtn" id="menubtn" aria-label="Menu" aria-expanded="false">☰</button>
 </header>
 <nav class="tabbar" aria-label="Main">
-  <button type="button" data-tab="board" data-group="tonight teams field bbb" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Board</span></button>
-  <button type="button" data-tab="stand" data-group="standings puttstand"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Standings</span></button>
+  <button type="button" data-tab="board" data-group="tonight teams field bbb" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Nightly</span></button>
+  <button type="button" data-tab="stand" data-group="standings puttstand earnings"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Season</span></button>
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
-  <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="10" cy="9" r=".8" fill="currentColor"/><circle cx="14" cy="9" r=".8" fill="currentColor"/><circle cx="9" cy="13" r=".8" fill="currentColor"/><circle cx="15" cy="13" r=".8" fill="currentColor"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg><span>Stats</span></button>
-  <button type="button" data-tab="news" data-group="newsres newsann newsbio"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg><span>News</span></button>
+  <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11"/><path d="M12 20V5"/><path d="M19 20v-6"/></svg><span>Stats</span></button>
+  <button type="button" data-tab="news" data-group="newsres newsann newsbio"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><path d="M12 17v4"/><path d="M9 21h6"/></svg><span>Press</span></button>
   <button type="button" data-tab="ctp" id="ctpbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V3"/><path d="M12 3l7 3-7 3"/><ellipse cx="12" cy="21" rx="6" ry="1.5"/></svg><span>CTP</span></button>
-  <button type="button" data-tab="admin" data-group="adminenter adminsched adminmsg adminctp adminbbb" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg><span>Admin</span></button>
+  <button type="button" data-tab="admin" data-group="adminenter adminsched adminmsg adminctp adminbbb" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10"/><path d="M18 7h2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Admin</span></button>
 </nav>
 <main>
   <div id="tncard" class="livebd hide"></div>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button><button type="button" data-tab="bbb" id="bbbpill" class="hide">Garbage</button></nav>
   <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
-  <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
+  <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Individual</button><button type="button" data-tab="puttstand">Putts</button><button type="button" data-tab="earnings">Earnings</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
   <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button><button type="button" data-tab="adminctp">CTP</button><button type="button" data-tab="adminbbb">Garbage</button></nav>
   <section id="tonight">
@@ -271,6 +271,7 @@
   </section>
   <section id="teams" class="hide"><div id="pastTeam" class="pastbd"></div><div class="livebd"><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></div></section>
   <section id="standings" class="hide"><div class="card" id="table"></div><div class="card" id="seasonpay"></div><div class="card" id="playoffpay"></div></section>
+  <section id="earnings" class="hide"><div id="earnbody"></div></section>
   <section id="puttstand" class="hide"><h2>Putt standings</h2><div id="puttleaders"></div><div class="card" id="putttable"></div><div class="card" id="putteven"></div><div class="card" id="puttrules"></div></section>
   <section id="schedule" class="hide">
     <div id="teecard"></div>
@@ -404,7 +405,7 @@
     document.querySelectorAll('nav.subnav button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab); });
     document.querySelectorAll('main section').forEach(function (s) { s.classList.toggle('hide', show.indexOf(s.id) < 0); });
     // Nov 24: the page name sits under "Roost Golf" in the header (Ty's names).
-    var pgn = { board: 'Leaderboard', stand: 'Season Standings', schedule: 'Schedule', scores: 'Statistics', news: 'News & Announcements', ctp: 'Closest to the Pin', admin: 'Admin' }[grp || tab] || '';
+    var pgn = { board: 'Nightly Leaderboard', stand: 'Season Standings', schedule: 'Schedule', scores: 'Scores & Stats', news: 'Press Box', ctp: 'Closest to the Pin', admin: 'Admin' }[grp || tab] || '';
     document.getElementById('pgname').textContent = pgn;
     var bnr = document.getElementById('bnrow'); bnr.classList.toggle('hide', grp !== 'board'); bnr.dataset.tab = tab; document.getElementById('tncard').classList.toggle('hide', grp !== 'board');
     if (grp === 'board' && window.renderBoardPast) renderBoardPast();
@@ -426,6 +427,7 @@
       if (tab === 'adminmsg' && window.renderMsg) renderMsg(true);
     }
     if (tab === 'newsbio' && window.renderBios) renderBios();
+    if (tab === 'earnings' && window.renderEarnings) renderEarnings();   // Nov 24: Season > Earnings
     if (tab === 'adminbbb' && window.renderAdminBbb) renderAdminBbb();   // Nov 24: BBB preview
     document.body.classList.toggle('ongarb', tab === 'bbb');   // Nov 24: no night picker on the Garbage page (tonight only)
     if (tab === 'bbb' && window.renderBbb) { renderBbb(); if (window.tnAutoClose) tnAutoClose(); }
@@ -1797,18 +1799,19 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=121"></script>
-<script src="settings.js?v=121"></script>
-<script src="flip.js?v=121"></script>
-<script src="match.js?v=121"></script>
-<script src="msg.js?v=121"></script>
-<script src="puttstand.js?v=121"></script>
-<script src="stats.js?v=121"></script>
-<script src="bios.js?v=121"></script>
-<script src="ctp.js?v=121"></script>
-<script src="fine.js?v=121"></script>
-<script src="tonight.js?v=121"></script>
-<script src="anim.js?v=121"></script>
-<script src="bbb.js?v=121"></script>
+<script src="tee.js?v=122"></script>
+<script src="settings.js?v=122"></script>
+<script src="flip.js?v=122"></script>
+<script src="match.js?v=122"></script>
+<script src="msg.js?v=122"></script>
+<script src="puttstand.js?v=122"></script>
+<script src="stats.js?v=122"></script>
+<script src="bios.js?v=122"></script>
+<script src="ctp.js?v=122"></script>
+<script src="fine.js?v=122"></script>
+<script src="tonight.js?v=122"></script>
+<script src="anim.js?v=122"></script>
+<script src="bbb.js?v=122"></script>
+<script src="earnings.js?v=122"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 /*
  * Admin > Message (Nov 13, 2026): Ty sends a custom push alert to the whole league or to players he picks.
- * Also saved on the News tab (Announcements): "Everyone" shows to all, a picked list only to those players.
+ * Also saved on the Press tab (Announcements): "Everyone" shows to all, a picked list only to those players.
  * Server: action 'message' (apps-script/message.gs). Players list comes from data.entry.players.
  */
 (function () {
@@ -27,7 +27,7 @@
     var to = targets(), n = to.length;
     var who = st.mode === 'all' ? 'all ' + n + ' league members' : n === 1 ? to[0] : n + ' players';
     var html = '<div class="card esw msg">' +
-      '<div class="esw-top"><b>Send a message</b><div class="esw-sub">Goes out as a push alert to everyone who has alerts on, and shows on the News tab for the people you send it to.</div></div>' +
+      '<div class="esw-top"><b>Send a message</b><div class="esw-sub">Goes out as a push alert to everyone who has alerts on, and shows on the Press tab for the people you send it to.</div></div>' +
       '<label class="msg-k" for="msgt">Heading <span>optional</span></label>' +
       '<input id="msgt" class="msg-in" maxlength="' + MAXT + '" placeholder="Roost Golf" value="' + e(st.title) + '">' +
       '<label class="msg-k" for="msgb">Message</label>' +
@@ -89,9 +89,9 @@
       .then(function (r) {
         var miss = (r.missing || []).filter(function (n, i, a) { return a.indexOf(n) === i; });
         var to = r.to || [], got = Math.max(0, to.length - miss.length);
-        st.msg = !got ? 'Nobody you picked has alerts on, so no push went out. It\'s on the News tab for them.'
+        st.msg = !got ? 'Nobody you picked has alerts on, so no push went out. It\'s on the Press tab for them.'
           : 'Sent ✓ ' + (got === to.length ? (got === 1 ? to[0] + ' got it.' : (got === 2 ? 'Both players got it.' : 'All ' + got + ' players got it.')) : got + ' of ' + to.length + ' players got it.') +
-            (miss.length ? ' Alerts are off for ' + miss.join(', ') + ', so they\'ll only see it on the News tab.' : '');
+            (miss.length ? ' Alerts are off for ' + miss.join(', ') + ', so they\'ll only see it on the Press tab.' : '');
         st.err = false; st.body = ''; st.title = ''; st.confirm = false;
       }, function (er) {
         st.msg = (er && er.message) || 'Couldn\'t send. Try again.'; st.err = true; st.confirm = false;
