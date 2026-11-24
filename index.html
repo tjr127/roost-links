@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=91">
-<link rel="stylesheet" href="theme.css?v=91">
+<link rel="stylesheet" href="app.css?v=92">
+<link rel="stylesheet" href="theme.css?v=92">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=91"></script>
-<script src="app.js?v=91"></script>
-<script src="rules.js?v=91"></script>
+<script src="live.js?v=92"></script>
+<script src="app.js?v=92"></script>
+<script src="rules.js?v=92"></script>
 </head>
 <body>
 <header>
@@ -1449,14 +1449,18 @@ function renderField() {
     if (bp.busy.list || (bp.list && Date.now() - bp.at < 300000) || !window.RL || !RL.get) return;
     bp.busy.list = true;
     RL.get('rounds').then(function (j) { bp.list = j.nights || []; }, function () { bp.list = bp.list || []; })
-      .then(function () { bp.busy.list = false; bp.at = Date.now(); renderBoardPast(); });
+      .then(function () { bp.busy.list = false; bp.at = Date.now(); renderBoardPast();
+        // Fetch the most recent past night ahead of time so picking it is instant.
+        (bp.list || []).slice(0, 2).forEach(function (x, i) { if (x && x.night && !bp.by[x.night] && !store('bp:' + x.night)) setTimeout(function () { bpGet(x.night); }, 1500 + i * 4000); }); });
   }
   function bpGet(n) {
     var c = bp.by[n];
+    // Nov 23: past nights rarely change, so a copy saved on this phone (up to 30 days) shows at once and is refreshed behind it.
+    if (!c) { try { var sv = JSON.parse(store('bp:' + n) || 'null'); if (sv && sv.d && Date.now() - sv.at < 2592000000) c = bp.by[n] = { d: sv.d, at: 0 }; } catch (e) {} }
     if (c && Date.now() - c.at < 300000) return c.d;
     if (!bp.busy[n]) {
       bp.busy[n] = true;
-      RL.get('boardpast', '&night=' + encodeURIComponent(n)).then(function (j) { bp.by[n] = { d: j, at: Date.now() }; },
+      RL.get('boardpast', '&night=' + encodeURIComponent(n)).then(function (j) { bp.by[n] = { d: j, at: Date.now() }; if (j && !j.err) store('bp:' + n, JSON.stringify({ d: j, at: Date.now() })); },
         function () { bp.by[n] = { d: c ? c.d : { err: true }, at: Date.now() - 240000 }; })
         .then(function () { bp.busy[n] = false; if (bp.night === n) renderBoardPast(); });
     }
@@ -1572,7 +1576,7 @@ function renderField() {
     document.getElementById('table').innerHTML =
       '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +
       d.standings.map(function (x, i) {
-        return '<tr class="' + ([1, 2, 3].indexOf(rank[i]) >= 0 ? 'place p' + rank[i] : '') + '"><td class="n">' + esc(rank[i]) +
+        return '<tr class="' + ([1, 2, 3].indexOf(rank[i]) >= 0 ? 'place p' + rank[i] : '') + '"><td class="n">' + esc(num(x.pts) !== null && rank.filter(function (r, j) { return r === rank[i] && num(d.standings[j].pts) !== null; }).length > 1 ? 'T' + rank[i] : rank[i]) +
           '</td><td>' + nm(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') +
           '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
       }).join('') + '</table>' +
@@ -1633,15 +1637,15 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=91"></script>
-<script src="settings.js?v=91"></script>
-<script src="flip.js?v=91"></script>
-<script src="match.js?v=91"></script>
-<script src="msg.js?v=91"></script>
-<script src="puttstand.js?v=91"></script>
-<script src="stats.js?v=91"></script>
-<script src="bios.js?v=91"></script>
-<script src="ctp.js?v=91"></script>
-<script src="fine.js?v=91"></script>
+<script src="tee.js?v=92"></script>
+<script src="settings.js?v=92"></script>
+<script src="flip.js?v=92"></script>
+<script src="match.js?v=92"></script>
+<script src="msg.js?v=92"></script>
+<script src="puttstand.js?v=92"></script>
+<script src="stats.js?v=92"></script>
+<script src="bios.js?v=92"></script>
+<script src="ctp.js?v=92"></script>
+<script src="fine.js?v=92"></script>
 </body>
 </html>
