@@ -775,3 +775,4 @@ main { padding-top: 10px; }
 #puttrules.fine-open .fine-t::after { transform: rotate(90deg); }
 #puttrules:not(.fine-open) .ps-rules { display: none; }
 #puttrules:not(.fine-open) .pp-t { margin-bottom: 0; }
+#putttable > .fine:not(.open), #table > .fine:not(.open), .sx-card > .fine:not(.open) { padding-bottom: 0; margin-bottom: 12px; }
