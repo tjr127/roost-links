@@ -82,7 +82,7 @@
     var pot = '$' + s.pot;
     var sub = !s.holes.length ? s.ps.length + ' playing · pot ' + pot : fin ? (lead.length > 1 ? 'Tie (' + names(lead) + ') · ' + pot + ' carries to next week' : youLead ? 'You won ' + pot : names(lead) + ' won ' + pot + ' with ' + top)
       : (youLead && lead.length === 1 ? 'You lead' : 'Leading: ' + names(lead) + ' ' + top) + ' · pot ' + pot;
-    return tile('bbb', 'BBB', big, sub, fin && youLead && lead.length === 1 ? 'win' : '');
+    return tile('bbb', 'Garbage', big, sub, fin && youLead && lead.length === 1 ? 'win' : '');
   }
 
   // Payouts (Ty, Nov 24): $5 a player for low net (winner takes all, ties split) and $5 a player for the team game

@@ -57,14 +57,14 @@
   // ---- Individual board: card + column ----
   function card(s) {
     var L = leaders(s), last = s.holes[s.holes.length - 1], st = s.final ? 'final' : s.holes.length ? 'live' : 'pre';
-    var head = st === 'final' ? 'BBB · final' : st === 'live' ? 'BBB · live' : 'BBB tonight';
+    var head = st === 'final' ? 'Garbage · final' : st === 'live' ? 'Garbage · live' : 'Garbage tonight';
     var body;
     if (st === 'pre') body = '<b>' + s.ps.length + ' players</b><span class="bbb-s">' + s.total * 3 + ' pts up for grabs</span>';
     else {
       var rest = s.order.filter(function (p) { return L.indexOf(p) < 0; }).slice(0, 2).map(function (p) { return e(short(p)) + ' ' + s.pts[p].t; }).join(' · ');
       var hl = '';
-      if (st === 'final') { var mb = s.order.slice().sort(function (a, b) { return s.pts[b].bi - s.pts[a].bi; })[0]; hl = 'Most Bingos: ' + e(short(mb)) + ' (' + s.pts[mb].bi + ')'; }
-      else if (last) hl = 'H' + last.n + ': ' + (last.tag === 'chip' ? e(short(last.ba)) + ' chip-in ×2' : last.tag === 'p3' ? e(short(last.bi)) + ' par-3 ×2' : 'Bango ' + e(short(last.ba)));
+      if (st === 'final') { var mb = s.order.slice().sort(function (a, b) { return s.pts[b].bi - s.pts[a].bi; })[0]; hl = 'Most Furthest Outs: ' + e(short(mb)) + ' (' + s.pts[mb].bi + ')'; }
+      else if (last) hl = 'H' + last.n + ': ' + (last.tag === 'chip' ? e(short(last.ba)) + ' chip-in ×2' : last.tag === 'p3' ? e(short(last.bi)) + ' par-3 ×2' : 'CTP ' + e(short(last.ba)));
       body = '<b>' + e(L.map(short).join(' & ')) + ' <span class="bbb-n">' + (L.length ? s.pts[L[0]].t : 0) + '</span></b>' + (rest ? '<span class="bbb-s">' + rest + '</span>' : '') + '<span class="bbb-h">' + hl + '</span>';
     }
     return '<button type="button" class="card bbbc ' + st + '" id="bbbopen"><span class="bbb-k">' + head + (st === 'live' ? '<i>thru ' + s.holes.length + '</i>' : '') + '</span>' + body + '</button>';
@@ -84,10 +84,10 @@
     t.classList.add('bbb');
     var cg = t.querySelector('colgroup'); if (cg) { var c = document.createElement('col'); c.className = 'c-m'; cg.appendChild(c); }
     var L = leaders(s), sel = document.getElementById('fieldsort');
-    if (sel && !sel.querySelector('option[value="bbb"]')) sel.insertAdjacentHTML('beforeend', '<option value="bbb">BBB points</option>');
+    if (sel && !sel.querySelector('option[value="bbb"]')) sel.insertAdjacentHTML('beforeend', '<option value="bbb">Garbage points</option>');
     var sorted = sel && sel.value === 'bbb';
     [].forEach.call(t.querySelectorAll('tr'), function (tr, i) {
-      if (i === 0) { var th = document.createElement('th'); th.className = 'n fs-h bbb-th' + (sorted ? ' sorted' : ''); th.setAttribute('data-fsort', 'bbb'); th.textContent = 'BBB'; tr.appendChild(th); return; }
+      if (i === 0) { var th = document.createElement('th'); th.className = 'n fs-h bbb-th' + (sorted ? ' sorted' : ''); th.setAttribute('data-fsort', 'bbb'); th.textContent = 'Garb'; th.title = 'Garbage points'; tr.appendChild(th); return; }
       var name = tr.getAttribute('data-fxrow'), td = document.createElement('td'); td.className = 'n' + (sorted ? ' b' : '');
       if (!name || !s.pts[name]) td.innerHTML = '<span class="bbb-out">–</span>';
       else td.innerHTML = L.indexOf(name) >= 0 ? '<span class="putw bbb-lead">' + s.pts[name].t + '</span>' : String(s.pts[name].t);
@@ -98,25 +98,25 @@
   // ---- BBB page ----
   function renderPage() {
     var el = document.getElementById('bbbbody'); if (!el) return;
-    if (!window.bbbOn()) { el.innerHTML = '<div class="card empty">Bingo Bango Bongo isn\'t on tonight.</div>'; return; }
+    if (!window.bbbOn()) { el.innerHTML = '<div class="card empty">Garbage isn\'t on tonight.</div>'; return; }
     var s = compute(), last = s.holes[s.holes.length - 1];
     var mk = function (h, k) { var p = h[k]; if (!p) return '<td class="bbb-out">—</td>'; var star = (h.tag === 'p3' && (k === 'bi' || k === 'ba')) ? ' ★' : (h.tag === 'chip' && (k === 'ba' || k === 'bo')) ? ' ⛳' : ''; return '<td' + (star ? ' class="bbb-x"' : '') + '>' + e(short(p)) + star + '</td>'; };
     var best = function (k, lbl) { var hs = s.holes.filter(function (h) { return h[k]; }); if (!hs.length) return ''; var h = hs[hash(k + hs.length) % hs.length]; return '<div>' + lbl + ': <b>' + e(short(h[k])) + '</b>, ' + e(h[k + 'D']) + ' (H' + h.n + ')</div>'; };
     el.innerHTML =
-      '<div class="bbb-top"><button type="button" class="bbb-back" id="bbbback">‹ Board</button><b class="bbb-title">Bingo Bango Bongo</b><span>' + (s.final ? 'Final' : s.holes.length ? 'Thru ' + s.holes.length : 'Not started') + '</span></div>' +
-      '<div class="bbb-demo">Demo points — real points come once the GSPro agent sends BBB data.</div>' +
+      '<div class="bbb-top"><button type="button" class="bbb-back" id="bbbback">‹ Board</button><b class="bbb-title">Garbage</b><span>' + (s.final ? 'Final' : s.holes.length ? 'Thru ' + s.holes.length : 'Not started') + '</span></div>' +
+      '<div class="bbb-demo">Demo points — real points come once the GSPro agent sends Garbage data.</div>' +
       '<div class="card"><div class="bbb-sh">Standings' + (s.final ? '' : ' · ' + s.left + ' pts left') + ' · pot $' + s.pot + (s.carry ? ' (incl. $' + s.carry + ' carried)' : '') + '</div><table class="bbbt"><colgroup><col style="width:9%"><col><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>' +
-      '<tr><th>#</th><th class="l">Player</th><th>Bingo</th><th>Bango</th><th>Bongo</th><th class="a">Tot</th></tr>' +
+      '<tr><th>#</th><th class="l">Player</th><th title="Furthest Out">FO</th><th title="Closest to Pin">CTP</th><th title="Longest Putt">LP</th><th class="a">Tot</th></tr>' +
       s.order.map(function (p, i) { var x = s.pts[p]; return '<tr><td class="m">' + (i + 1) + '</td><td class="l">' + e(p) + '</td><td>' + x.bi + '</td><td>' + x.ba + '</td><td>' + x.bo + '</td><td class="a">' + x.t + '</td></tr>'; }).join('') + '</table></div>' +
       (last ? '<div class="card bbb-last"><div class="bbb-sh a">Latest · Hole ' + last.n + ' · par ' + last.par + '</div>' +
-        '<div><b>Bingo</b>' + (last.bi ? e(short(last.bi)) + ' — ' + (last.par === 3 ? 'on from the tee, ' : 'on from ') + e(last.biD) : 'nobody on from the tee') + '</div>' +
-        '<div><b>Bango</b>' + e(short(last.ba)) + ' — ' + e(last.baD) + '</div><div><b>Bongo</b>' + e(short(last.bo)) + ' — ' + e(last.boD) + '</div></div>' : '') +
-      '<div class="card"><div class="bbb-sh">Hole by hole</div><table class="bbbt hh"><colgroup><col style="width:15%"><col style="width:13%"><col><col><col></colgroup><tr><th class="l">Hole</th><th>Par</th><th>Bi</th><th>Ba</th><th>Bo</th></tr>' +
+        '<div><b>FO</b>' + (last.bi ? e(short(last.bi)) + ' — ' + (last.par === 3 ? 'on from the tee, ' : 'on from ') + e(last.biD) : 'nobody on from the tee') + '</div>' +
+        '<div><b>CTP</b>' + e(short(last.ba)) + ' — ' + e(last.baD) + '</div><div><b>LP</b>' + e(short(last.bo)) + ' — ' + e(last.boD) + '</div></div>' : '') +
+      '<div class="card"><div class="bbb-sh">Hole by hole</div><table class="bbbt hh"><colgroup><col style="width:15%"><col style="width:13%"><col><col><col></colgroup><tr><th class="l">Hole</th><th>Par</th><th>FO</th><th>CTP</th><th>LP</th></tr>' +
       s.holes.map(function (h) { return '<tr><td class="l">' + h.n + '</td><td class="m">' + h.par + '</td>' + mk(h, 'bi') + mk(h, 'ba') + mk(h, 'bo') + '</tr>'; }).join('') +
       (s.final ? '' : '<tr><td class="l m">' + (s.holes.length + 1) + '</td><td class="m">·</td><td class="m">·</td><td class="m">·</td><td class="m">·</td></tr>') + '</table>' +
-      '<div class="bbb-key">★ par-3 tee shot takes Bingo + Bango · ⛳ chip-in takes Bango + Bongo · — nobody on from the tee</div></div>' +
-      (s.holes.length ? '<div class="card bbb-best"><div class="bbb-sh">Tonight\'s bests</div>' + best('bi', 'Longest Bingo') + best('ba', 'Tightest Bango') + best('bo', 'Longest Bongo') + '</div>' : '') +
-      '<div class="bbb-rules"><b>Rules</b> · Bingo: first on the green from furthest away (the shot onto the green can\'t be a mulligan replay; penalty strokes are fine). Par 3: anyone on from the tee counts the same whatever the tee; closest takes Bingo and Bango. Bango: closest to the pin once everyone is on, played from off the green. Bongo: fewest putts, longest first putt breaks ties. A chip-in takes Bango and Bongo. $1 a player; the leader at the end of the night takes the pot, a tie carries it to next week.</div>';
+      '<div class="bbb-key">★ par-3 tee shot takes Furthest Out + Closest to Pin · ⛳ chip-in takes Closest to Pin + Longest Putt · — nobody on from the tee</div></div>' +
+      (s.holes.length ? '<div class="card bbb-best"><div class="bbb-sh">Tonight\'s bests</div>' + best('bi', 'Longest Furthest Out') + best('ba', 'Tightest CTP') + best('bo', 'Longest Putt') + '</div>' : '') +
+      '<div class="bbb-rules"><b>Rules</b> · <b>Furthest Out (FO)</b>: first on the green from furthest away (the shot onto the green can\'t be a mulligan replay; penalty strokes are fine). Par 3: anyone on from the tee counts the same whatever the tee; closest takes FO and CTP. <b>Closest to Pin (CTP)</b>: closest to the pin once everyone is on, played from off the green. <b>Longest Putt (LP)</b>: fewest putts, longest first putt breaks ties. A chip-in takes CTP and LP. $1 a player; the leader at the end of the night takes the pot, a tie carries it to next week.</div>';
   }
   window.renderBbb = renderPage;
 
@@ -125,10 +125,10 @@
     var el = document.getElementById('adminbbbbody'); if (!el) return;
     var c = cfg(), all = tonightNames(), sel = inPlayers(), guests = {};
     ((d().entry && d().entry.players) || []).forEach(function (p) { if (p.guest) guests[p.name] = 1; });
-    el.innerHTML = '<div class="card bbba"><div class="bbba-h"><div><b>Bingo Bango Bongo</b><small>' + e(d().title || 'Tonight') + '</small></div>' +
-      '<button type="button" class="bbb-sw' + (c.on ? ' on' : '') + '" id="bbbsw" role="switch" aria-checked="' + !!c.on + '" aria-label="Bingo Bango Bongo on tonight"><span></span></button></div>' +
+    el.innerHTML = '<div class="card bbba"><div class="bbba-h"><div><b>Garbage</b><small>' + e(d().title || 'Tonight') + '</small></div>' +
+      '<button type="button" class="bbb-sw' + (c.on ? ' on' : '') + '" id="bbbsw" role="switch" aria-checked="' + !!c.on + '" aria-label="Garbage on tonight"><span></span></button></div>' +
       (c.on ? '<div class="bbba-l"><span>Who\'s playing (from Tonight)</span><span><button type="button" data-bbball="1">All</button> · <button type="button" data-bbball="0">None</button></span></div>' +
-        ((d().cards || []).some(function (c) { return BBB_EXCLUDE.test(String(c.name).trim()); }) ? '<div class="bbba-f" style="border:0;padding:0">Jeff is left out of BBB for now (remote play).</div>' : '') +
+        ((d().cards || []).some(function (c) { return BBB_EXCLUDE.test(String(c.name).trim()); }) ? '<div class="bbba-f" style="border:0;padding:0">Jeff is left out of Garbage for now (remote play).</div>' : '') +
         (all.length ? all.map(function (n) { return '<label class="bbba-p"><input type="checkbox" data-bbbp="' + e(n) + '"' + (sel.indexOf(n) >= 0 ? ' checked' : '') + '>' + e(n) + (guests[n] ? ' <i>guest</i>' : '') + '</label>'; }).join('') : '<div class="empty">Nobody on Tonight yet.</div>') +
         '<label class="bbba-p" style="justify-content:space-between">Carried over from last week <span>$ <input type="number" min="0" step="1" inputmode="numeric" data-bbbcarry="1" value="' + (Number(c.carry) || 0) + '" style="width:64px;height:36px;font-size:15px;background:#101412;color:inherit;border:1px solid #2c3530;border-radius:8px;padding:0 8px"></span></label>' +
         '<div class="bbba-f">' + sel.length + ' playing · pot $' + (sel.length + (Number(c.carry) || 0)) + ' ($1 each' + (Number(c.carry) ? ' + carry' : '') + ')' + (sel.length < 2 ? ' · needs at least 2' : '') + '. Preview: saved on this phone only, with demo points.</div>' : '<div class="bbba-f">Off. Turn it on to pick tonight\'s BBB players.</div>') + '</div>';
