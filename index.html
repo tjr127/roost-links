@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=93">
-<link rel="stylesheet" href="theme.css?v=93">
+<link rel="stylesheet" href="app.css?v=94">
+<link rel="stylesheet" href="theme.css?v=94">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=93"></script>
-<script src="app.js?v=93"></script>
-<script src="rules.js?v=93"></script>
+<script src="live.js?v=94"></script>
+<script src="app.js?v=94"></script>
+<script src="rules.js?v=94"></script>
 </head>
 <body>
 <header>
@@ -1399,7 +1399,7 @@ function renderField() {
       var d = by === 'pts' ? vb - va : va - vb;
       return d || a.i - b.i;
     });
-    function th(key, label) { return '<th class="n fs-h' + (by === key ? ' sorted' : '') + '" data-fsort="' + key + '">' + label + (by === key ? (key === 'pts' ? ' ▾' : ' ▴') : '') + '</th>'; }
+    function th(key, label) { return '<th class="n fs-h' + (by === key ? ' sorted' : '') + '" data-fsort="' + key + '">' + label + '</th>'; }
     function posOf(rs, get) { return rs.map(function (r, i) { var v = num(get(r)[by]); if (v === null) return ''; var j = i; while (j > 0 && num(get(rs[j - 1])[by]) === v) j--; return (rs.filter(function (q) { return num(get(q)[by]) === v; }).length > 1 ? 'T' : '') + (j + 1); }); }
     // Putting challenge (Nov 13): Low or High putts, alternating each league night. Banner on top; on the challenge
     // night, the finished player(s) with the lowest (or highest) putts get their putts highlighted.
@@ -1516,7 +1516,7 @@ function renderField() {
       if (va === null) return 1; if (vb === null) return -1;
       return by === 'pts' ? vb - va : va - vb;
     });
-    function th(k, l) { return '<th class="n fs-h' + (by === k ? ' sorted' : '') + '" data-fsort="' + k + '">' + l + (by === k ? (k === 'pts' ? ' ▾' : ' ▴') : '') + '</th>'; }
+    function th(k, l) { return '<th class="n fs-h' + (by === k ? ' sorted' : '') + '" data-fsort="' + k + '">' + l + '</th>'; }
     var ppos = rows.map(function (x, i) { var v = num(x[by]); if (v === null) return ''; var j = i; while (j > 0 && num(rows[j - 1][by]) === v) j--; return (rows.filter(function (q) { return num(q[by]) === v; }).length > 1 ? 'T' : '') + (j + 1); });
     function pbest(k, hi) { var v = rows.map(function (x) { return num(x[k]); }).filter(function (v) { return v !== null; }); return v.length ? (hi ? Math.max : Math.min).apply(null, v) : null; }
     var pNet = pbest('net', false), pPts = pbest('pts', true), pGross = pbest('gross', false);
@@ -1677,15 +1677,15 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=93"></script>
-<script src="settings.js?v=93"></script>
-<script src="flip.js?v=93"></script>
-<script src="match.js?v=93"></script>
-<script src="msg.js?v=93"></script>
-<script src="puttstand.js?v=93"></script>
-<script src="stats.js?v=93"></script>
-<script src="bios.js?v=93"></script>
-<script src="ctp.js?v=93"></script>
-<script src="fine.js?v=93"></script>
+<script src="tee.js?v=94"></script>
+<script src="settings.js?v=94"></script>
+<script src="flip.js?v=94"></script>
+<script src="match.js?v=94"></script>
+<script src="msg.js?v=94"></script>
+<script src="puttstand.js?v=94"></script>
+<script src="stats.js?v=94"></script>
+<script src="bios.js?v=94"></script>
+<script src="ctp.js?v=94"></script>
+<script src="fine.js?v=94"></script>
 </body>
 </html>

@@ -797,10 +797,10 @@ nav.subnav button.on, .seg button.on { background: rgba(245,177,60,.16); color: 
 /* Nov 23: Individual board. Position, Gross, status under the name; tap a heading to sort (dropdown hidden). */
 .bnrow .fsort { display: none !important; }
 table.fld { table-layout: fixed; width: 100%; }
-table.fld col.c-p { width: 12%; } table.fld col.c-m { width: 15%; }
-table.fld th { font-size: 10.5px; letter-spacing: 0; padding-left: 2px; padding-right: 2px; white-space: nowrap; }
+table.fld col.c-p { width: 9%; } table.fld col.c-m { width: 14.5%; }
+table.fld th { font-size: 10px; letter-spacing: 0; padding-left: 2px; padding-right: 2px; white-space: nowrap; }
 table.fld td { padding-left: 2px; padding-right: 2px; }
-table.fld th:first-child, table.fld td:first-child { padding-left: 12px; }
+table.fld th:first-child, table.fld td:first-child { padding-left: 10px; }
 table.fld th:last-child, table.fld td:last-child { padding-right: 10px; }
 table.fld .fs-h { cursor: pointer; }
 table.fld td.fld-p { color: var(--muted); font: 600 13px var(--num), sans-serif; }
