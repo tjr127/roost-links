@@ -728,3 +728,22 @@ body.bpast .livebd { display: none !important; }
 .bp-tbl { width: 100%; }
 .bp-tbl td { padding: 9px 4px; border-top: 1px solid var(--line); }
 .bp-win td { color: var(--amber); font-weight: 600; }
+
+/* Nov 23: compact top of screen. One-line header; the Board's Night picker is a chip on one row with Basic/Detailed (or the sort). */
+header { padding: calc(8px + env(safe-area-inset-top)) 16px 8px; }
+header .brand { gap: 10px; min-height: 36px; }
+header .brand img { width: 32px; height: 32px; border-radius: 9px; }
+header h1 { font-size: 19px; }
+header .sub { display: none; }
+.st-cog { top: calc(8px + env(safe-area-inset-top)); width: 36px; height: 36px; }
+nav.subnav { margin: 0 0 8px; }
+nav.subnav button { min-height: 36px; line-height: 36px; }
+main { padding-top: 10px; }
+.bnrow { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.bnrow.hide { display: none; }
+#bnpick { margin: 0; flex: 1; min-width: 0; }
+#bnpick select { width: 100%; height: 38px; padding: 0 30px 0 14px; border-radius: 999px !important; font: 600 13px Inter, sans-serif; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+.bn-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.bnrow [data-ctl] { display: none; flex: none; }
+.bnrow[data-tab="tonight"] [data-ctl="tonight"], .bnrow[data-tab="teams"] [data-ctl="teams"], .bnrow[data-tab="field"] [data-ctl="field"] { display: flex; }
+.bnrow .fsort select { height: 38px; padding: 0 10px; border-radius: 999px !important; font: 600 13px Inter, sans-serif; }

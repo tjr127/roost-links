@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=81">
-<link rel="stylesheet" href="theme.css?v=81">
+<link rel="stylesheet" href="app.css?v=82">
+<link rel="stylesheet" href="theme.css?v=82">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=81"></script>
-<script src="app.js?v=81"></script>
-<script src="rules.js?v=81"></script>
+<script src="live.js?v=82"></script>
+<script src="app.js?v=82"></script>
+<script src="rules.js?v=82"></script>
 </head>
 <body>
 <header>
@@ -253,7 +253,7 @@
 </nav>
 <main>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
-  <div id="bnpick" class="card picker hide"><label for="bnsel">Night</label><select id="bnsel"></select></div>
+  <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><div class="seg livebd" data-ctl="tonight" role="group" aria-label="Match view"><button type="button" data-h2h="basic">Basic</button><button type="button" data-h2h="detailed">Detailed</button></div><div class="seg livebd" data-ctl="teams" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Stats</button></nav>
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
@@ -261,14 +261,14 @@
   <section id="tonight">
     <div id="teestrip" class="teestrip hide livebd"></div>
     <div id="pastH2H" class="pastbd"></div>
-    <div id="matchwrap" class="livebd"><div class="fhead"><h2>Head-to-Head Matches</h2><div class="seg" role="group" aria-label="Match view"><button type="button" data-h2h="basic">Basic</button><button type="button" data-h2h="detailed">Detailed</button></div></div><div id="matches"></div></div>
+    <div id="matchwrap" class="livebd"><div id="matches"></div></div>
   </section>
   <section id="field" class="hide">
     <div id="pastField" class="pastbd"></div>
     <div id="puttbanner" class="livebd"></div>
-    <div class="fhead livebd"><h2>Field Leaderboard</h2><label class="fsort">Sort by <select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div><div class="card livebd" id="fieldcard"></div>
+    <div class="card livebd" id="fieldcard"></div>
   </section>
-  <section id="teams" class="hide"><div id="pastTeam" class="pastbd"></div><div class="fhead livebd"><h2>Team game</h2><div class="seg" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div></div><div class="livebd"><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></div></section>
+  <section id="teams" class="hide"><div id="pastTeam" class="pastbd"></div><div class="livebd"><div id="gameinfo"></div><div id="teamlist"></div><div id="teamdetail" class="hide"></div></div></section>
   <section id="standings" class="hide"><h2>Season standings</h2><div class="card" id="table"></div><div class="card" id="seasonpay"></div><div class="card" id="playoffpay"></div></section>
   <section id="puttstand" class="hide"><h2>Putt standings</h2><div id="puttleaders"></div><div class="card" id="putttable"></div><div class="card" id="putteven"></div><div class="card" id="puttrules"></div></section>
   <section id="schedule" class="hide">
@@ -401,7 +401,7 @@
     document.querySelectorAll('nav.subnav').forEach(function (n) { n.classList.toggle('hide', n.dataset.for !== grp); });
     document.querySelectorAll('nav.subnav button').forEach(function (x) { x.classList.toggle('on', x.dataset.tab === tab); });
     document.querySelectorAll('main section').forEach(function (s) { s.classList.toggle('hide', show.indexOf(s.id) < 0); });
-    document.getElementById('bnpick').classList.toggle('hide', grp !== 'board');
+    var bnr = document.getElementById('bnrow'); bnr.classList.toggle('hide', grp !== 'board'); bnr.dataset.tab = tab;
     if (grp === 'board' && window.renderBoardPast) renderBoardPast();
     store('tab', tab);
     if (grp === 'board' && !auto && data) store('boardPick', JSON.stringify({ n: data.title, t: tab }));
@@ -656,7 +656,7 @@
     var useNight = cardNight;
     if (useNight && !nights.some(function (x) { return x.night === useNight; })) useNight = past.nights ? '' : useNight;
     if (!useNight && !tonight.length && nights.length) useNight = nights[0].night;   // tonight cleared: show the last night
-    var opts = (tonight.length || !nights.length ? [{ v: '', t: 'Tonight' + (title ? ' · ' + title : '') }] : [])
+    var opts = (tonight.length || !nights.length ? [{ v: '', t: (!data || data.live !== false ? 'Tonight' : ((data.field || []).length ? 'Latest' : 'Next')) + (title ? ' · ' + title : '') }] : [])
       .concat(nights.map(function (x) { return { v: x.night, t: x.label }; }));
     var okey = opts.map(function (o) { return o.v + o.t; }).join('|');
     if (nsel.dataset.opts !== okey) {
@@ -1457,7 +1457,8 @@ function renderField() {
     var sel = document.getElementById('bnsel');
     var title = (data && data.title) || '';
     var list = (bp.list || []).filter(function (x) { return !(title && title.indexOf(x.label.split(' · ')[0]) >= 0 && data && (data.field || []).length); });
-    var opts = [{ v: '', t: 'Tonight' + (title ? ' · ' + title : '') }].concat(list.map(function (x) { return { v: x.night, t: x.label }; }));
+    var nowLbl = !data || data.live !== false ? 'Tonight' : ((data.field || []).length ? 'Latest' : 'Next');
+    var opts = [{ v: '', t: nowLbl + (title ? ' · ' + title : '') }].concat(list.map(function (x) { return { v: x.night, t: x.label }; }));
     var okey = opts.map(function (o) { return o.v + o.t; }).join('|');
     if (sel.dataset.opts !== okey) { sel.innerHTML = opts.map(function (o) { return '<option value="' + esc(o.v) + '">' + esc(o.t) + '</option>'; }).join(''); sel.dataset.opts = okey; }
     if (bp.night && !opts.some(function (o) { return o.v === bp.night; })) bp.night = '';
@@ -1467,7 +1468,7 @@ function renderField() {
     var d = bpGet(bp.night), h = document.getElementById('pastH2H'), t = document.getElementById('pastTeam'), f = document.getElementById('pastField');
     if (!d || d.err) { var msg = '<div class="card empty">' + (d ? 'Couldn\'t load that night. Try again in a moment.' : 'Loading that night…') + '</div>'; h.innerHTML = t.innerHTML = f.innerHTML = msg; return; }
     // Head2Head: final Stableford, winner highlighted (same look as the live cards)
-    h.innerHTML = '<div class="fhead"><h2>Head-to-Head Matches</h2></div>' + ((d.matches || []).map(function (m) {
+    h.innerHTML = ((d.matches || []).map(function (m) {
       var a = num(m.a.pts), b = num(m.b.pts);
       var ow = m.kind === 'oneway' ? 'One-Way Match →' : m.kind === 'makeup' ? 'One-Way Makeup →' : '';
       return '<div class="card match"><div class="name">' + esc(m.a.name) + '</div><div class="mid"><div class="scores">' +
@@ -1477,7 +1478,7 @@ function renderField() {
     }).join('') || '<div class="card empty">No head-to-head matches that night</div>');
     // Team: from the Team Log snapshot
     var tm = d.team;
-    t.innerHTML = '<div class="fhead"><h2>Team game</h2></div>' + (!tm ? '<div class="card empty">No team results saved for this night</div>' :
+    t.innerHTML = (!tm ? '<div class="card empty">No team results saved for this night</div>' :
       '<div class="card tbasic"><div class="sc-lbl">' + esc(tm.game) + ' · ' + esc(tm.scoring) + '</div><table class="bp-tbl">' + tm.teams.map(function (x, i) {
         var sc = x.score === '' || x.score == null;
         return '<tr' + (i === 0 && !sc ? ' class="bp-win"' : '') + '><td class="n">' + (sc ? '' : (i + 1)) + '</td><td>' + esc(x.players) + '</td><td class="n b">' + (sc ? '<span class="muted">no score</span>' : esc(x.score)) + '</td></tr>';
@@ -1490,7 +1491,7 @@ function renderField() {
       return by === 'pts' ? vb - va : va - vb;
     });
     function th(k, l) { return '<th class="n' + (by === k ? ' sorted' : '') + '">' + l + '</th>'; }
-    f.innerHTML = '<div class="fhead"><h2>Field Leaderboard</h2><span class="muted">Sorted by ' + ({ net: 'low net', pts: 'Stableford', putts: 'fewest putts' })[by] + '</span></div><div class="card">' + (rows.length ?
+    f.innerHTML = '<div class="card">' + (rows.length ?
       '<table><tr><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' + rows.map(function (x) {
         return '<tr><td>' + esc(x.player) + '</td><td class="n">' + esc(x.gross) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + esc(x.net) + '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + esc(x.pts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + esc(x.putts) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores posted that night</div>') + '</div>';
@@ -1612,14 +1613,14 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=81"></script>
-<script src="settings.js?v=81"></script>
-<script src="flip.js?v=81"></script>
-<script src="match.js?v=81"></script>
-<script src="msg.js?v=81"></script>
-<script src="puttstand.js?v=81"></script>
-<script src="stats.js?v=81"></script>
-<script src="bios.js?v=81"></script>
-<script src="ctp.js?v=81"></script>
+<script src="tee.js?v=82"></script>
+<script src="settings.js?v=82"></script>
+<script src="flip.js?v=82"></script>
+<script src="match.js?v=82"></script>
+<script src="msg.js?v=82"></script>
+<script src="puttstand.js?v=82"></script>
+<script src="stats.js?v=82"></script>
+<script src="bios.js?v=82"></script>
+<script src="ctp.js?v=82"></script>
 </body>
 </html>
