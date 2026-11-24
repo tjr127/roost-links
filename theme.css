@@ -808,3 +808,7 @@ table.fld td.fld-n { overflow: hidden; text-overflow: ellipsis; white-space: now
 table.fld td.fld-n small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
 table.fld .putw { min-width: 0; padding: 2px 7px; }
 table.fld td.b { font-size: 16px; }
+
+/* Nov 23: night over and the recalculated team totals differ from the saved ones: show the saved results. */
+body.tposted #teams .livebd, body.tposted .bnrow [data-ctl="teams"] { display: none !important; }
+body.tposted #pastTeam { display: block; }

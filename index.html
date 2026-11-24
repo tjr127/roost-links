@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=95">
-<link rel="stylesheet" href="theme.css?v=95">
+<link rel="stylesheet" href="app.css?v=96">
+<link rel="stylesheet" href="theme.css?v=96">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=95"></script>
-<script src="app.js?v=95"></script>
-<script src="rules.js?v=95"></script>
+<script src="live.js?v=96"></script>
+<script src="app.js?v=96"></script>
+<script src="rules.js?v=96"></script>
 </head>
 <body>
 <header>
@@ -1265,6 +1265,7 @@ function tdOrder(td) {
   return { list: list, rank: rank };
 }
 function renderTeams(d) {
+  try { teamPostedCheck(d); } catch (x) { console.error(x); }
   var td = d.teamDetail, listEl = document.getElementById('teamlist'), det = document.getElementById('teamdetail');
   var info = document.getElementById('gameinfo');
   if (!td || !td.teams.length || !(d.teams || []).length) {
@@ -1475,6 +1476,24 @@ function renderField() {
     }
     return c ? c.d : null;
   }
+  function teamPastHtml(tm) {
+    return '<div class="card tbasic"><div class="sc-lbl">' + esc(tm.game) + ' · ' + esc(tm.scoring) + '</div><table class="bp-tbl">' + tm.teams.map(function (x, i) {
+      var sc = x.score === '' || x.score == null;
+      return '<tr' + (i === 0 && !sc ? ' class="bp-win"' : '') + '><td class="n">' + (sc ? '' : (i + 1)) + '</td><td>' + esc(x.players) + '</td><td class="n b">' + (sc ? '<span class="muted">no score</span>' : esc(x.score)) + '</td></tr>';
+    }).join('') + '</table><div class="paykey">' + (tm.lowWins ? 'Lowest' : 'Highest') + ' total wins.</div></div>';
+  }
+  // Nov 23: night over and posted. If the Tonight tab's team totals no longer match what was saved on the night
+  // (handicaps moved since), show the saved team results instead of the recalculated ones.
+  function teamPostedCheck(d) {
+    var c = d && d.posted && bp.by[d.posted], pt = c && c.d && c.d.team, td = d && d.teamDetail, drift = false;
+    if (pt && td && td.teams) td.teams.forEach(function (t) {
+      var key = (t.players || []).map(function (p) { return p.name; }).sort().join('/');
+      var s = (pt.teams || []).filter(function (x) { return String(x.players).split('/').sort().join('/') === key; })[0];
+      if (s && num(s.score) !== null && num(t.total) !== null && num(s.score) !== num(t.total)) drift = true;
+    });
+    document.body.classList.toggle('tposted', drift);
+    if (drift && !bp.night) document.getElementById('pastTeam').innerHTML = teamPastHtml(pt) + '<div class="tleg">Results as saved on the night.</div>';
+  }
   window.renderBoardPast = function () {
     bpList();
     var sel = document.getElementById('bnsel');
@@ -1487,7 +1506,7 @@ function renderField() {
     if (bp.night && !opts.some(function (o) { return o.v === bp.night; })) bp.night = '';
     sel.value = bp.night;
     document.body.classList.toggle('bpast', !!bp.night);
-    if (!bp.night) return;
+    if (!bp.night) { teamPostedCheck(data); return; }
     var d = bpGet(bp.night), h = document.getElementById('pastH2H'), t = document.getElementById('pastTeam'), f = document.getElementById('pastField');
     if (!d || d.err) { var msg = '<div class="card empty">' + (d ? 'Couldn\'t load that night. Try again in a moment.' : 'Loading that night…') + '</div>'; h.innerHTML = t.innerHTML = f.innerHTML = msg; return; }
     // Head2Head: final Stableford, winner highlighted (same look as the live cards)
@@ -1504,11 +1523,7 @@ function renderField() {
     }).join('') || '<div class="card empty">No head-to-head matches that night</div>');
     // Team: from the Team Log snapshot
     var tm = d.team;
-    t.innerHTML = (!tm ? '<div class="card empty">No team results saved for this night</div>' :
-      '<div class="card tbasic"><div class="sc-lbl">' + esc(tm.game) + ' · ' + esc(tm.scoring) + '</div><table class="bp-tbl">' + tm.teams.map(function (x, i) {
-        var sc = x.score === '' || x.score == null;
-        return '<tr' + (i === 0 && !sc ? ' class="bp-win"' : '') + '><td class="n">' + (sc ? '' : (i + 1)) + '</td><td>' + esc(x.players) + '</td><td class="n b">' + (sc ? '<span class="muted">no score</span>' : esc(x.score)) + '</td></tr>';
-      }).join('') + '</table><div class="paykey">' + (tm.lowWins ? 'Lowest' : 'Highest') + ' total wins.</div></div>');
+    t.innerHTML = !tm ? '<div class="card empty">No team results saved for this night</div>' : teamPastHtml(tm);
     // Individual: sorted the same way as the live field (Sort by setting)
     var by = document.getElementById('fieldsort').value || 'net';
     var rows = (d.field || []).slice().sort(function (x, y) {
@@ -1677,15 +1692,15 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=95"></script>
-<script src="settings.js?v=95"></script>
-<script src="flip.js?v=95"></script>
-<script src="match.js?v=95"></script>
-<script src="msg.js?v=95"></script>
-<script src="puttstand.js?v=95"></script>
-<script src="stats.js?v=95"></script>
-<script src="bios.js?v=95"></script>
-<script src="ctp.js?v=95"></script>
-<script src="fine.js?v=95"></script>
+<script src="tee.js?v=96"></script>
+<script src="settings.js?v=96"></script>
+<script src="flip.js?v=96"></script>
+<script src="match.js?v=96"></script>
+<script src="msg.js?v=96"></script>
+<script src="puttstand.js?v=96"></script>
+<script src="stats.js?v=96"></script>
+<script src="bios.js?v=96"></script>
+<script src="ctp.js?v=96"></script>
+<script src="fine.js?v=96"></script>
 </body>
 </html>
