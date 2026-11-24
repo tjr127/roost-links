@@ -74,10 +74,12 @@
     if (!t || t.classList.contains('bbb')) return;
     t.classList.add('bbb');
     var cg = t.querySelector('colgroup'); if (cg) { var c = document.createElement('col'); c.className = 'c-m'; cg.appendChild(c); }
-    var L = leaders(s);
+    var L = leaders(s), sel = document.getElementById('fieldsort');
+    if (sel && !sel.querySelector('option[value="bbb"]')) sel.insertAdjacentHTML('beforeend', '<option value="bbb">BBB points</option>');
+    var sorted = sel && sel.value === 'bbb';
     [].forEach.call(t.querySelectorAll('tr'), function (tr, i) {
-      if (i === 0) { var th = document.createElement('th'); th.className = 'n bbb-th'; th.textContent = 'BBB'; tr.appendChild(th); return; }
-      var name = tr.getAttribute('data-fxrow'), td = document.createElement('td'); td.className = 'n';
+      if (i === 0) { var th = document.createElement('th'); th.className = 'n fs-h bbb-th' + (sorted ? ' sorted' : ''); th.setAttribute('data-fsort', 'bbb'); th.textContent = 'BBB'; tr.appendChild(th); return; }
+      var name = tr.getAttribute('data-fxrow'), td = document.createElement('td'); td.className = 'n' + (sorted ? ' b' : '');
       if (!name || !s.pts[name]) td.innerHTML = '<span class="bbb-out">–</span>';
       else td.innerHTML = L.indexOf(name) >= 0 ? '<span class="putw bbb-lead">' + s.pts[name].t + '</span>' : String(s.pts[name].t);
       tr.appendChild(td);

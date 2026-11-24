@@ -1011,3 +1011,4 @@ table.fld.bbb th:last-child, table.fld.bbb td:last-child { padding-right: 8px; }
 .tn.tn-after { border-color: rgba(143,209,158,.45); }
 .tn.tn-after .tn-kick { color: var(--win); }
 table.bbbt th { font-size: 10px; letter-spacing: -.2px; }
+table.fld th.bbb-th:not(.sorted) { color: var(--muted); }
