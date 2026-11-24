@@ -83,6 +83,18 @@
     return tile('bbb', 'BBB', big, sub, fin && youLead ? 'win' : '');
   }
 
+  // Season tile (Nov 24): your place and points in the regular-season standings (d.standings), gap to the leader / next.
+  function seasonTile(d, y) {
+    var st = (d.standings || []).filter(function (x) { return num(x.pts) !== null; });
+    var me = st.filter(function (x) { return x.player === y; })[0]; if (!me || d.roundType === 'Casual') return '';
+    var mp = num(me.pts), above = st.filter(function (x) { return num(x.pts) > mp; }), tie = st.filter(function (x) { return num(x.pts) === mp; }).length > 1;
+    var p = (tie ? 'T' : '') + (above.length + 1), top = num(st[0].pts);
+    var sub;
+    if (!above.length) { var second = st.filter(function (x) { return num(x.pts) < mp; })[0]; sub = tie ? 'Tied for the lead' : second ? 'Leading by ' + (mp - num(second.pts)) : 'Leading'; }
+    else { var nx = above[above.length - 1]; sub = (num(nx.pts) - mp) + ' back of ' + e(nx.player) + (num(nx.pts) !== top ? ' · ' + (top - mp) + ' off the lead' : ''); }
+    return tile('season', 'Season', ord(p) + ' · ' + mp + ' pts', sub + (me.wtl ? ' · ' + e(me.wtl) : ''), p === '1' ? 'win' : '');
+  }
+
   // Putting pot for the night the card is about.
   function potTile(d, next) {
     var pc = d.putts; if (!pc || pc.carry === undefined) return '';
@@ -166,6 +178,7 @@
     out.push(netTile(d, y, done));
     out.push(bb ? scoreT : (done ? '' : teeT) || '');
     if (!done && !y) out.push(teeT);
+    if (y) out.push(seasonTile(d, y));
     return out;
   }
 
@@ -193,7 +206,7 @@
     if (k === 'toggle') { st('tnOpen', st('tnOpen') === '0' ? '1' : '0'); var c = b.closest('.tn'), on = st('tnOpen') !== '0'; c.classList.toggle('open', on); b.setAttribute('aria-expanded', on); return; }
     if (k === 'signin') { if (window.RL && RL.signIn) RL.signIn(); return; }
     if (k === 'bbb') { if (window.showTab) showTab('bbb'); if (window.renderBbb) renderBbb(); window.scrollTo(0, 0); return; }
-    var tab = { match: 'tonight', team: 'teams', pot: 'field', tee: 'schedule', score: 'field', net: 'field' }[k];
-    if (tab && window.showTab) { showTab(tab); if (k !== 'tee') { var el = document.querySelector(k === 'match' ? '.match.mine' : k === 'pot' || k === 'net' || k === 'score' ? '#fieldcard' : '#teamlist'); if (el && el.scrollIntoView) try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} } else window.scrollTo(0, 0); }
+    var tab = { match: 'tonight', team: 'teams', pot: 'field', tee: 'schedule', score: 'field', net: 'field', season: 'standings' }[k];
+    if (tab && window.showTab) { showTab(tab); if (k !== 'tee' && k !== 'season') { var el = document.querySelector(k === 'match' ? '.match.mine' : k === 'pot' || k === 'net' || k === 'score' ? '#fieldcard' : '#teamlist'); if (el && el.scrollIntoView) try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} } else window.scrollTo(0, 0); }
   });
 })();
