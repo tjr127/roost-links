@@ -77,13 +77,13 @@
   var CATS = [
     { id: 'sg', l: 'SG', cap: 'Strokes gained: where each player gains or loses strokes, per 18 holes', m: ['ott', 'app', 'arg', 'putt', 'sgt'],
       key: 'Strokes gained per 18 holes (per round, the Tour standard), even though we play 9. <b>OTT</b> tee shots on par 4s and 5s, <b>APP</b> approach shots, <b>ARG</b> within about 30 yards of the green, <b>PUTT</b> on the green. Starts with rounds after Nov 14.' },
-    { id: 'drive', l: 'Driving', cap: 'Off the tee: fairways, distance, penalties', m: ['fw', 'drive', 'ld', 'pen', 'mull'],
+    { id: 'drive', l: 'Drive', cap: 'Off the tee: fairways, distance, penalties', m: ['fw', 'drive', 'ld', 'pen', 'mull'],
       key: '<b>FW</b> fairways hit on par 4s and 5s. <b>Drive</b> average drive that finished in the fairway; <b>LD</b> the longest. <b>Pen</b> penalty strokes, <b>Mull</b> mulligans (totals).' },
-    { id: 'appr', l: 'Approach', cap: 'Shots into the green: greens hit, distance in, how close', m: ['gir', 'apyd', 'prox'],
+    { id: 'appr', l: 'Appr', cap: 'Shots into the green: greens hit, distance in, how close', m: ['gir', 'apyd', 'prox'],
       key: '<b>GIR</b> greens in regulation. <b>Appr</b> average distance to the pin before an approach shot; <b>Prox</b> average distance to the pin after it, in feet (PGA Tour "Proximity to Hole"). Approach = a shot from more than about 30 yards off the green (40 yards from the pin) that finishes on or around the green or in the hole; par 3 tee shots count, par 4/5 tee shots don\'t.' },
     { id: 'short', l: 'Short', cap: 'Short game: getting up and down after missing the green', m: ['scr', 'sand', 'arg'],
       key: '<b>Scr</b> scrambling: missed the green in regulation and still made par or better. <b>Sand</b> up and down from a greenside bunker. <b>ARG</b> strokes gained around the green per 18 holes.' },
-    { id: 'putt', l: 'Putting', cap: 'On the green: putts, 3-putts, strokes gained putting', m: ['putts', 'three', 'putt'],
+    { id: 'putt', l: 'Putt', cap: 'On the green: putts, 3-putts, strokes gained putting', m: ['putts', 'three', 'putt'],
       key: '<b>Putts</b> per 18 holes. <b>3-putt</b> share of holes with 3 or more putts. <b>PUTT</b> strokes gained putting per 18 holes.' }
 
   ];
@@ -130,7 +130,8 @@
     return '<svg class="sx-spark" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" aria-hidden="true"><polyline points="' + xy.map(function (p) { return p.join(','); }).join(' ') + '"/><circle cx="' + l[0] + '" cy="' + l[1] + '" r="2"/></svg>';
   }
 
-  var S = { base: ['hcp', 'scratch'].indexOf(st('sxBase')) >= 0 ? st('sxBase') : 'tour', view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: '' };
+  var S = { base: ['hcp', 'scratch'].indexOf(st('sxBase')) >= 0 ? st('sxBase') : 'tour', view: st('sxView') || 'all', scope: st('sxScope') || 'season', cat: st('sxCat') || 'drive', sort: {}, who: st('sxWho') || '' };
+  var CARD_T = { drive: 'Driving', appr: 'Approach', short: 'Short game', putt: 'Putting' };
   try { S.sort = JSON.parse(st('sxSort') || '{}') || {}; } catch (x) { S.sort = {}; }
 
   function baseSel() {
@@ -141,6 +142,20 @@
   var BASE_KEY = { tour: 'Against the average PGA Tour player (ShotLink baseline; 0 = Tour average, negative = strokes lost to a Tour pro).',
     scratch: 'Against a typical scratch (0 handicap) golfer (0 = scratch level; + = better than scratch). Scratch benchmark: golfity.com, based on Mark Broadie\'s research.',
     hcp: 'Against a typical golfer with the same handicap index (0 = playing to your handicap; + = better than golfers at your level). Benchmarks by handicap: golfity.com, based on Mark Broadie\'s research; Handicaps tab index.' };
+  // Nov 23: one set of controls for both views. Category tabs, then one row: player picker (Everyone or a name),
+  // which rounds, and the strokes-gained baseline when it applies.
+  function controls(names, cat, withBase) {
+    var ln = lastNight(), tonightHas = !!feed() && feed().tonight === ln;
+    return '<div class="sx-tabs" role="tablist">' + CATS.map(function (c) {
+      return '<button type="button" role="tab" data-sxcat="' + c.id + '" class="' + (c.id === cat.id ? 'on' : '') + '" aria-selected="' + (c.id === cat.id) + '">' + c.l + '</button>';
+    }).join('') + '</div><div class="sx-filt"><label class="sx-sel sx-who"><select id="sxwho" aria-label="Player"><option value="">Everyone</option>' +
+      names.map(function (n) { return '<option' + (n === S.who ? ' selected' : '') + '>' + e(n) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="sx-sel"><select id="sxscope" aria-label="Which rounds">' +
+      '<option value="season"' + (S.scope !== 'night' ? ' selected' : '') + '>Season</option>' +
+      '<option value="night"' + (S.scope === 'night' ? ' selected' : '') + '>' + (tonightHas ? 'Tonight' : (ln ? 'Last round (' + nightLabel(ln) + ')' : 'Last round')) + '</option></select></label>' +
+      (withBase ? baseSel() : '') + '</div>';
+  }
+  function allNames() { var s = rowsByPlayer(''); return Object.keys(s).sort(); }
   function renderAll(box) {
     var ln = lastNight(), tonightHas = !!feed() && feed().tonight === ln;
     var scopeNight = S.scope === 'night' ? ln : '';
@@ -155,14 +170,8 @@
       return dir > 0 ? b - a : a - b;
     });
     var u = me();
-    var html = '<div class="sx-tabs" role="tablist">' + CATS.map(function (c) {
-      return '<button type="button" role="tab" data-sxcat="' + c.id + '" class="' + (c.id === cat.id ? 'on' : '') + '" aria-selected="' + (c.id === cat.id) + '">' + c.l + '</button>';
-    }).join('') + '</div><div class="sx-cap">' + cat.cap + '</div>';
     var hasSg = cat.m.some(function (k) { return M[k].sg; });
-    html += '<div class="sx-filt"><span>Showing</span><label class="sx-sel"><select id="sxscope" aria-label="Which rounds">' +
-      '<option value="season"' + (S.scope !== 'night' ? ' selected' : '') + '>Season</option>' +
-      '<option value="night"' + (S.scope === 'night' ? ' selected' : '') + '>' + (tonightHas ? 'Tonight' : (ln ? 'Last round (' + nightLabel(ln) + ')' : 'Last round')) + '</option></select></label>' +
-      (hasSg ? baseSel() : '') + '</div>';
+    var html = controls(allNames(), cat, hasSg);
     if (!list.length) return box.innerHTML = html + '<div class="card empty">' + (S.scope === 'night' ? 'No stats for this round yet. They fill in as GSPro sends holes.' : 'No stats yet. They build up as GSPro sends holes.') + '</div>';
     var prev = null, rank = 0;
     html += '<div class="card sx-card"><table class="stand sx-t' + (cat.m.length > 4 ? ' sx-5' : '') + '"><colgroup><col class="c-r"><col>' + cat.m.map(function () { return '<col class="c-m">'; }).join('') + '</colgroup><tr><th class="n">#</th><th>Player</th>' +
@@ -170,11 +179,11 @@
       list.map(function (a, i) {
         var v = sm.v(a);
         if (v === null) rank = ''; else if (prev === null || Math.abs(v - prev) > 1e-9) { rank = i + 1; prev = v; }
-        return '<tr class="' + (a.p === u ? 'sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(a.p) +
+        return '<tr data-sxpick="' + e(a.p) + '" class="sx-row-pick' + (a.p === u ? ' sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(a.p) +
           '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) + (S.scope === 'night' ? '' : ' · ' + rds(a.sgN)) : hasSg && S.scope !== 'night' ? rds(a.sgN) + ' of shots' : S.scope === 'night' ? a.holes + ' holes' : rds(a.nights)) + '</small></td>' +
           cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (thin(a) ? ' sx-thin' : (x >= 0 ? ' sx-pos' : ' sx-neg')) : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
       }).join('') + '</table>';
-    html += '<div class="paykey">' + cat.key + (hasSg ? ' <b>SG ' + ({ tour: 'vs Tour', scratch: 'vs scratch golfer', hcp: 'vs my handicap' })[S.base] + ':</b> ' + BASE_KEY[S.base] + ' <b>Grey</b> = fewer than ' + SG_MIN + ' rounds with shot data (shot tracking started Nov 19): one 9-hole round doubled to 18 holes swings a lot.' : '') + ' Tap a column to sort.</div>';
+    html += '<div class="paykey">' + cat.cap + '. ' + cat.key + (hasSg ? ' <b>SG ' + ({ tour: 'vs Tour', scratch: 'vs scratch golfer', hcp: 'vs my handicap' })[S.base] + ':</b> ' + BASE_KEY[S.base] + ' <b>Grey</b> = fewer than ' + SG_MIN + ' rounds with shot data (shot tracking started Nov 19): one 9-hole round doubled to 18 holes swings a lot.' : '') + ' Tap a column to sort, tap a player for their stats.</div>';
     // Tonight's penalty / mulligan holes (Driving only)
     var ag = D.agentStats;
     if (cat.id === 'drive' && S.scope === 'night' && tonightHas && ag && ag.players) {
@@ -187,31 +196,30 @@
   }
 
   function renderMe(box) {
-    var season = rowsByPlayer(''), list = Object.keys(season).map(function (k) { return season[k]; });
-    var names = list.map(function (a) { return a.p; }).sort();
-    var who = S.who || me();
-    if (names.indexOf(who) < 0) who = names[0] || '';
-    var html = '<div class="card picker"><label for="sxwho">Player</label><select id="sxwho">' + names.map(function (n) { return '<option' + (n === who ? ' selected' : '') + '>' + e(n) + '</option>'; }).join('') + '</select></div>';
-    if (!who) return box.innerHTML = html + '<div class="card empty">No stats yet. They build up as GSPro sends holes.</div>';
+    var ln = lastNight(), scopeNight = S.scope === 'night' ? ln : '';
+    var season = rowsByPlayer(scopeNight), list = Object.keys(season).map(function (k) { return season[k]; });
+    var who = S.who, cat = CATS.filter(function (c) { return c.id === S.cat; })[0] || CATS[0];
+    var html = controls(allNames(), cat, true);
     var a = season[who], nights = perNight(who), last = nights.length ? nights[nights.length - 1] : null;
+    if (!a) return box.innerHTML = html + '<div class="card empty">No stats for ' + e(who) + ' in this round.</div>';
     html += '<div class="sx-sum">' + e(who) + ' · ' + a.nights + ' round' + (a.nights === 1 ? '' : 's') + ' · ' + a.holes + ' holes' + (last ? ' · last round ' + e(nightLabel(last.n)) : '') + '</div>';
     // Strokes gained bars
     var sgKeys = ['ott', 'app', 'arg', 'putt'];
     if (a.sgH) {
       var vals = sgKeys.map(function (k) { return M[k].v(a); }), mx = Math.max.apply(null, vals.map(function (v) { return Math.abs(v); }).concat([0.5]));
       var th = thin(a);
-      html += '<div class="sx-filt"><span>Strokes gained</span>' + baseSel() + '</div><div class="card sx-sg' + (th ? ' sx-thin-card' : '') + '"><div class="pp-t">Strokes gained per 18 holes <span class="sx-tot ' + (th ? 'sx-thin' : M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
+      html += '<div id="sxc-sg" class="card sx-sg' + (th ? ' sx-thin-card' : '') + '"><div class="pp-t">Strokes gained per 18 holes <span class="sx-tot ' + (th ? 'sx-thin' : M.sgt.v(a) >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M.sgt, M.sgt.v(a)) + '</span></div>' +
         sgKeys.map(function (k, i) {
           var v = vals[i], w = Math.round(Math.abs(v) / mx * 50);
           return '<div class="sx-bar"><span class="sx-bl">' + M[k].t.replace('SG: ', '') + '</span><span class="sx-bt"><i class="' + (v >= 0 ? 'p' : 'n') + '" style="' + (v >= 0 ? 'left:50%' : 'right:50%') + ';width:' + w + '%"></i></span><b class="' + (th ? 'sx-thin' : v >= 0 ? 'sx-pos' : 'sx-neg') + '">' + fmt(M[k], v) + '</b></div>';
         }).join('') + '<div class="paykey">' + (th ? '<b>Based on ' + rds(a.sgN) + ' of shot data</b>, so greyed until ' + SG_MIN + ': one round doubled to 18 holes swings a lot. ' : 'Based on ' + rds(a.sgN) + ' of shot data. ') + BASE_KEY[S.base] + ' Bars left = strokes lost.' + (S.base === 'hcp' && hcpIndex(who) !== null ? ' Your index: ' + hcpIndex(who) + '.' : '') + '</div></div>';
     } else {
-      html += '<div class="card sx-sg"><div class="pp-t">Strokes gained</div><div class="paykey">Starts with your next round once the GSPro agent update is in.</div></div>';
+      html += '<div id="sxc-sg" class="card sx-sg"><div class="pp-t">Strokes gained</div><div class="paykey">Starts with your next round once the GSPro agent update is in.</div></div>';
     }
     CATS.forEach(function (c) {
       if (c.id === 'sg') return;
       var ks = c.m.filter(function (k) { return !M[k].sg; });
-      html += '<div class="card sx-mine"><div class="pp-t">' + (c.id === 'short' ? 'Short game' : c.l) + '</div>' + ks.map(function (k) {
+      html += '<div id="sxc-' + c.id + '" class="card sx-mine"><div class="pp-t">' + (CARD_T[c.id] || c.l) + '</div>' + ks.map(function (k) {
         var m = M[k], v = m.v(a), rk = rankOf(list, m, who), tr = nights.map(function (x) { return m.v(x.a); });
         var lv = last ? m.v(last.a) : null;
         return '<div class="sx-row"><div class="sx-rl">' + m.t + (m.n && v !== null ? '<small>' + m.n(a) + '</small>' : '') + '</div>' +
@@ -229,25 +237,28 @@
     if (!box || !D) return;
     loadFeed();
     if (!feed()) { box.innerHTML = '<div class="card empty">Loading stats…</div>'; return; }
-    document.querySelectorAll('[data-sxview]').forEach(function (b) { var on = b.getAttribute('data-sxview') === S.view; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
-    if (S.view === 'me') renderMe(box); else renderAll(box);
+    if (S.who && allNames().indexOf(S.who) < 0) S.who = '';
+    if (S.who) renderMe(box); else renderAll(box);
   };
 
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target : null; if (!t) return;
     var b;
-    if ((b = t.closest('[data-sxview]'))) { S.view = b.getAttribute('data-sxview'); st('sxView', S.view); }
-    else if ((b = t.closest('[data-sxcat]'))) { S.cat = b.getAttribute('data-sxcat'); st('sxCat', S.cat); }
+    var jump = false;
+    if ((b = t.closest('[data-sxcat]'))) { S.cat = b.getAttribute('data-sxcat'); st('sxCat', S.cat); jump = !!S.who; }
+    else if ((b = t.closest('[data-sxpick]'))) { S.who = b.getAttribute('data-sxpick'); st('sxWho', S.who); }
     else if ((b = t.closest('[data-sxscope]'))) { S.scope = b.getAttribute('data-sxscope'); st('sxScope', S.scope); }
     else if ((b = t.closest('[data-sxbase]'))) { S.base = b.getAttribute('data-sxbase'); st('sxBase', S.base); }
     else if ((b = t.closest('[data-sxsort]'))) { S.sort[S.cat] = b.getAttribute('data-sxsort'); st('sxSort', JSON.stringify(S.sort)); }
     else return;
     window.renderStats();
+    // With a player picked, the category tabs jump to that card.
+    if (jump) { var c = document.getElementById('sxc-' + S.cat); if (c && c.scrollIntoView) try { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) {} }
   });
   document.addEventListener('change', function (ev) {
     var id = ev.target && ev.target.id;
     if (id === 'sxscope') { S.scope = ev.target.value; st('sxScope', S.scope); window.renderStats(); }
     if (id === 'sxbase') { S.base = ev.target.value; st('sxBase', S.base); window.renderStats(); }
-    if (id === 'sxwho') { S.who = ev.target.value; window.renderStats(); }
+    if (id === 'sxwho') { S.who = ev.target.value; st('sxWho', S.who); window.renderStats(); }
   });
 })();
