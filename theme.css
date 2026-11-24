@@ -776,3 +776,6 @@ main { padding-top: 10px; }
 #puttrules:not(.fine-open) .ps-rules { display: none; }
 #puttrules:not(.fine-open) .pp-t { margin-bottom: 0; }
 #putttable > .fine:not(.open), #table > .fine:not(.open), .sx-card > .fine:not(.open) { padding-bottom: 0; margin-bottom: 12px; }
+
+/* Nov 23: the nightly schedule card had no inner padding, so names and the note ran to the card's edge and were clipped by its rounded corners. */
+.card.nm { padding: 12px 14px 14px; }
