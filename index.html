@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=90">
-<link rel="stylesheet" href="theme.css?v=90">
+<link rel="stylesheet" href="app.css?v=91">
+<link rel="stylesheet" href="theme.css?v=91">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=90"></script>
-<script src="app.js?v=90"></script>
-<script src="rules.js?v=90"></script>
+<script src="live.js?v=91"></script>
+<script src="app.js?v=91"></script>
+<script src="rules.js?v=91"></script>
 </head>
 <body>
 <header>
@@ -331,7 +331,7 @@
 </main>
 <script>
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function thr(t) { return t ? '<div class="thr' + (t === 'F' ? ' f' : '') + '">' + esc(t) + '</div>' : ''; }
+  function thr(t) { return t ? '<div class="thr' + (t === 'F' ? ' f' : '') + '">' + esc(t === 'F' ? 'Finished' : t) + '</div>' : ''; }
   function num(s) { var n = parseFloat(s); return isNaN(n) ? null : n; }
   // Payouts (Ty, Nov 14). Regular season: by standings place; players tied on points share the combined pot of the places they cover.
   var SEASON_PAY = [180, 130, 80], PLAYOFF_PAY = [210, 150, 90];
@@ -1285,7 +1285,7 @@ function renderTeams(d) {
     // Basic: one line per team, tap for its hole-by-hole.
     listEl.innerHTML = cnt + '<div class="card tbasic">' + o.list.map(function (t) {
       var r = o.rank[t.name];
-      return '<div class="trow tap" data-team="' + esc(t.name) + '"><span class="tpl">' + (r ? tdPlaceText(r) : '–') + '</span>' +
+      return '<div class="trow tap' + (r && r.place === 1 ? ' first' : '') + '" data-team="' + esc(t.name) + '"><span class="tpl">' + (r ? tdPlaceText(r) : '–') + '</span>' +
         '<span class="tlab">' + esc(tLabel(t)) + (r && tdGapText(r) ? '<i>' + esc(tdGapText(r)) + '</i>' : '') + '</span>' +
         '<span class="score">' + (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + '</span>') + '</span></div>';
     }).join('') + '</div><div class="tleg">Tap a team for its hole-by-hole.</div>';
@@ -1346,7 +1346,7 @@ function teamDetailHtml(td, t, o, thru, inline) {
     (r ? ' · <b>' + tdPlaceText(r) + '</b> ' + esc(tdGapText(r)) : '') + '</div>' +
     (td.desc ? '<div class="gdesc">' + esc(td.desc) + '</div>' : '')) +
     '<div class="tplayers">' + t.players.map(function (p, i) {
-      return esc(p.name) + (minThru[i] ? ' <span class="th' + (minThru[i] === 'F' ? ' f' : '') + '">' + esc(minThru[i] === 'F' ? 'F' : 'Thru ' + minThru[i]) + '</span>' : '');
+      return esc(p.name) + (minThru[i] ? ' <span class="th' + (minThru[i] === 'F' ? ' f' : '') + '">' + esc(minThru[i] === 'F' ? 'Finished' : 'Thru ' + minThru[i]) + '</span>' : '');
     }).join(' · ') + '</div>' +
     (t.eligible ? '' : '<div class="inel">Not eligible: ' + esc(game) + ' needs at least ' + td.minPlayers + ' players</div>') + '</div>';
   var short = function (n) { var sn = ((data && data.shortNames) || {})[n]; if (sn) return sn; return n.length > 7 ? n.slice(0, 6) + '…' : n; };
@@ -1409,6 +1409,12 @@ function renderField() {
         if (pc.players && done.length >= pc.players) { var ws = Object.keys(win); live = ws.length > 1 ? { tie: true, winners: ws } : { winners: ws }; }
       }
     }
+    // Nov 23: lowest net and highest Stableford among finished players get the same green pill.
+    var holesF = Math.max.apply(null, [0].concat(((data && data.cards) || []).map(function (c) { return (c.holes || []).length; })));
+    var doneF = list.filter(function (x) { return holesF && num(x.thru) !== null && num(x.thru) >= holesF; });
+    function bestOf(k, hi) { var v = doneF.map(function (x) { return num(x[k]); }).filter(function (v) { return v !== null; }); return v.length ? (hi ? Math.max : Math.min).apply(null, v) : null; }
+    var bestNet = bestOf('net', false), bestPts = bestOf('pts', true);
+    function bv(x, k, best) { return best !== null && doneF.indexOf(x) >= 0 && num(x[k]) === best ? '<span class="putw" title="Best so far">' + esc(x[k]) + '</span>' : esc(x[k]); }
     if (pb) {
       var line = '';
       if (pc && pc.carry !== undefined) {
@@ -1425,8 +1431,8 @@ function renderField() {
       '<table><tr><th>Player</th><th class="n">Thru</th>' + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r) {
         var x = r.x;
-        return '<tr><td>' + nm(x.player) + '</td><td class="n">' + esc(x.thru) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + esc(x.net) +
-          '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + esc(x.pts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + (win[x.player] ? '<span class="putw" title="Putting challenge leader">' + esc(x.putts) + '</span>' : esc(x.putts)) + '</td></tr>';
+        return '<tr><td>' + nm(x.player) + '</td><td class="n">' + esc(x.thru) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + bv(x, 'net', bestNet) +
+          '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + bv(x, 'pts', bestPts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + (win[x.player] ? '<span class="putw" title="Putting challenge leader">' + esc(x.putts) + '</span>' : esc(x.putts)) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores yet</div>';
   }
   (function () {
@@ -1478,10 +1484,10 @@ function renderField() {
       var m = w.m;
       var a = num(m.a.pts), b = num(m.b.pts);
       var ow = m.kind === 'oneway' ? 'One-Way Match →' : m.kind === 'makeup' ? 'One-Way Makeup →' : '';
-      return '<div class="card match' + (w.mine ? '' : ' mine') + '"><div class="name">' + nm(m.a.name) + '</div><div class="mid"><div class="scores">' +
+      return '<div class="card match done' + (w.mine ? '' : ' mine') + '"><div class="name' + (a !== null && b !== null && a > b ? ' won' : '') + '">' + nm(m.a.name) + '</div><div class="mid"><div class="scores">' +
         '<div class="pts' + (a !== null && b !== null && a > b ? ' lead' : '') + '">' + esc(a === null ? '–' : a) + '</div><div class="vs">' + (a !== null && a === b ? 'tie' : 'vs') + '</div>' +
         '<div class="pts' + (a !== null && b !== null && b > a ? ' lead' : '') + '">' + esc(b === null ? '–' : b) + '</div></div>' + (ow ? '<div class="ow">' + ow + '</div>' : '') + '</div>' +
-        '<div class="name r">' + nm(m.b.name) + '</div></div>';
+        '<div class="name r' + (a !== null && b !== null && b > a ? ' won' : '') + '">' + nm(m.b.name) + '</div></div>';
     }).join('') || '<div class="card empty">No head-to-head matches that night</div>');
     // Team: from the Team Log snapshot
     var tm = d.team;
@@ -1498,9 +1504,12 @@ function renderField() {
       return by === 'pts' ? vb - va : va - vb;
     });
     function th(k, l) { return '<th class="n' + (by === k ? ' sorted' : '') + '">' + l + '</th>'; }
+    function pbest(k, hi) { var v = rows.map(function (x) { return num(x[k]); }).filter(function (v) { return v !== null; }); return v.length ? (hi ? Math.max : Math.min).apply(null, v) : null; }
+    var pNet = pbest('net', false), pPts = pbest('pts', true);
+    function pv(x, k, best) { return best !== null && num(x[k]) === best ? '<span class="putw">' + esc(x[k]) + '</span>' : esc(x[k]); }
     f.innerHTML = '<div class="card">' + (rows.length ?
       '<table><tr><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' + rows.map(function (x) {
-        return '<tr><td>' + nm(x.player) + '</td><td class="n">' + esc(x.gross) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + esc(x.net) + '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + esc(x.pts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + esc(x.putts) + '</td></tr>';
+        return '<tr><td>' + nm(x.player) + '</td><td class="n">' + esc(x.gross) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + pv(x, 'net', pNet) + '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + pv(x, 'pts', pPts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + esc(x.putts) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores posted that night</div>') + '</div>';
   };
 
@@ -1518,14 +1527,15 @@ function renderField() {
       var x = w.x;
       var a = num(x.ap), b = num(x.bp);
       var la = a !== null && b !== null && a > b, lb = a !== null && b !== null && b > a;
-      return '<div class="card match' + (w.mine ? '' : ' mine') + '">' +
-        '<div class="name">' + nm(x.a) + thr(x.aThru) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
+      var fin = x.aThru === 'F' && x.bThru === 'F';
+      return '<div class="card match' + (w.mine ? '' : ' mine') + (fin ? ' done' : '') + '">' +
+        '<div class="name' + (fin && la ? ' won' : '') + '">' + nm(x.a) + thr(x.aThru) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
         '<div class="mid"><div class="scores">' +
         '<div class="pts' + (la ? ' lead' : '') + '">' + esc(x.ap || '–') + '</div>' +
         '<div class="vs">vs</div>' +
         '<div class="pts' + (lb ? ' lead' : '') + '">' + esc(x.bp || '–') + '</div>' +
         '</div>' + (x.oneWay ? '<div class="ow">One Way →</div>' : '') + '</div>' +
-        '<div class="name r">' + nm(x.b) + thr(x.bThru) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
+        '<div class="name r' + (fin && lb ? ' won' : '') + '">' + nm(x.b) + thr(x.bThru) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
         (x.even ? '<div class="thru">Even: no strokes</div>' : '') +
         (window.matchStory ? window.matchStory(x) : '') +
         '</div>';
@@ -1623,15 +1633,15 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=90"></script>
-<script src="settings.js?v=90"></script>
-<script src="flip.js?v=90"></script>
-<script src="match.js?v=90"></script>
-<script src="msg.js?v=90"></script>
-<script src="puttstand.js?v=90"></script>
-<script src="stats.js?v=90"></script>
-<script src="bios.js?v=90"></script>
-<script src="ctp.js?v=90"></script>
-<script src="fine.js?v=90"></script>
+<script src="tee.js?v=91"></script>
+<script src="settings.js?v=91"></script>
+<script src="flip.js?v=91"></script>
+<script src="match.js?v=91"></script>
+<script src="msg.js?v=91"></script>
+<script src="puttstand.js?v=91"></script>
+<script src="stats.js?v=91"></script>
+<script src="bios.js?v=91"></script>
+<script src="ctp.js?v=91"></script>
+<script src="fine.js?v=91"></script>
 </body>
 </html>

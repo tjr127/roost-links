@@ -779,3 +779,17 @@ main { padding-top: 10px; }
 
 /* Nov 23: the nightly schedule card had no inner padding, so names and the note ran to the card's edge and were clipped by its rounded corners. */
 .card.nm { padding: 12px 14px 14px; }
+
+/* Nov 23: colour language. Amber = selected, and you. Green = winning and money. Grey = the losing score. Red = losses / getting worse. */
+.match .pts { color: var(--muted); }
+.match .pts.lead { color: var(--win); }
+.match .name.won { font-weight: 800; }
+.match.done .name:not(.won) { font-weight: 500; }
+.putb-pot { color: var(--win); }
+.putw { background: var(--win); color: #101412; }
+.bp-win td { color: var(--win); }
+.nm-res.win b { background: var(--win); }
+.tbasic .trow.first .score { color: var(--win); }
+.tbasic .trow.first .tpl { color: var(--win); }
+nav.subnav button.on, .seg button.on { background: rgba(245,177,60,.16); color: var(--amber); box-shadow: inset 0 0 0 1px rgba(245,177,60,.5); }
+.match .scores:not(:has(.lead)) .pts { color: var(--ink); }
