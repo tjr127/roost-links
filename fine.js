@@ -22,7 +22,7 @@
     if (t && !t.dataset.fine) { t.dataset.fine = '1'; t.classList.add('fine-t'); t.setAttribute('role', 'button'); t.tabIndex = 0; }
     if (pr) { pr.classList.toggle('fine-open', rulesOpen); if (t) t.setAttribute('aria-expanded', rulesOpen); }
   }
-  function queue() { if (queued) return; queued = true; (window.requestAnimationFrame || setTimeout)(apply); }
+  function queue() { if (queued) return; queued = true; setTimeout(apply, 0); }
   function toggle(t) {
     var el = t.closest('.fine');
     if (el) {
