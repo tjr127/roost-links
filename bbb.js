@@ -12,7 +12,10 @@
   function save(c) { try { localStorage.setItem('bbbCfg', JSON.stringify(c)); } catch (x) {} }
   function d() { return window.data || {}; }
   function short(n) { var s = (d().shortNames || {})[n]; return s || n; }
-  function tonightNames() { return (d().cards || []).map(function (c) { return c.name; }); }
+  // Ty, Nov 24: Jeff Holl plays remotely (GSPro online); his shots may not reach our round file, so he's left out of
+  // BBB until further notice. He can't be picked in Admin > BBB. Team game, low net and putting still include him.
+  var BBB_EXCLUDE = /^jeff( holl)?$/i;
+  function tonightNames() { return (d().cards || []).map(function (c) { return c.name; }).filter(function (n) { return !BBB_EXCLUDE.test(String(n).trim()); }); }
   function inPlayers() {
     var c = cfg(), all = tonightNames();
     return c.players ? all.filter(function (n) { return c.players.indexOf(n) >= 0; }) : all;
@@ -119,6 +122,7 @@
     el.innerHTML = '<div class="card bbba"><div class="bbba-h"><div><b>Bingo Bango Bongo</b><small>' + e(d().title || 'Tonight') + '</small></div>' +
       '<button type="button" class="bbb-sw' + (c.on ? ' on' : '') + '" id="bbbsw" role="switch" aria-checked="' + !!c.on + '" aria-label="Bingo Bango Bongo on tonight"><span></span></button></div>' +
       (c.on ? '<div class="bbba-l"><span>Who\'s playing (from Tonight)</span><span><button type="button" data-bbball="1">All</button> · <button type="button" data-bbball="0">None</button></span></div>' +
+        ((d().cards || []).some(function (c) { return BBB_EXCLUDE.test(String(c.name).trim()); }) ? '<div class="bbba-f" style="border:0;padding:0">Jeff is left out of BBB for now (remote play).</div>' : '') +
         (all.length ? all.map(function (n) { return '<label class="bbba-p"><input type="checkbox" data-bbbp="' + e(n) + '"' + (sel.indexOf(n) >= 0 ? ' checked' : '') + '>' + e(n) + (guests[n] ? ' <i>guest</i>' : '') + '</label>'; }).join('') : '<div class="empty">Nobody on Tonight yet.</div>') +
         '<div class="bbba-f">' + sel.length + ' playing' + (sel.length < 2 ? ' · needs at least 2' : '') + '. Preview: saved on this phone only, with demo points.</div>' : '<div class="bbba-f">Off. Turn it on to pick tonight\'s BBB players.</div>') + '</div>';
   }

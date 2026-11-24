@@ -94,7 +94,8 @@
     var td = d.teamDetail, teams = (td && td.teams) || []; if (!teams.length || !window.tdOrder) return null;
     var r = tdOrder(td).rank, top = teams.filter(function (t) { return r[t.name] && r[t.name].place === 1; });
     if (!top.length) return null;
-    var players = teams.reduce(function (n, t) { return n + (t.players || []).length; }, 0), pot = BUYIN * players, how = '', vals = {};
+    // Ty, Nov 24: everyone on Tonight pays $5 once, even if the numbers put someone on two teams.
+    var pot = BUYIN * (d.cards || []).length, how = '', vals = {};
     [['net', 'combined net'], ['putts', 'combined putts']].forEach(function (k) {
       if (top.length < 2) return;
       var v = top.map(function (t) { return teamSum(d, t, k[0]); });
