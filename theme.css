@@ -841,3 +841,21 @@ table.stt.sst td:first-child small, .hc-axis { font-size: 12px; }
 .trow .tpl.m1, .thead .tpl.m1 { background: #F7C948; color: #101412; }
 .trow .tpl.m2, .thead .tpl.m2 { background: #C9D1CC; color: #101412; }
 .trow .tpl.m3, .thead .tpl.m3 { background: #E07A4F; color: #101412; }
+
+/* Nov 23: Tonight card (tonight.js). Collapsible; four shortcut tiles. */
+#tncard.hide { display: none; }
+.tn { padding: 0; margin-bottom: 10px; border-color: rgba(245,177,60,.4); background: linear-gradient(180deg, rgba(245,177,60,.07), rgba(245,177,60,.02)), var(--card); }
+.tn-h { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 12px 14px; cursor: pointer; }
+.tn-hh { display: block; min-width: 0; }
+.tn-kick { display: block; font: 700 12px Inter, sans-serif; letter-spacing: .7px; text-transform: uppercase; color: var(--amber); }
+.tn-title { display: block; font: 700 16px var(--num), sans-serif; color: var(--ink); margin-top: 1px; }
+.tn-chev { color: var(--muted); font-size: 22px; line-height: 1; transition: transform .15s; flex: none; }
+.tn.open .tn-chev { transform: rotate(90deg); }
+.tn-g { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0 12px 12px; }
+.tn.open .tn-g { display: grid; }
+.tn-t { all: unset; box-sizing: border-box; display: block; min-width: 0; padding: 10px 12px; border-radius: 14px; background: var(--card2); border: 1px solid var(--line2); cursor: pointer; }
+.tn-k { display: block; font: 700 12px Inter, sans-serif; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+.tn-b { display: block; font: 700 18px var(--num), sans-serif; color: var(--ink); margin-top: 3px; line-height: 1.15; overflow-wrap: anywhere; }
+.tn-b.win { color: var(--win); } .tn-b.amb { color: var(--amber); }
+.tn-s { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.3; }
+.tn-h:focus-visible, .tn-t:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
