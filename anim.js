@@ -29,15 +29,13 @@
     setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 1900);
   }
   function countUp(el, from, to) {
-    var t0 = null, dur = 700;
-    function step(ts) {
-      if (!el.isConnected) return;
-      if (t0 === null) t0 = ts;
-      var p = Math.min(1, (ts - t0) / dur), v = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
-      el.textContent = v;
-      if (p < 1) requestAnimationFrame(step); else el.textContent = to;
-    }
-    requestAnimationFrame(step);
+    // Timer-based (not requestAnimationFrame, which stops while the app is in the background), and it always lands on the real number.
+    var t0 = Date.now(), dur = 700;
+    var iv = setInterval(function () {
+      var p = Math.min(1, (Date.now() - t0) / dur);
+      if (!el.isConnected || p >= 1) { clearInterval(iv); if (el.isConnected) el.textContent = to; return; }
+      el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+    }, 40);
   }
 
   function pass() {
