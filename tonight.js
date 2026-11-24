@@ -26,7 +26,7 @@
       carry = pc.result ? (pc.result.tie ? pc.pot : 0) : pc.pot;
       mode = pc.mode === 'High' ? 'Low' : 'High';
     }
-    var big = exact !== null ? '$' + exact : (carry ? '$' + carry + ' + $1 each' : '$1 each');
+    var big = exact !== null ? '$<span data-fxnum="pot2" data-v="' + exact + '">' + exact + '</span>' : (carry ? '$' + carry + ' + $1 each' : '$1 each');
     return tile('pot', 'Putting pot', big, (mode === 'High' ? 'HIGH' : 'LOW') + ' putts wins', 'win');
   }
 
@@ -96,7 +96,7 @@
     var tiles = (live ? liveTiles(d, y) : nextTiles(d, y)).filter(Boolean);
     if (!y) tiles.unshift(tile('signin', 'Your night', 'Sign in', 'to see your match and tee time', 'amb'));
     var open = st('tnOpen') !== '0';
-    box.innerHTML = '<div class="card tn' + (open ? ' open' : '') + '"><button type="button" class="tn-h" data-tn="toggle" aria-expanded="' + open + '"><span class="tn-hh"><span class="tn-kick">' + kicker + '</span><span class="tn-title">' + title + '</span></span><span class="tn-chev" aria-hidden="true">›</span></button>' +
+    box.innerHTML = '<div class="card tn' + (open ? ' open' : '') + '"><button type="button" class="tn-h" data-tn="toggle" aria-expanded="' + open + '"><span class="tn-hh"><span class="tn-kick">' + (live ? '<span class="tn-live" aria-hidden="true"></span>' : '') + kicker + '</span><span class="tn-title">' + title + '</span></span><span class="tn-chev" aria-hidden="true">›</span></button>' +
       '<div class="tn-g">' + tiles.join('') + '</div></div>';
   };
 

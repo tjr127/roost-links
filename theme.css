@@ -885,3 +885,48 @@ header .brand { padding-right: 160px; }
 .st-out-btn { all: unset; box-sizing: border-box; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line2); color: var(--ink); font: 600 13px Inter, sans-serif; cursor: pointer; flex: none; }
 /* Streak column in Season standings. */
 .stk-w { color: var(--win); font-weight: 700; } .stk-l { color: var(--loss); font-weight: 700; } .stk-t { color: var(--muted); font-weight: 700; }
+
+/* Nov 23 (later): Season standings layout. Streak is the last column; the record, points and streak never wrap. */
+table.stand-s { table-layout: fixed; width: 100%; }
+table.stand-s col.c-r { width: 12%; } table.stand-s col.c-w { width: 19%; } table.stand-s col.c-p { width: 12%; } table.stand-s col.c-s { width: 15%; }
+table.stand-s th, table.stand-s td { padding-left: 4px; padding-right: 4px; }
+table.stand-s th:first-child, table.stand-s td:first-child { padding-left: 12px; }
+table.stand-s th:last-child, table.stand-s td:last-child { padding-right: 12px; }
+table.stand-s th.n, table.stand-s td.n { white-space: nowrap; }
+table.stand-s td.st-pl { overflow-wrap: anywhere; }
+table.stand-s td.st-pl .pay { margin-left: 0; display: inline-block; }
+/* Team game: one card per team, opens on tap. */
+.tacc { padding: 0 14px; margin-bottom: 8px; }
+.tacc .trow { border-top: 0; }
+.tacc.open { margin-bottom: 6px; border-color: rgba(245,177,60,.35); }
+.tacc-body { margin-bottom: 10px; }
+.trow:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 10px; }
+
+/* ---- Animations (anim.js) ---- */
+@keyframes fxFlash { 0% { text-shadow: 0 0 0 rgba(245,177,60,0); transform: scale(1); } 20% { text-shadow: 0 0 14px rgba(245,177,60,.95); transform: scale(1.18); } 100% { text-shadow: 0 0 0 rgba(245,177,60,0); transform: scale(1); } }
+.fx-flash { animation: fxFlash 1.1s ease-out; display: inline-block; }
+td.fx-flash, .match .pts.fx-flash { display: revert; }
+@keyframes fxPop { 0% { transform: scale(1); } 35% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.fx-pop { animation: fxPop .7s cubic-bezier(.2,.8,.2,1); }
+@keyframes fxPulse { 0% { box-shadow: 0 0 0 0 rgba(143,209,158,.8); } 100% { box-shadow: 0 0 0 12px rgba(143,209,158,0); } }
+.pc.fx-pulse { animation: fxPulse .6s ease-out 2; }
+@keyframes fxGlow { 0% { box-shadow: inset 0 0 0 1px rgba(143,209,158,.9), 0 0 18px rgba(143,209,158,.35); } 100% { box-shadow: inset 0 0 0 1px rgba(143,209,158,0), 0 0 0 rgba(143,209,158,0); } }
+.fx-glow { animation: fxGlow 1.4s ease-out; }
+@keyframes fxIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.fx-in, #matches .match.fx-just .stk, #matches .match.fx-just .thru, #matches .match.fx-just .mstory, #matches .match.fx-just .mtarget { animation: fxIn .28s ease-out; }
+@keyframes fxShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+.fx-shake { animation: fxShake .6s ease-in-out; }
+.putb { position: relative; }
+.fx-conf { position: absolute; left: 50%; top: 55%; width: 0; height: 0; pointer-events: none; z-index: 3; }
+.fx-conf i { position: absolute; width: 7px; height: 10px; border-radius: 2px; opacity: 0; animation: fxConf 1.5s cubic-bezier(.15,.7,.3,1) forwards; }
+@keyframes fxConf { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 60% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 150px)) rotate(var(--r)); } }
+/* (6) live dot on the Tonight card */
+.tn-live { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--win); margin-right: 6px; vertical-align: 1px; animation: fxLive 1.8s ease-in-out infinite; }
+@keyframes fxLive { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(143,209,158,.7); } 50% { opacity: .55; box-shadow: 0 0 0 6px rgba(143,209,158,0); } }
+/* (7) the Tonight card eases open and closed */
+.tn .tn-g { display: grid; max-height: 0; opacity: 0; overflow: hidden; padding-bottom: 0; transition: max-height .3s ease, opacity .25s ease, padding-bottom .3s ease; }
+.tn.open .tn-g { max-height: 520px; opacity: 1; padding-bottom: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  .fx-flash, .fx-pop, .pc.fx-pulse, .fx-glow, .fx-in, .fx-shake, .tn-live, #matches .match.fx-just * { animation: none !important; }
+  .tn .tn-g, .tn-chev, .fine-t::after { transition: none !important; }
+}

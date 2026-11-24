@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=103">
-<link rel="stylesheet" href="theme.css?v=103">
+<link rel="stylesheet" href="app.css?v=104">
+<link rel="stylesheet" href="theme.css?v=104">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=103"></script>
-<script src="app.js?v=103"></script>
-<script src="rules.js?v=103"></script>
+<script src="live.js?v=104"></script>
+<script src="app.js?v=104"></script>
+<script src="rules.js?v=104"></script>
 </head>
 <body>
 <header>
@@ -254,7 +254,7 @@
 <main>
   <div id="tncard" class="livebd hide"></div>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button></nav>
-  <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><div class="seg livebd" data-ctl="teams" role="group" aria-label="Team view"><button type="button" data-tv="basic">Basic</button><button type="button" data-tv="detailed">Detailed</button></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
+  <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
   <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Season</button><button type="button" data-tab="puttstand">Putts</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
@@ -332,7 +332,7 @@
 </main>
 <script>
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function thr(t) { return t ? '<div class="thr' + (t === 'F' ? ' f' : '') + '">' + esc(t === 'F' ? 'Finished' : t) + '</div>' : ''; }
+  function thr(t, who) { return t ? '<div class="thr' + (t === 'F' ? ' f' : '') + '"' + (who ? ' data-fxstate="fin|' + esc(who) + '" data-v="' + (t === 'F' ? 1 : 0) + '"' : '') + '>' + esc(t === 'F' ? 'Finished' : t) + '</div>' : ''; }
   function num(s) { var n = parseFloat(s); return isNaN(n) ? null : n; }
   // Payouts (Ty, Nov 14). Regular season: by standings place; players tied on points share the combined pot of the places they cover.
   var SEASON_PAY = [180, 130, 80], PLAYOFF_PAY = [210, 150, 90];
@@ -438,7 +438,7 @@
   // Head2Head view: Basic (names, Thru and scores only, so every match fits on one screen) or Detailed. Per phone; starts Detailed.
   // Nov 23: match cards are compact and open on tap; which ones are open is kept while the app is open.
   var h2hOpen = {};
-  function h2hToggle(card) { var k = card.getAttribute('data-mk'); h2hOpen[k] = !h2hOpen[k]; card.classList.toggle('open', !!h2hOpen[k]); card.setAttribute('aria-expanded', !!h2hOpen[k]); }
+  function h2hToggle(card) { var k = card.getAttribute('data-mk'); h2hOpen[k] = !h2hOpen[k]; card.classList.toggle('open', !!h2hOpen[k]); card.classList.toggle('fx-just', !!h2hOpen[k]); card.setAttribute('aria-expanded', !!h2hOpen[k]); }
   document.getElementById('matches').addEventListener('click', function (ev) {
     var card = ev.target.closest && ev.target.closest('.match[data-mk]');
     if (!card || ev.target.closest('.mstory.tap, .mtarget, a, button')) return;
@@ -1292,36 +1292,26 @@ function renderTeams(d) {
     listEl.innerHTML = '<div class="card empty">No team game tonight</div>';
     return;
   }
-  var thru = tdThruMap(d), o = tdOrder(td), view = teamView();
-  document.querySelectorAll('[data-tv]').forEach(function (x) { var on = x.getAttribute('data-tv') === view; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
-  var sel = view === 'basic' ? td.teams.filter(function (t) { return t.name === teamSel; })[0] : null;
-  if (!sel) {
-    det.className = 'hide'; listEl.className = ''; info.className = '';
-    var cnt = td.counted && td.counted !== 'Total' ? '<div class="tcount">Counting ' + esc(td.counted.toLowerCase()) + '</div>' : '';
-    if (view === 'detailed') {
-      // Every team broken out: members with Thru, then its hole-by-hole table.
-      listEl.innerHTML = cnt + o.list.map(function (t) { return teamDetailHtml(td, t, o, thru, true); }).join('') + teamLegend(td.game);
-      return;
-    }
-    // Basic: one line per team, tap for its hole-by-hole.
-    listEl.innerHTML = cnt + '<div class="card tbasic">' + o.list.map(function (t) {
-      var r = o.rank[t.name];
-      return '<div class="trow tap' + (r && r.place === 1 ? ' first' : '') + '" data-team="' + esc(t.name) + '"><span class="tpl' + (r && r.place <= 3 ? ' m' + r.place : '') + '">' + (r ? tdPlaceText(r) : '–') + '</span>' +
-        '<span class="tlab">' + ((t.players || []).length ? '<span class="tps">' + t.players.map(function (p) { return pn(p.name); }).join('') + '</span>' : esc(tLabel(t))) + (r && tdGapText(r) ? '<i>' + esc(tdGapText(r)) + '</i>' : '') + '</span>' +
-        '<span class="score">' + (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + '</span>') + '</span></div>';
-    }).join('') + '</div><div class="tleg">Tap a team for its hole-by-hole.</div>';
-    Array.prototype.forEach.call(listEl.querySelectorAll('[data-team]'), function (el) {
-      el.addEventListener('click', function () { openTeam(el.getAttribute('data-team')); });
-    });
-    return;
-  }
-  listEl.className = 'hide'; info.className = 'hide'; det.className = '';
-  det.innerHTML = teamDetailHtml(td, sel, o, thru) + teamLegend(td.game);
-  det.querySelector('.tback').addEventListener('click', function () { openTeam(''); });
-  Array.prototype.forEach.call(det.querySelectorAll('[data-go]'), function (el) {
-    el.addEventListener('click', function () { openTeam(el.getAttribute('data-go')); });
+  // Nov 23: one row per team; tap a team to open its hole-by-hole underneath (replaces the Basic / Detailed switch).
+  var thru = tdThruMap(d), o = tdOrder(td);
+  det.className = 'hide'; listEl.className = ''; info.className = '';
+  var cnt = td.counted && td.counted !== 'Total' ? '<div class="tcount">Counting ' + esc(td.counted.toLowerCase()) + '</div>' : '';
+  var anyOpen = false;
+  listEl.innerHTML = cnt + o.list.map(function (t) {
+    var r = o.rank[t.name], open = !!teamOpen[t.name]; if (open) anyOpen = true;
+    return '<div class="card tbasic tacc' + (open ? ' open' : '') + '"><div class="trow tap' + (r && r.place === 1 ? ' first' : '') + '" data-team="' + esc(t.name) + '" role="button" tabindex="0" aria-expanded="' + open + '"><span class="tpl' + (r && r.place <= 3 ? ' m' + r.place : '') + '">' + (r ? tdPlaceText(r) : '–') + '</span>' +
+      '<span class="tlab">' + ((t.players || []).length ? '<span class="tps">' + t.players.map(function (p) { return pn(p.name); }).join('') + '</span>' : esc(tLabel(t))) + (r && tdGapText(r) ? '<i>' + esc(tdGapText(r)) + '</i>' : '') + '</span>' +
+      '<span class="score" data-fx="t|' + esc(t.name) + '">' + (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + '</span>') + '</span></div></div>' +
+      (open ? '<div class="tacc-body' + (teamJust === t.name ? ' fx-in' : '') + '">' + teamDetailHtml(td, t, o, thru, 'table') + '</div>' : '');
+  }).join('') + (anyOpen ? teamLegend(td.game) : '') + '<div class="tleg">Tap a team for its hole-by-hole.</div>';
+  teamJust = '';
+  Array.prototype.forEach.call(listEl.querySelectorAll('[data-team]'), function (el) {
+    function tog() { var n = el.getAttribute('data-team'); teamOpen[n] = !teamOpen[n]; teamJust = teamOpen[n] ? n : ''; renderTeams(data); }
+    el.addEventListener('click', tog);
+    el.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tog(); } });
   });
 }
+var teamOpen = {}, teamJust = '';
 document.addEventListener('click', function (ev) {
   var b = ev.target.closest && ev.target.closest('[data-tv]');
   if (!b) return;
@@ -1400,6 +1390,7 @@ function teamDetailHtml(td, t, o, thru, inline) {
     t.players.map(function (p) { return '<th class="n" title="' + esc(p.name) + '">' + esc(short(p.name)) + '</th>'; }).join('') +
     '<th class="n">Team</th><th class="n">Pos</th></tr>' + rows +
     '<tr class="tot"><td colspan="2">Total</td>' + ptot + '<td class="n tv">' + esc(t.eligible ? t.total : '') + '</td><td></td></tr></table></div>';
+  if (inline === 'table') return table;
   return head + table;
 }
 
@@ -1446,10 +1437,11 @@ function renderField() {
         var res = live || pc.result;
         if (pc.tonight && res && res.tie) line = 'Result: Tie · $' + pc.pot + ' pushes to ' + esc(pc.next || 'next league night');
         else if (pc.tonight && res && res.winners && res.winners.length) line = 'Result: ' + esc(res.winners[0]) + ' wins $' + pc.pot;
-        else if (pc.tonight) line = 'Pot is $' + pc.pot;
+        else if (pc.tonight) line = 'Pot is $<span data-fxnum="pot" data-v="' + pc.pot + '">' + pc.pot + '</span>';
         else line = 'Pot is $' + pc.carry + ' + $1 per player';
       }
-      pb.innerHTML = pc ? '<div class="card putb"><span class="putb-k">Putting challenge</span><b>' + (pc.tonight ? 'This week: ' : esc(pc.night) + ': ') +
+      var potState = pc && pc.tonight && pc.carry !== undefined ? ((live || pc.result) ? ((live || pc.result).tie ? 'tie' : 'win') : 'open') : '';
+      pb.innerHTML = pc ? '<div class="card putb" data-fxstate="pot|' + esc(pc.night || '') + '" data-v="' + potState + '"><span class="putb-k">Putting challenge</span><b>' + (pc.tonight ? 'This week: ' : esc(pc.night) + ': ') +
         (pc.mode === 'High' ? 'HIGH' : 'LOW') + ' putts</b>' + (line ? '<span class="putb-s putb-pot">' + line + '</span>' : '') + '</div>' : '';
     }
     var pos = posOf(rows, function (r) { return r.x; });
@@ -1457,9 +1449,10 @@ function renderField() {
       '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m"><col class="c-m"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r, i) {
         var x = r.x, t = num(x.thru), st = t === null ? '' : (holesF && t >= holesF ? 'Finished' : 'Thru ' + t);
-        return '<tr><td class="fld-p">' + pos[i] + '</td><td class="fld-n">' + nm(x.player) + (st ? '<small>' + st + '</small>' : '') + '</td><td class="n' + (by === 'gross' ? ' b' : '') + '">' + bv(x, 'gross', bestGross) +
-          '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + bv(x, 'net', bestNet) +
-          '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + bv(x, 'pts', bestPts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + (win[x.player] ? '<span class="putw" title="Putting challenge leader">' + esc(x.putts) + '</span>' : esc(x.putts)) + '</td></tr>';
+        function fx(k) { return ' data-fx="f|' + esc(x.player) + '|' + k + '"'; }
+        return '<tr data-fxrow="' + esc(x.player) + '"><td class="fld-p">' + pos[i] + '</td><td class="fld-n">' + nm(x.player) + (st ? '<small data-fxstate="fin2|' + esc(x.player) + '" data-v="' + (st === 'Finished' ? 1 : 0) + '">' + st + '</small>' : '') + '</td><td class="n' + (by === 'gross' ? ' b' : '') + '"' + fx('gross') + '>' + bv(x, 'gross', bestGross) +
+          '</td><td class="n' + (by === 'net' ? ' b' : '') + '"' + fx('net') + '>' + bv(x, 'net', bestNet) +
+          '</td><td class="n' + (by === 'pts' ? ' b' : '') + '"' + fx('pts') + '>' + bv(x, 'pts', bestPts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '"' + fx('putts') + '>' + (win[x.player] ? '<span class="putw" title="Putting challenge leader">' + esc(x.putts) + '</span>' : esc(x.putts)) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores yet</div>';
   }
   (function () {
@@ -1606,14 +1599,14 @@ function renderField() {
       var a = num(x.ap), b = num(x.bp);
       var la = a !== null && b !== null && a > b, lb = a !== null && b !== null && b > a;
       var fin = x.aThru === 'F' && x.bThru === 'F', mk = x.a + '|' + x.b;
-      return '<div class="card match' + (w.mine ? '' : ' mine') + (fin ? ' done' : '') + (h2hOpen[mk] ? ' open' : '') + '" data-mk="' + esc(mk) + '" role="button" tabindex="0" aria-expanded="' + !!h2hOpen[mk] + '">' +
-        '<div class="name' + (fin && la ? ' won' : '') + '">' + pn(x.a) + thr(x.aThru) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
+      return '<div class="card match' + (w.mine ? '' : ' mine') + (fin ? ' done' : '') + (h2hOpen[mk] ? ' open' : '') + '" data-mk="' + esc(mk) + '" data-fxstate="done|' + esc(mk) + '" data-v="' + (fin ? 1 : 0) + '" role="button" tabindex="0" aria-expanded="' + !!h2hOpen[mk] + '">' +
+        '<div class="name' + (fin && la ? ' won' : '') + '">' + pn(x.a) + thr(x.aThru, x.a) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
         '<div class="mid"><div class="scores">' +
-        '<div class="pts' + (la ? ' lead' : '') + '">' + esc(x.ap || '–') + '</div>' +
+        '<div class="pts' + (la ? ' lead' : '') + '" data-fx="m|' + esc(mk) + '|a">' + esc(x.ap || '–') + '</div>' +
         '<div class="vs">vs</div>' +
-        '<div class="pts' + (lb ? ' lead' : '') + '">' + esc(x.bp || '–') + '</div>' +
+        '<div class="pts' + (lb ? ' lead' : '') + '" data-fx="m|' + esc(mk) + '|b">' + esc(x.bp || '–') + '</div>' +
         '</div>' + (x.oneWay ? '<div class="ow">One Way →</div>' : '') + '</div>' +
-        '<div class="name r' + (fin && lb ? ' won' : '') + '">' + pn(x.b, true) + thr(x.bThru) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
+        '<div class="name r' + (fin && lb ? ' won' : '') + '">' + pn(x.b, true) + thr(x.bThru, x.b) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
         (x.even ? '<div class="thru">Even: no strokes</div>' : '') +
         (window.matchStory ? window.matchStory(x) : '') +
         '</div>';
@@ -1660,11 +1653,11 @@ function renderField() {
       return r + 1;
     });
     document.getElementById('table').innerHTML =
-      '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Strk</th><th class="n">Pts</th></tr>' +
+      '<table class="stand stand-s"><colgroup><col class="c-r"><col><col class="c-w"><col class="c-p"><col class="c-s"></colgroup><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th><th class="n">Strk</th></tr>' +
       d.standings.map(function (x, i) {
         return '<tr class="' + ([1, 2, 3].indexOf(rank[i]) >= 0 ? 'place p' + rank[i] : '') + '"><td class="n">' + esc(num(x.pts) !== null && rank.filter(function (r, j) { return r === rank[i] && num(d.standings[j].pts) !== null; }).length > 1 ? 'T' + rank[i] : rank[i]) +
-          '</td><td>' + pn(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') +
-          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n">' + streak(x.player) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
+          '</td><td class="st-pl">' + pn(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') +
+          '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td><td class="n">' + streak(x.player) + '</td></tr>';
       }).join('') + '</table>' +
       '<div class="paykey">Green = payout if the regular season ended today. Players tied on points split the combined pot for the places they share.</div>';
     var payCard = function (title, amts, labels, key) {
@@ -1723,16 +1716,17 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=103"></script>
-<script src="settings.js?v=103"></script>
-<script src="flip.js?v=103"></script>
-<script src="match.js?v=103"></script>
-<script src="msg.js?v=103"></script>
-<script src="puttstand.js?v=103"></script>
-<script src="stats.js?v=103"></script>
-<script src="bios.js?v=103"></script>
-<script src="ctp.js?v=103"></script>
-<script src="fine.js?v=103"></script>
-<script src="tonight.js?v=103"></script>
+<script src="tee.js?v=104"></script>
+<script src="settings.js?v=104"></script>
+<script src="flip.js?v=104"></script>
+<script src="match.js?v=104"></script>
+<script src="msg.js?v=104"></script>
+<script src="puttstand.js?v=104"></script>
+<script src="stats.js?v=104"></script>
+<script src="bios.js?v=104"></script>
+<script src="ctp.js?v=104"></script>
+<script src="fine.js?v=104"></script>
+<script src="tonight.js?v=104"></script>
+<script src="anim.js?v=104"></script>
 </body>
 </html>

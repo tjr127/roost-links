@@ -28,7 +28,7 @@
     if (el) {
       if (t.closest('a, button, select')) return false;
       var on = !el.classList.contains('open');
-      open[key(el)] = on; el.classList.toggle('open', on); el.setAttribute('aria-expanded', on);
+      open[key(el)] = on; el.classList.toggle('open', on); el.classList.toggle('fx-in', on); el.setAttribute('aria-expanded', on);
       return true;
     }
     if (t.closest('.fine-t')) { rulesOpen = !rulesOpen; apply(); return true; }
