@@ -46,6 +46,7 @@
     var order = ps.slice().sort(function (a, b) { return pts[b].t - pts[a].t || a.localeCompare(b); });
     return { ps: ps, total: total, holes: holes, pts: pts, order: order, left: (total - holes.length) * 3, final: holes.length === total, anyScores: anyScores };
   }
+  window.bbbState = function () { return compute(); };
   function leaders(s) { var top = s.order.length ? s.pts[s.order[0]].t : 0; return s.order.filter(function (p) { return s.pts[p].t === top && top > 0; }); }
 
   // ---- Individual board: card + column ----
@@ -69,7 +70,7 @@
     row.classList.toggle('on', on);
     var t = document.querySelector('#fieldcard table.fld');
     if (!on) { bc.innerHTML = ''; return; }
-    var s = compute(); bc.innerHTML = card(s);
+    var s = compute(); bc.innerHTML = '';   // Nov 24: the BBB status lives on the Tonight card now
     if (!t || t.classList.contains('bbb')) return;
     t.classList.add('bbb');
     var cg = t.querySelector('colgroup'); if (cg) { var c = document.createElement('col'); c.className = 'c-m'; cg.appendChild(c); }

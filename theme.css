@@ -1003,3 +1003,11 @@ table.fld.bbb .tpt { display: block; font-size: 10.5px; line-height: 1.1; margin
 table.fld.bbb .putw { padding: 2px 5px; display: inline-block; line-height: 1.15; }
 table.fld.bbb th { font-size: 10.5px !important; letter-spacing: -.2px; }
 table.fld.bbb th:last-child, table.fld.bbb td:last-child { padding-right: 8px; }
+/* Nov 24: Tonight card carries the putting pot and BBB; the cards above the Individual table are gone */
+#bbbrow { display: none !important; }
+.tn.open .tn-g { max-height: 700px; }
+.tn-g > .tn-t:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.tn-b.loss { color: var(--loss, #F28B7C); }
+.tn.tn-after { border-color: rgba(143,209,158,.45); }
+.tn.tn-after .tn-kick { color: var(--win); }
+table.bbbt th { font-size: 10px; letter-spacing: -.2px; }
