@@ -19,7 +19,7 @@
     // Nov 23: the header button is the sign-in chip. Signed out: an amber "Sign in" button. Signed in: your initials and name; tap for Settings.
     hdr.appendChild(cog);
     cog.addEventListener('click', function () { if (RL.user()) open(); else RL.signIn(); });
-    chipDraw();
+    chipDraw(); setTimeout(chipRoom, 0);
     ov = document.createElement('div');
     ov.className = 'st-ov hide';
     ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Settings');
@@ -36,7 +36,9 @@
     cog.dataset.who = key; cog.className = 'st-cog st-in'; cog.setAttribute('aria-label', 'Signed in as ' + a.name + '. Open settings');
     cog.innerHTML = '<span class="pc' + (t.length > 2 ? ' pc3' : '') + '" aria-hidden="true">' + e(t) + '</span><span class="st-nm">' + e(a.name) + '</span>';
   }
-  window.updateHeaderChip = function () { build(); chipDraw(); };
+  // Leave just enough room on the right of the title for the chip, so the page name under "Roost Golf" gets the rest.
+  function chipRoom() { var cog = document.getElementById('stbtn'), br = document.querySelector('header .brand'); if (cog && br && cog.offsetWidth) br.style.paddingRight = (cog.offsetWidth + 22) + 'px'; }
+  window.updateHeaderChip = function () { build(); chipDraw(); chipRoom(); };
   function open() {
     build();
     ov.classList.remove('hide');

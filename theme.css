@@ -934,3 +934,4 @@ td.fx-flash, .match .pts.fx-flash { display: revert; }
 /* Nov 24: page name under "Roost Golf" in the header (option B). */
 header .pgname { font: 700 12px Inter, sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--amber); margin-top: 2px; line-height: 1.2; }
 header .pgname:empty { display: none; }
+.st-cog.st-in { max-width: 124px; }
