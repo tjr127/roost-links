@@ -170,7 +170,7 @@
       list.map(function (a, i) {
         var v = sm.v(a);
         if (v === null) rank = ''; else if (prev === null || Math.abs(v - prev) > 1e-9) { rank = i + 1; prev = v; }
-        return '<tr class="' + (a.p === u ? 'sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(cat.id === 'drive' ? short(a.p) : a.p) +
+        return '<tr class="' + (a.p === u ? 'sx-me' : '') + '"><td class="n">' + rank + '</td><td class="sx-pl" title="' + e(a.p) + '">' + e(a.p) +
           '<small>' + (hasSg && S.base === 'hcp' ? 'hcp ' + (hcpIndex(a.p) === null ? '–' : hcpIndex(a.p)) + (S.scope === 'night' ? '' : ' · ' + rds(a.sgN)) : hasSg && S.scope !== 'night' ? rds(a.sgN) + ' of shots' : S.scope === 'night' ? a.holes + ' holes' : rds(a.nights)) + '</small></td>' +
           cat.m.map(function (k) { var m = M[k], x = m.v(a); return '<td class="n' + (k === sk ? ' b' : '') + (m.sg && x !== null ? (thin(a) ? ' sx-thin' : (x >= 0 ? ' sx-pos' : ' sx-neg')) : '') + '">' + fmt(m, x) + (m.u === '%' && x !== null ? '<span class="sx-u">%</span>' : '') + '</td>'; }).join('') + '</tr>';
       }).join('') + '</table>';
@@ -180,7 +180,7 @@
     if (cat.id === 'drive' && S.scope === 'night' && tonightHas && ag && ag.players) {
       var hl = function (l) { return (l || []).map(function (h) { return h.hole + (h.n > 1 ? ' (' + h.n + ')' : ''); }).join(', '); };
       html += ag.players.filter(function (s) { return s.pen || s.mull; }).map(function (s) {
-        return '<div class="paykey"><b>' + e(short(s.player)) + '</b>' + (s.pen ? ' · Penalties on ' + hl(s.penHoles) : '') + (s.mull ? ' · Mulligans on ' + hl(s.mullHoles) : '') + '</div>';
+        return '<div class="paykey"><b>' + e(s.player) + '</b>' + (s.pen ? ' · Penalties on ' + hl(s.penHoles) : '') + (s.mull ? ' · Mulligans on ' + hl(s.mullHoles) : '') + '</div>';
       }).join('');
     }
     box.innerHTML = html + '</div>';

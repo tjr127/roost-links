@@ -747,3 +747,7 @@ main { padding-top: 10px; }
 .bnrow [data-ctl] { display: none; flex: none; }
 .bnrow[data-tab="tonight"] [data-ctl="tonight"], .bnrow[data-tab="teams"] [data-ctl="teams"], .bnrow[data-tab="field"] [data-ctl="field"] { display: flex; }
 .bnrow .fsort select { height: 38px; padding: 0 10px; border-radius: 999px !important; font: 600 13px Inter, sans-serif; }
+
+/* Nov 23: full names in the Putts and Stats tables (no initials); name column a little wider on the 5-stat tables. */
+.sx-t.sx-5 col.c-m { width: 13.5%; }
+.ps-t col.c-n { width: 12%; } .ps-t col.c-a { width: 14%; } .ps-t col.c-p { width: 15%; }

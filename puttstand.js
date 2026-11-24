@@ -114,7 +114,7 @@
         var paceHtml = p.n ? (isLow ? '<span class="putw">' + pace + '</span>' : isHigh ? '<span class="putw hi">' + pace + '</span>' : String(pace)) : '–';
         var tr = '<tr class="ps-row' + (p.n ? '' : ' none') + (open[p.name] ? ' open' : '') + '" data-ps="' + e(p.name) + '">' +
           '<td class="n">' + (p.n ? r + 1 : '') + '</td>' +
-          '<td class="ps-pl"><div class="ps-nm" title="' + e(p.name) + '">' + e(shortName(p.name)) + '</div>' + (tag ? '<div class="ps-tag">' + tag + '</div>' : '') + spark(p.rounds, lo, hi) + '</td>' +
+          '<td class="ps-pl"><div class="ps-nm" title="' + e(p.name) + '">' + e(p.name) + '</div>' + (tag ? '<div class="ps-tag">' + tag + '</div>' : '') + spark(p.rounds, lo, hi) + '</td>' +
           '<td class="n">' + (p.cut ? (p.n - p.cut) + '<span class="ps-cut">of ' + p.n + '</span>' : p.n + '<span class="ps-cap">/' + s.cap + '</span>') + '</td>' +
           '<td class="n b">' + (p.n ? p.total : '–') + '</td>' +
           '<td class="n">' + (p.n ? f1(p.avg) : '–') + trend(p.rounds) + '</td>' +
