@@ -231,16 +231,24 @@
     var title = live || after ? e(d.title || '') : e(String(T.label || '').replace(/^(\w{3})\w*day,/, '$1')) + (T.course ? ' · ' + e(T.course) + (T.tees && T.tees.nine ? ', ' + e(T.tees.nine) + ' 9' : '') : '');
     var tiles = (live || after ? liveTiles(d, y, after) : nextTiles(d, y)).filter(Boolean);
     if (!y) tiles.unshift(tile('signin', 'Your night', 'Sign in', 'to see your match and tee time', 'amb'));
-    var open = st('tnOpen') !== '0';
+    var open = st('tnOpen') !== '0' && !autoClosed;
     box.innerHTML = '<div class="card tn' + (open ? ' open' : '') + (after ? ' tn-after' : '') + '"><button type="button" class="tn-h" data-tn="toggle" aria-expanded="' + open + '"><span class="tn-hh"><span class="tn-kick">' + (live && !after ? '<span class="tn-live" aria-hidden="true"></span>' : '') + kicker + '</span><span class="tn-title">' + title + '</span></span><span class="tn-chev" aria-hidden="true">›</span></button>' +
       '<div class="tn-g">' + tiles.join('') + '</div></div>';
   };
 
+  // Nov 24 (Ty): tapping a tile (or opening the Garbage page) folds the card away so the page it leads to is in view.
+  // Not saved: the card is open again next time the app opens; tapping its header opens it right away.
+  var autoClosed = false;
+  window.tnAutoClose = function () {
+    autoClosed = true; var c = document.querySelector('#tncard .tn'); if (!c) return;
+    c.classList.remove('open'); var h = c.querySelector('[data-tn="toggle"]'); if (h) h.setAttribute('aria-expanded', 'false');
+  };
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('[data-tn]'); if (!b) return;
     var k = b.getAttribute('data-tn');
-    if (k === 'toggle') { st('tnOpen', st('tnOpen') === '0' ? '1' : '0'); var c = b.closest('.tn'), on = st('tnOpen') !== '0'; c.classList.toggle('open', on); b.setAttribute('aria-expanded', on); return; }
+    if (k === 'toggle') { var c = b.closest('.tn'), on = !c.classList.contains('open'); autoClosed = false; st('tnOpen', on ? '1' : '0'); c.classList.toggle('open', on); b.setAttribute('aria-expanded', on); return; }
     if (k === 'signin') { if (window.RL && RL.signIn) RL.signIn(); return; }
+    window.tnAutoClose();
     if (k === 'bbb') { if (window.showTab) showTab('bbb'); if (window.renderBbb) renderBbb(); window.scrollTo(0, 0); return; }
     var tab = { match: 'tonight', team: 'teams', pot: 'field', tee: 'schedule', score: 'field', net: 'field', season: 'standings' }[k];
     if (tab && window.showTab) { showTab(tab); if (k !== 'tee' && k !== 'season') { var el = document.querySelector(k === 'match' ? '.match.mine' : k === 'pot' || k === 'net' || k === 'score' ? '#fieldcard' : '#teamlist'); if (el && el.scrollIntoView) try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} } else window.scrollTo(0, 0); }

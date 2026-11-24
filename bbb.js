@@ -95,28 +95,69 @@
     });
   };
 
-  // ---- BBB page ----
+  // ---- Garbage page (redesigned Nov 24: leader strip, bars, three tiles, dot grid, rules folded away) ----
+  var selHole = null;
+  function meName() { try { var u = window.RL && RL.user && RL.user(); return (u && u.name) || ''; } catch (x) { return ''; } }
+  function ordn(n) { var sfx = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'; return n + sfx; }
+  function placeOf(s, p) { var t = s.pts[p].t, better = s.order.filter(function (q) { return s.pts[q].t > t; }).length, tie = s.order.filter(function (q) { return s.pts[q].t === t; }).length > 1; return (tie ? 'T' : '') + ordn(better + 1); }
+  function tile3(k, cls, big, sub) { return '<div class="gb-t ' + cls + '"><span class="gb-k">' + k + '</span><b>' + big + '</b><small>' + sub + '</small></div>'; }
+  function gridBlock(s, start, n) {
+    var h = '<tr><th class="l">Hole</th>';
+    for (var i = start; i < start + n; i++) h += '<th' + (i === selHole ? ' class="sel"' : '') + '>' + (i < s.holes.length ? '<button type="button" data-gbh="' + i + '" aria-label="Hole ' + (i + 1) + ' details">' + (i + 1) + '</button>' : (i + 1)) + '</th>';
+    h += '</tr>';
+    s.ps.forEach(function (p) {
+      h += '<tr><td class="l">' + e(short(p)) + '</td>';
+      for (var i = start; i < start + n; i++) {
+        var ho = s.holes[i];
+        if (!ho) { h += '<td class="m">·</td>'; continue; }
+        var lab = [ho.bi === p ? 'FO' : '', ho.ba === p ? 'CTP' : '', ho.bo === p ? 'LP' : ''].filter(Boolean).join(', ');
+        h += '<td data-gbh="' + i + '"' + (i === selHole ? ' class="sel"' : '') + (lab ? ' aria-label="' + lab + '"' : '') + '><i class="gd' + (ho.bi === p ? ' fo' : '') + '"></i><i class="gd' + (ho.ba === p ? ' ct' : '') + '"></i><i class="gd' + (ho.bo === p ? ' lp' : '') + '"></i></td>';
+      }
+      h += '</tr>';
+    });
+    return '<table class="gb-g">' + h + '</table>';
+  }
   function renderPage() {
     var el = document.getElementById('bbbbody'); if (!el) return;
     if (!window.bbbOn()) { el.innerHTML = '<div class="card empty">Garbage isn\'t on tonight.</div>'; return; }
-    var s = compute(), last = s.holes[s.holes.length - 1];
-    var mk = function (h, k) { var p = h[k]; if (!p) return '<td class="bbb-out">—</td>'; var star = (h.tag === 'p3' && (k === 'bi' || k === 'ba')) ? ' ★' : (h.tag === 'chip' && (k === 'ba' || k === 'bo')) ? ' ⛳' : ''; return '<td' + (star ? ' class="bbb-x"' : '') + '>' + e(short(p)) + star + '</td>'; };
-    var best = function (k, lbl) { var hs = s.holes.filter(function (h) { return h[k]; }); if (!hs.length) return ''; var h = hs[hash(k + hs.length) % hs.length]; return '<div>' + lbl + ': <b>' + e(short(h[k])) + '</b>, ' + e(h[k + 'D']) + ' (H' + h.n + ')</div>'; };
-    el.innerHTML =
-      '<div class="bbb-top"><button type="button" class="bbb-back" id="bbbback">‹ Board</button><b class="bbb-title">Garbage</b><span>' + (s.final ? 'Final' : s.holes.length ? 'Thru ' + s.holes.length : 'Not started') + '</span></div>' +
-      '<div class="bbb-demo">Demo points — real points come once the GSPro agent sends Garbage data.</div>' +
-      '<div class="card"><div class="bbb-sh">Standings' + (s.final ? '' : ' · ' + s.left + ' pts left') + ' · pot $' + s.pot + (s.carry ? ' (incl. $' + s.carry + ' carried)' : '') + '</div><table class="bbbt"><colgroup><col style="width:9%"><col><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>' +
-      '<tr><th>#</th><th class="l">Player</th><th title="Furthest Out">FO</th><th title="Closest to Pin">CTP</th><th title="Longest Putt">LP</th><th class="a">Tot</th></tr>' +
-      s.order.map(function (p, i) { var x = s.pts[p]; return '<tr><td class="m">' + (i + 1) + '</td><td class="l">' + e(p) + '</td><td>' + x.bi + '</td><td>' + x.ba + '</td><td>' + x.bo + '</td><td class="a">' + x.t + '</td></tr>'; }).join('') + '</table></div>' +
-      (last ? '<div class="card bbb-last"><div class="bbb-sh a">Latest · Hole ' + last.n + ' · par ' + last.par + '</div>' +
-        '<div><b>FO</b>' + (last.bi ? e(short(last.bi)) + ' — ' + (last.par === 3 ? 'on from the tee, ' : 'on from ') + e(last.biD) : 'nobody on from the tee') + '</div>' +
-        '<div><b>CTP</b>' + e(short(last.ba)) + ' — ' + e(last.baD) + '</div><div><b>LP</b>' + e(short(last.bo)) + ' — ' + e(last.boD) + '</div></div>' : '') +
-      '<div class="card"><div class="bbb-sh">Hole by hole</div><table class="bbbt hh"><colgroup><col style="width:15%"><col style="width:13%"><col><col><col></colgroup><tr><th class="l">Hole</th><th>Par</th><th>FO</th><th>CTP</th><th>LP</th></tr>' +
-      s.holes.map(function (h) { return '<tr><td class="l">' + h.n + '</td><td class="m">' + h.par + '</td>' + mk(h, 'bi') + mk(h, 'ba') + mk(h, 'bo') + '</tr>'; }).join('') +
-      (s.final ? '' : '<tr><td class="l m">' + (s.holes.length + 1) + '</td><td class="m">·</td><td class="m">·</td><td class="m">·</td><td class="m">·</td></tr>') + '</table>' +
-      '<div class="bbb-key">★ par-3 tee shot takes Furthest Out + Closest to Pin · ⛳ chip-in takes Closest to Pin + Longest Putt · — nobody on from the tee</div></div>' +
-      (s.holes.length ? '<div class="card bbb-best"><div class="bbb-sh">Tonight\'s bests</div>' + best('bi', 'Longest Furthest Out') + best('ba', 'Tightest CTP') + best('bo', 'Longest Putt') + '</div>' : '') +
-      '<div class="bbb-rules"><b>Rules</b> · <b>Furthest Out (FO)</b>: first on the green from furthest away (the shot onto the green can\'t be a mulligan replay; penalty strokes are fine). Par 3: anyone on from the tee counts the same whatever the tee; closest takes FO and CTP. <b>Closest to Pin (CTP)</b>: closest to the pin once everyone is on, played from off the green. <b>Longest Putt (LP)</b>: fewest putts, longest first putt breaks ties. A chip-in takes CTP and LP. $1 a player; the leader at the end of the night takes the pot, a tie carries it to next week.</div>';
+    var s = compute(), last = s.holes[s.holes.length - 1], me = meName(), L = leaders(s), top = L.length ? s.pts[L[0]].t : 0;
+    if (selHole === null || selHole >= s.holes.length) selHole = s.holes.length - 1;
+    var mine = s.pts[me] ? placeOf(s, me) : '';
+    // status line + leader strip
+    var status = s.final ? '' : '<div class="gb-st"><span>' + (s.holes.length ? '<i class="gb-live"></i>Thru ' + s.holes.length + ' of ' + s.total : 'Not started') + '</span><span>' + s.left + ' pts left</span><span>Pot <b>$' + s.pot + '</b>' + (s.carry ? ' <small>($' + s.carry + ' carried)</small>' : '') + '</span></div>';
+    var strip;
+    if (!s.holes.length) strip = '<div class="gb-lead"><div><span class="gb-k">Garbage tonight</span><b>' + s.ps.length + ' players</b><small>' + s.total * 3 + ' points up for grabs · $1 each</small></div><div class="gb-big">$' + s.pot + '<small>pot</small></div></div>';
+    else {
+      var second = s.order.filter(function (p) { return L.indexOf(p) < 0; })[0], gap = second ? top - s.pts[second].t : 0, who = L.map(function (p) { return p === me ? 'You' : e(short(p)); }).join(' & ');
+      var sub = L.length > 1 ? 'Tied at the top' : second ? gap + ' clear of ' + e(short(second)) : '';
+      if (mine && L.indexOf(me) < 0) sub += (sub ? ' · ' : '') + 'you\'re ' + mine;
+      if (s.final) strip = '<div class="gb-lead fin"><div><span class="gb-k">Garbage · final</span><b>' + (L.length > 1 ? 'Tie: ' + who : who + (who === 'You' ? ' win $' : ' wins $') + s.pot) + '</b><small>' + (L.length > 1 ? '$' + s.pot + ' carries to next week' : (second ? e(short(second)) + ' 2nd with ' + s.pts[second].t : '')) + '</small></div><div class="gb-big">' + top + '<small>points</small></div></div>';
+      else strip = '<div class="gb-lead"><div><span class="gb-k">Leading</span><b>' + who + '</b><small>' + sub + '</small></div><div class="gb-big">' + top + '<small>points</small></div></div>';
+    }
+    // standings with FO / CTP / LP bars
+    var mx = Math.max(1, top);
+    var rows = s.order.map(function (p, i) {
+      var x = s.pts[p], seg = [['fo', x.bi], ['ct', x.ba], ['lp', x.bo]].map(function (g) { return g[1] ? '<i class="' + g[0] + '" style="flex:' + g[1] + '">' + g[1] + '</i>' : ''; }).join('');
+      return '<div class="gb-r' + (p === me ? ' me' : '') + '" aria-label="' + e(p) + ': ' + x.bi + ' Furthest Out, ' + x.ba + ' Closest to Pin, ' + x.bo + ' Longest Putt, ' + x.t + ' total"><span class="gb-p">' + placeOf(s, p).replace(/(st|nd|rd|th)$/, '') + '</span><span class="gb-n">' + e(short(p)) + '</span><span class="gb-barw"><span class="gb-bar" style="width:' + Math.round(x.t / mx * 100) + '%">' + seg + '</span></span><b' + (L.indexOf(p) >= 0 ? ' class="a"' : '') + '>' + x.t + '</b></div>';
+    }).join('');
+    var legend = '<span class="gb-leg"><i class="gd fo"></i>FO <i class="gd ct"></i>CTP <i class="gd lp"></i>LP</span>';
+    // three tiles: latest hole while playing, the night's bests at the end
+    var tiles = '';
+    if (last) {
+      var bestH = function (k) { var hs = s.holes.filter(function (h) { return h[k]; }); return hs.length ? hs[hash(k + hs.length) % hs.length] : null; };
+      var T = s.final ? { h: 'Tonight\'s bests', bi: bestH('bi'), ba: bestH('ba'), bo: bestH('bo') } : { h: 'Latest · hole ' + last.n + ' · par ' + last.par, bi: last, ba: last, bo: last };
+      var tl = function (k, cls, lab, ho) { if (!ho || !ho[k]) return tile3(lab, cls, '—', k === 'bi' ? 'nobody on from the tee' : ''); return tile3(lab, cls, e(short(ho[k])), e(String(ho[k + 'D']).replace('chip-in from ', 'chip-in, ')) + (s.final ? ' · H' + ho.n : '')); };
+      tiles = '<div class="gb-h">' + T.h + '</div><div class="gb-ts">' + tl('bi', 'fo', 'FO', T.bi) + tl('ba', 'ct', 'CTP', T.ba) + tl('bo', 'lp', 'LP', T.bo) + '</div>';
+    }
+    // hole-by-hole dot grid (+ details of the tapped hole)
+    var grid = '';
+    for (var st = 0; st < s.total; st += 9) grid += gridBlock(s, st, Math.min(9, s.total - st));
+    var sh = s.holes[selHole], det = sh ? '<div class="gb-det"><b>Hole ' + sh.n + ' · par ' + sh.par + '</b><span><i class="gd fo"></i>' + (sh.bi ? e(short(sh.bi)) + ', ' + e(sh.biD) : 'nobody') + '</span><span><i class="gd ct"></i>' + e(short(sh.ba)) + ', ' + e(sh.baD) + '</span><span><i class="gd lp"></i>' + e(short(sh.bo)) + ', ' + e(sh.boD) + '</span></div>' : '';
+    el.innerHTML = status + strip +
+      '<div class="card gb-c"><div class="gb-ch"><span class="bbb-sh">Standings</span>' + legend + '</div>' + rows + '</div>' + tiles +
+      '<div class="card gb-c"><div class="gb-ch"><span class="bbb-sh">Hole by hole</span><small>tap a hole for distances</small></div>' + grid + det + '</div>' +
+      '<details class="gb-rules"><summary>How Garbage works</summary><p><b>Furthest Out (FO)</b>: first on the green from furthest away (the shot onto the green can\'t be a mulligan replay; penalty strokes are fine). Par 3: anyone on from the tee counts the same whatever the tee; closest takes FO and CTP.</p><p><b>Closest to Pin (CTP)</b>: closest to the pin once everyone is on, played from off the green.</p><p><b>Longest Putt (LP)</b>: fewest putts, longest first putt breaks ties. A chip-in takes CTP and LP.</p><p>$1 a player; the leader at the end of the night takes the pot, a tie carries it to next week. In the grid, the three dots in each box are FO, CTP, LP from left to right.</p></details>' +
+      '<div class="gb-demo">Demo points until the GSPro agent sends Garbage data.</div>';
   }
   window.renderBbb = renderPage;
 
@@ -142,7 +183,7 @@
     if (t.closest('#bbbsw')) { c = cfg(); c.on = !c.on; save(c); refresh(); }
     else if (t.closest('[data-bbball]')) { c = cfg(); c.players = t.closest('[data-bbball]').getAttribute('data-bbball') === '1' ? tonightNames() : []; save(c); refresh(); }
     else if (t.closest('#bbbopen')) { if (window.showTab) showTab('bbb'); renderPage(); window.scrollTo(0, 0); }
-    else if (t.closest('#bbbback')) { if (window.showTab) showTab('field'); }
+    else if (t.closest('[data-gbh]')) { selHole = Number(t.closest('[data-gbh]').getAttribute('data-gbh')); renderPage(); }
   });
   document.addEventListener('change', function (ev) {
     var cr = ev.target.closest && ev.target.closest('[data-bbbcarry]');
