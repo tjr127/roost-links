@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=98">
-<link rel="stylesheet" href="theme.css?v=98">
+<link rel="stylesheet" href="app.css?v=99">
+<link rel="stylesheet" href="theme.css?v=99">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=98"></script>
-<script src="app.js?v=98"></script>
-<script src="rules.js?v=98"></script>
+<script src="live.js?v=99"></script>
+<script src="app.js?v=99"></script>
+<script src="rules.js?v=99"></script>
 </head>
 <body>
 <header>
@@ -475,6 +475,15 @@
   function you() { var a = window.RL && RL.user && RL.user(); return a ? a.name : ''; }
   function me() { return meName || you(); }
   function nm(name) { var y = you(); return y && name === y ? '<span class="you">' + esc(name) + '</span>' : esc(name); }
+  // Nov 23: player chips. A coloured circle with the player's initials; league members get a fixed colour each
+  // (by alphabetical place in the schedule's player list), guests are grey. pn() = chip + name; long names drop under the chip.
+  var PCOL = ['#7FB6E6', '#E6A3D0', '#9FD8C4', '#C9B3F2', '#F2C28B', '#8FC7D9', '#E8D97A', '#B4C98A', '#F2A39B', '#A8B8F0', '#D9A7F0', '#7FD1D1'];
+  function chip(name) {
+    var lg = ((data && data.schedule) || []).map(function (p) { return p.name; }).sort(), i = lg.indexOf(name);
+    var t = ((data && data.shortNames) || {})[name] || String(name || '').slice(0, 2).toUpperCase();
+    return '<span class="pc' + (t.length > 2 ? ' pc3' : '') + '" style="background:' + (i < 0 ? '#C8CEC9' : PCOL[i % PCOL.length]) + '" aria-hidden="true">' + esc(t) + '</span>';
+  }
+  function pn(name, right, plain) { return '<span class="pn' + (right ? ' r' : '') + '">' + chip(name) + '<span class="pn-t">' + (plain ? esc(name) : nm(name)) + '</span></span>'; }
   var youBusy = false;
   window.rerenderYou = function () { if (!data || youBusy) return; youBusy = true; try { render(data); } finally { youBusy = false; } };
   function setMe(name) {
@@ -526,10 +535,10 @@
     function hc(v) { return v === '' || v == null ? '–' : plus(v); }
     function side(p, right, res) {
       if (res) return '<div class="nm-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '') + '">' +
-        '<div class="nm-name">' + esc(p.name) + '</div>' +
+        '<div class="nm-name">' + pn(p.name, right, true) + '</div>' +
         '<div class="nm-ch nm-res' + (res === 'W' ? ' win' : '') + '"><b>' + esc(p.pts === '' ? '–' : p.pts) + '</b><small>STBF</small></div></div>';
       return '<div class="nm-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '') + '">' +
-        '<div class="nm-name">' + esc(p.name) + '</div>' +
+        '<div class="nm-name">' + pn(p.name, right, true) + '</div>' +
         '<div class="nm-ch"><b>' + esc(hc(p.ch)) + '</b><small>HDCP</small></div>' +
         '<div class="nm-sub">Index ' + esc(hc(p.index)) + (p.tee ? ' · ' + esc(p.tee) : '') + '</div></div>';
     }
@@ -1287,8 +1296,8 @@ function renderTeams(d) {
     // Basic: one line per team, tap for its hole-by-hole.
     listEl.innerHTML = cnt + '<div class="card tbasic">' + o.list.map(function (t) {
       var r = o.rank[t.name];
-      return '<div class="trow tap' + (r && r.place === 1 ? ' first' : '') + '" data-team="' + esc(t.name) + '"><span class="tpl">' + (r ? tdPlaceText(r) : '–') + '</span>' +
-        '<span class="tlab">' + esc(tLabel(t)) + (r && tdGapText(r) ? '<i>' + esc(tdGapText(r)) + '</i>' : '') + '</span>' +
+      return '<div class="trow tap' + (r && r.place === 1 ? ' first' : '') + '" data-team="' + esc(t.name) + '"><span class="tpl' + (r && r.place <= 3 ? ' m' + r.place : '') + '">' + (r ? tdPlaceText(r) : '–') + '</span>' +
+        '<span class="tlab">' + ((t.players || []).length ? '<span class="tps">' + t.players.map(function (p) { return pn(p.name); }).join('') + '</span>' : esc(tLabel(t))) + (r && tdGapText(r) ? '<i>' + esc(tdGapText(r)) + '</i>' : '') + '</span>' +
         '<span class="score">' + (t.eligible ? esc(t.total || '–') : '<span class="inel">Needs ' + td.minPlayers + '</span>') + '</span></div>';
     }).join('') + '</div><div class="tleg">Tap a team for its hole-by-hole.</div>';
     Array.prototype.forEach.call(listEl.querySelectorAll('[data-team]'), function (el) {
@@ -1341,7 +1350,7 @@ function teamDetailHtml(td, t, o, thru, inline) {
   var head = (inline ? '' : '<div class="tnav"><button class="tback">‹ Teams</button><span>' +
     (prev ? '<button data-go="' + esc(prev.name) + '">‹</button>' : '') +
     (next ? '<button data-go="' + esc(next.name) + '">›</button>' : '') + '</span></div>') +
-    '<div class="card gamecard thead' + (inline ? ' tinl' : '') + '"><div class="row"><span class="gname">' + (inline && r ? '<span class="tpl">' + tdPlaceText(r) + '</span>' : '') + esc(tLabel(t)) + '</span><span class="tbig">' +
+    '<div class="card gamecard thead' + (inline ? ' tinl' : '') + '"><div class="row"><span class="gname">' + (inline && r ? '<span class="tpl' + (r.place <= 3 ? ' m' + r.place : '') + '">' + tdPlaceText(r) + '</span>' : '') + esc(tLabel(t)) + '</span><span class="tbig">' +
     (t.eligible ? esc(t.total || '–') : '') + '</span></div>' +
     (inline ? (r && tdGapText(r) ? '<div class="tsub">' + esc(tdGapText(r)) + '</div>' : '') :
     '<div class="tsub">' + esc(game + ' · ' + td.scoring) + (td.counted !== 'Total' ? ' · ' + esc(td.counted) : '') +
@@ -1516,10 +1525,10 @@ function renderField() {
       var m = w.m;
       var a = num(m.a.pts), b = num(m.b.pts);
       var ow = m.kind === 'oneway' ? 'One-Way Match →' : m.kind === 'makeup' ? 'One-Way Makeup →' : '';
-      return '<div class="card match done' + (w.mine ? '' : ' mine') + '"><div class="name' + (a !== null && b !== null && a > b ? ' won' : '') + '">' + nm(m.a.name) + '</div><div class="mid"><div class="scores">' +
+      return '<div class="card match done' + (w.mine ? '' : ' mine') + '"><div class="name' + (a !== null && b !== null && a > b ? ' won' : '') + '">' + pn(m.a.name) + '</div><div class="mid"><div class="scores">' +
         '<div class="pts' + (a !== null && b !== null && a > b ? ' lead' : '') + '">' + esc(a === null ? '–' : a) + '</div><div class="vs">' + (a !== null && a === b ? 'tie' : 'vs') + '</div>' +
         '<div class="pts' + (a !== null && b !== null && b > a ? ' lead' : '') + '">' + esc(b === null ? '–' : b) + '</div></div>' + (ow ? '<div class="ow">' + ow + '</div>' : '') + '</div>' +
-        '<div class="name r' + (a !== null && b !== null && b > a ? ' won' : '') + '">' + nm(m.b.name) + '</div></div>';
+        '<div class="name r' + (a !== null && b !== null && b > a ? ' won' : '') + '">' + pn(m.b.name, true) + '</div></div>';
     }).join('') || '<div class="card empty">No head-to-head matches that night</div>');
     // Team: from the Team Log snapshot
     var tm = d.team;
@@ -1588,13 +1597,13 @@ function renderField() {
       var la = a !== null && b !== null && a > b, lb = a !== null && b !== null && b > a;
       var fin = x.aThru === 'F' && x.bThru === 'F';
       return '<div class="card match' + (w.mine ? '' : ' mine') + (fin ? ' done' : '') + '">' +
-        '<div class="name' + (fin && la ? ' won' : '') + '">' + nm(x.a) + thr(x.aThru) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
+        '<div class="name' + (fin && la ? ' won' : '') + '">' + pn(x.a) + thr(x.aThru) + (x.aStrokes ? '<div class="stk">' + esc(x.aStrokes) + '</div>' : '') + '</div>' +
         '<div class="mid"><div class="scores">' +
         '<div class="pts' + (la ? ' lead' : '') + '">' + esc(x.ap || '–') + '</div>' +
         '<div class="vs">vs</div>' +
         '<div class="pts' + (lb ? ' lead' : '') + '">' + esc(x.bp || '–') + '</div>' +
         '</div>' + (x.oneWay ? '<div class="ow">One Way →</div>' : '') + '</div>' +
-        '<div class="name r' + (fin && lb ? ' won' : '') + '">' + nm(x.b) + thr(x.bThru) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
+        '<div class="name r' + (fin && lb ? ' won' : '') + '">' + pn(x.b, true) + thr(x.bThru) + (x.bStrokes ? '<div class="stk">' + esc(x.bStrokes) + '</div>' : '') + '</div>' +
         (x.even ? '<div class="thru">Even: no strokes</div>' : '') +
         (window.matchStory ? window.matchStory(x) : '') +
         '</div>';
@@ -1632,7 +1641,7 @@ function renderField() {
       '<table class="stand"><tr><th class="n">#</th><th>Player</th><th class="n">W-L-T</th><th class="n">Pts</th></tr>' +
       d.standings.map(function (x, i) {
         return '<tr class="' + ([1, 2, 3].indexOf(rank[i]) >= 0 ? 'place p' + rank[i] : '') + '"><td class="n">' + esc(num(x.pts) !== null && rank.filter(function (r, j) { return r === rank[i] && num(d.standings[j].pts) !== null; }).length > 1 ? 'T' + rank[i] : rank[i]) +
-          '</td><td>' + nm(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') +
+          '</td><td>' + pn(x.player) + (pay[i] ? ' <span class="pay">' + money(pay[i]) + '</span>' : '') +
           '</td><td class="n">' + esc(x.wtl) + '</td><td class="n b">' + esc(x.pts) + '</td></tr>';
       }).join('') + '</table>' +
       '<div class="paykey">Green = payout if the regular season ended today. Players tied on points split the combined pot for the places they share.</div>';
@@ -1692,15 +1701,15 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=98"></script>
-<script src="settings.js?v=98"></script>
-<script src="flip.js?v=98"></script>
-<script src="match.js?v=98"></script>
-<script src="msg.js?v=98"></script>
-<script src="puttstand.js?v=98"></script>
-<script src="stats.js?v=98"></script>
-<script src="bios.js?v=98"></script>
-<script src="ctp.js?v=98"></script>
-<script src="fine.js?v=98"></script>
+<script src="tee.js?v=99"></script>
+<script src="settings.js?v=99"></script>
+<script src="flip.js?v=99"></script>
+<script src="match.js?v=99"></script>
+<script src="msg.js?v=99"></script>
+<script src="puttstand.js?v=99"></script>
+<script src="stats.js?v=99"></script>
+<script src="bios.js?v=99"></script>
+<script src="ctp.js?v=99"></script>
+<script src="fine.js?v=99"></script>
 </body>
 </html>

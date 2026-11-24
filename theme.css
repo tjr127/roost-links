@@ -826,3 +826,18 @@ table.stt.sst td:first-child small, .hc-axis { font-size: 12px; }
 .nm-ow { max-width: 86px; }
 .ps-t th, .sx-t th, table.fld th, table.mplan th, table.stt th { font-size: 11.5px !important; }
 .nm-sub, .nm-vs, .sx-tabs button, .sx-sel select, .paykey, .seg button, .ps-note, .tleg, .sx-cap { font-size: 13px; }
+
+/* Nov 23: player chips (a colour per player) and medal colours on team places. */
+.pc { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center; flex: none;
+  font: 700 10px var(--num), sans-serif; letter-spacing: -.2px; color: #101412; }
+.pc.pc3 { font-size: 8px; letter-spacing: -.4px; }
+.pn { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px 6px; max-width: 100%; vertical-align: middle; }
+.pn.r { flex-direction: row-reverse; }
+.pn-t { min-width: 0; }
+.match .name .pn { display: flex; }
+.nm-name:has(.pn) { white-space: normal; overflow: visible; }
+.nm-name .pn { display: flex; }
+.tps { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.trow .tpl.m1, .thead .tpl.m1 { background: #F7C948; color: #101412; }
+.trow .tpl.m2, .thead .tpl.m2 { background: #C9D1CC; color: #101412; }
+.trow .tpl.m3, .thead .tpl.m3 { background: #E07A4F; color: #101412; }
