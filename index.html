@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=94">
-<link rel="stylesheet" href="theme.css?v=94">
+<link rel="stylesheet" href="app.css?v=95">
+<link rel="stylesheet" href="theme.css?v=95">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=94"></script>
-<script src="app.js?v=94"></script>
-<script src="rules.js?v=94"></script>
+<script src="live.js?v=95"></script>
+<script src="app.js?v=95"></script>
+<script src="rules.js?v=95"></script>
 </head>
 <body>
 <header>
@@ -1434,7 +1434,7 @@ function renderField() {
     }
     var pos = posOf(rows, function (r) { return r.x; });
     document.getElementById('fieldcard').innerHTML = list.length ?
-      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m"><col class="c-m"><col class="c-m"><col class="c-m"></colgroup><tr><th>Pos</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
+      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m"><col class="c-m"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r, i) {
         var x = r.x, t = num(x.thru), st = t === null ? '' : (holesF && t >= holesF ? 'Finished' : 'Thru ' + t);
         return '<tr><td class="fld-p">' + pos[i] + '</td><td class="fld-n">' + nm(x.player) + (st ? '<small>' + st + '</small>' : '') + '</td><td class="n' + (by === 'gross' ? ' b' : '') + '">' + bv(x, 'gross', bestGross) +
@@ -1522,7 +1522,7 @@ function renderField() {
     var pNet = pbest('net', false), pPts = pbest('pts', true), pGross = pbest('gross', false);
     function pv(x, k, best) { return best !== null && num(x[k]) === best ? '<span class="putw">' + esc(x[k]) + '</span>' : esc(x[k]); }
     f.innerHTML = '<div class="card">' + (rows.length ?
-      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m"><col class="c-m"><col class="c-m"><col class="c-m"></colgroup><tr><th>Pos</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' + rows.map(function (x, i) {
+      '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m"><col class="c-m"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' + rows.map(function (x, i) {
         return '<tr><td class="fld-p">' + ppos[i] + '</td><td class="fld-n">' + nm(x.player) + '</td><td class="n' + (by === 'gross' ? ' b' : '') + '">' + pv(x, 'gross', pGross) + '</td><td class="n' + (by === 'net' ? ' b' : '') + '">' + pv(x, 'net', pNet) + '</td><td class="n' + (by === 'pts' ? ' b' : '') + '">' + pv(x, 'pts', pPts) + '</td><td class="n' + (by === 'putts' ? ' b' : '') + '">' + esc(x.putts) + '</td></tr>';
       }).join('') + '</table>' : '<div class="empty">No scores posted that night</div>') + '</div>';
   };
@@ -1677,15 +1677,15 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=94"></script>
-<script src="settings.js?v=94"></script>
-<script src="flip.js?v=94"></script>
-<script src="match.js?v=94"></script>
-<script src="msg.js?v=94"></script>
-<script src="puttstand.js?v=94"></script>
-<script src="stats.js?v=94"></script>
-<script src="bios.js?v=94"></script>
-<script src="ctp.js?v=94"></script>
-<script src="fine.js?v=94"></script>
+<script src="tee.js?v=95"></script>
+<script src="settings.js?v=95"></script>
+<script src="flip.js?v=95"></script>
+<script src="match.js?v=95"></script>
+<script src="msg.js?v=95"></script>
+<script src="puttstand.js?v=95"></script>
+<script src="stats.js?v=95"></script>
+<script src="bios.js?v=95"></script>
+<script src="ctp.js?v=95"></script>
+<script src="fine.js?v=95"></script>
 </body>
 </html>
