@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=133">
-<link rel="stylesheet" href="theme.css?v=133">
+<link rel="stylesheet" href="app.css?v=134">
+<link rel="stylesheet" href="theme.css?v=134">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=133"></script>
-<script src="app.js?v=133"></script>
-<script src="rules.js?v=133"></script>
+<script src="live.js?v=134"></script>
+<script src="app.js?v=134"></script>
+<script src="rules.js?v=134"></script>
 </head>
 <body>
 <header>
@@ -701,7 +701,7 @@
       }).join('');
       if (rsAble) right = '<span role="button" tabindex="0" class="rs-btn" aria-label="Reschedule ' + esc(x.date) + '" data-rs="' + esc(JSON.stringify({ night: (x.rs || x.extras.filter(function (m) { return m.rs; })[0].rs).night, player: p.name, vs: vsAll, date: x.date })) + '">' +
         '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Reschedule</span></span>';
-      return open + 'sd-wk' + (x.next ? ' next' : '') + '">' + when + '<span class="sd-what"><span class="opp">vs ' + esc(opp) + '</span><span class="sub">' + esc(sub) + '</span>' + extras + '</span>' + right + close;
+      return open + 'sd-wk' + (x.next ? ' next' : '') + '">' + when + '<span class="sd-what">' + extras + '<span class="opp">vs ' + esc(opp) + '</span><span class="sub">' + esc(sub) + '</span></span>' + right + close;
     }).join('');
     hint.classList.toggle('hide', !any);
   }
@@ -1935,20 +1935,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=133"></script>
-<script src="settings.js?v=133"></script>
-<script src="flip.js?v=133"></script>
-<script src="match.js?v=133"></script>
-<script src="msg.js?v=133"></script>
-<script src="puttstand.js?v=133"></script>
-<script src="stats.js?v=133"></script>
-<script src="bios.js?v=133"></script>
-<script src="ctp.js?v=133"></script>
-<script src="fine.js?v=133"></script>
-<script src="tonight.js?v=133"></script>
-<script src="anim.js?v=133"></script>
-<script src="bbb.js?v=133"></script>
-<script src="earnings.js?v=133"></script>
+<script src="tee.js?v=134"></script>
+<script src="settings.js?v=134"></script>
+<script src="flip.js?v=134"></script>
+<script src="match.js?v=134"></script>
+<script src="msg.js?v=134"></script>
+<script src="puttstand.js?v=134"></script>
+<script src="stats.js?v=134"></script>
+<script src="bios.js?v=134"></script>
+<script src="ctp.js?v=134"></script>
+<script src="fine.js?v=134"></script>
+<script src="tonight.js?v=134"></script>
+<script src="anim.js?v=134"></script>
+<script src="bbb.js?v=134"></script>
+<script src="earnings.js?v=134"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
