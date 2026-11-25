@@ -256,10 +256,24 @@ function scheduleX_(ss) {
     var c = rsCloses_(ss, n.key, tz);
     openKey[n.key] = !c || new Date() < c;
   });
+  // Each night's tee times, for the app's "Add to calendar" (blank columns fall back to 6/8 PM).
+  var times = {};
+  nights.forEach(function (n) {
+    if (n.type === 'Off') return;
+    rsCloses_(ss, n.key, tz);   // fills RS_SEASON_
+    for (var i = 0; i < RS_SEASON_.rows.length; i++) {
+      if (!(RS_SEASON_.rows[i][1] instanceof Date) || rsKey_(RS_SEASON_.rows[i][1], tz) !== n.key) continue;
+      var e = ntParse_(RS_SEASON_.disp[i][6]) || { h: 18, m: 0 }, l = ntParse_(RS_SEASON_.disp[i][7]) || { h: 20, m: 0 };
+      times[n.key] = { night: n.key, early: ntLabel_(e), late: ntLabel_(l), eh: e.h, em: e.m, lh: l.h, lm: l.m };
+      break;
+    }
+  });
   players.forEach(function (p) {
     p.weeks.forEach(function (w) {
       var n = byLabel[w.date];
       if (!n) return;
+      w.night = n.key;
+      if (times[n.key]) w.times = times[n.key];
       var mine = rows.filter(function (m) { return m.date === n.key && !rsMoved_(m) && (m.a === p.name || (m.b === p.name && m.type !== 'One-way')); })[0];
       if (mine && openKey[n.key]) w.rs = { night: n.key, a: mine.a, b: mine.b };
       var ex = rows.filter(function (m) { return m.on === n.key && m.a === p.name; });

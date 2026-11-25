@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=135">
-<link rel="stylesheet" href="theme.css?v=135">
+<link rel="stylesheet" href="app.css?v=136">
+<link rel="stylesheet" href="theme.css?v=136">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=135"></script>
-<script src="app.js?v=135"></script>
-<script src="rules.js?v=135"></script>
+<script src="live.js?v=136"></script>
+<script src="app.js?v=136"></script>
+<script src="rules.js?v=136"></script>
 </head>
 <body>
 <header>
@@ -282,8 +282,9 @@
     </div>
     <div id="svplayer">
       <div class="sd-prow"><select id="who" aria-label="Player"></select><div class="sd-rec" id="schedsum"></div></div>
-      <div class="card sd-weeks" id="weeks"></div>
-      <div class="sd-hint" id="weekshint">Tap a night to see its matchups.</div>
+      <div id="upnext"></div>
+      <div class="sd-weeks2" id="weeks"></div>
+      <div class="sd-hint hide" id="weekshint"></div>
     </div>
   </section>
   <section id="cards" class="hide">
@@ -639,13 +640,43 @@
       (d.posted ? '<div class="paykey">Final Stableford totals. Winner highlighted.</div>' : '<div class="paykey">HDCP = course handicap for this night\'s course and nine at the tees each player is playing (his pick for the night, else his usual tees).</div>') + '</div>';
   }
 
-  document.getElementById('weeks').addEventListener('click', function (ev) {
-    var b = ev.target.closest && ev.target.closest('[data-night]');
-    if (!b) return;
-    nightPick = b.getAttribute('data-night'); schedView = 'night'; store('schedView', schedView);
+  function goNight(night) {
+    nightPick = night; schedView = 'night'; store('schedView', schedView);
     renderSchedule();
     var seg = document.querySelector('#schedule .sd-seg');
     if (seg && seg.scrollIntoView) try { seg.scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); } catch (e) {}
+  }
+  // Nov 25: "Add to calendar" -> .ics (Early tee time to ~2 hours after the Late tee time).
+  function addToCal(d) {
+    var n = String(d.night).split('-'), pad = function (x) { return (x < 10 ? '0' : '') + x; };
+    var y = +n[0], mo = +n[1], da = +n[2];
+    var s = new Date(y, mo - 1, da, d.eh, d.em), e = new Date(y, mo - 1, da, d.lh + 2, d.lm);
+    var f = function (t) { return t.getFullYear() + pad(t.getMonth() + 1) + pad(t.getDate()) + 'T' + pad(t.getHours()) + pad(t.getMinutes()) + '00'; };
+    var esc2 = function (t) { return String(t).replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n'); };
+    var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Roost Golf//EN', 'BEGIN:VEVENT',
+      'UID:roost-' + d.night + '-' + (d.uid || 'me') + '@roostgolf', 'DTSTAMP:' + f(new Date()),
+      'DTSTART:' + f(s), 'DTEND:' + f(e), 'SUMMARY:' + esc2(d.title), 'LOCATION:' + esc2(d.course || ''),
+      'DESCRIPTION:' + esc2('Tee times are not final until groups are confirmed. Check the Roost Golf app.'),
+      'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = 'roost-golf-' + d.night + '.ics';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+  }
+  document.getElementById('schedule').addEventListener('click', function (ev) {
+    var t = ev.target; if (!t.closest) return;
+    var see = t.closest('[data-see]');
+    if (see) { goNight(see.getAttribute('data-see')); return; }
+    var cal = t.closest('[data-cal]');
+    if (cal) { try { addToCal(JSON.parse(cal.getAttribute('data-cal'))); } catch (x) {} return; }
+    if (t.closest('.rs-btn')) return;
+    var row = t.closest('.sm-row.can');
+    if (row && row.closest('#weeks')) {
+      var was = row.classList.contains('open');
+      document.querySelectorAll('#weeks .sm-row.open').forEach(function (r) { r.classList.remove('open'); r.querySelector('.sm-chev').setAttribute('aria-expanded', 'false'); });
+      if (!was) { row.classList.add('open'); row.querySelector('.sm-chev').setAttribute('aria-expanded', 'true'); }
+    }
   });
   function renderSchedule() {
     document.querySelectorAll('[data-sv]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sv') === schedView); });
@@ -666,6 +697,7 @@
     var hint = document.getElementById('weekshint');
     if (!p) {
       document.getElementById('schedsum').innerHTML = '';
+      document.getElementById('upnext').innerHTML = '';
       document.getElementById('weeks').innerHTML = '<div class="empty">Pick a name to see their schedule</div>';
       hint.classList.add('hide');
       return;
@@ -673,37 +705,75 @@
     var w = 0, l = 0, t = 0;
     p.weeks.forEach(function (x) { if (x.status === 'W') w++; if (x.status === 'L') l++; if (x.status === 'T') t++; });
     document.getElementById('schedsum').innerHTML = '<span class="w"><b>' + w + '</b>Won</span><span class="l"><b>' + l + '</b>Lost</span><span><b>' + t + '</b>Tied</span>';
-    var label = { W: 'W', L: 'L', T: 'T', makeup: 'Makeup', pending: 'Pending' };
-    var info = nightInfo(), who = p.name === you() ? 'You' : p.name, any = false;
-    document.getElementById('weeks').innerHTML = p.weeks.map(function (x) {
-      var bye = x.status === 'bye', it = info.by[x.date];
+    var info = nightInfo(), who = p.name === you() ? 'You' : p.name;
+    var me = you(), mine = me && (me === p.name || isAdmin());
+    var chev = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+    var rsIcon = '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>';
+    var MON = { Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', May: 'May', Jun: 'June', Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October', Nov: 'November', Dec: 'December' };
+    var rows = p.weeks.map(function (x) {
+      var it = info.by[x.date], night = x.night || (it && it.night) || '';
       var om = /^(.*?)\s*\((.*)\)$/.exec(x.opp || ''), opp = om ? om[1] : x.opp, extra = om ? om[2] : '';
-      var when = '<span class="sd-when"><span class="dow' + (it && it.off ? ' off' : '') + '">' + esc(it ? it.dow : '') + '</span><b>' + esc(x.date) + '</b></span>';
-      var open = it ? '<button type="button" data-night="' + esc(it.night) + '" class="' : '<div class="', close = it ? '</button>' : '</div>';
-      if (it) any = true;
-      if (bye) return open + 'sd-wk bye">' + when + '<span class="sd-what"><span class="sub">Bye · ' + esc(x.course) + '</span></span>' + close;
-      var sc = /^\s*(\d+)\s*[–-]\s*(\d+)\s*$/.exec(x.score || '');
-      var sub = sc ? who + ' ' + sc[1] + ' · ' + opp + ' ' + sc[2] + ' · ' + x.course : x.course;
-      if (x.status === 'makeup') { /* chip says 'Moved to Mon D' */ }
-      else if (/^one.?way$/i.test(extra)) sub += ' · one-way';
-      else if (extra) sub += ' · ' + extra;
-      if (x.next && it && window.teeGroups) {
-        var G = teeGroups(it.night);
-        if (G && G.early.indexOf(p.name) >= 0) sub += ' · Early ' + G.times.Early; else if (G && G.late.indexOf(p.name) >= 0) sub += ' · Late ' + G.times.Late;
+      var parts = x.date.split(' '), dow = it ? it.dow : '';
+      var dcol = '<div class="sm-date"><span class="dow' + (it && it.off ? ' off' : '') + '">' + esc(dow) + '</span><b>' + esc(parts[1] || '') + '</b></div>';
+      var o = { mon: parts[0], x: x, night: night, opp: opp };
+      if (x.status === 'bye') { o.html = '<div class="sm-row bye">' + dcol + '<div class="sm-what"><span class="sm-sub">Bye · ' + esc(x.course) + '</span></div></div>'; return o; }
+      if (x.status === 'makeup') {
+        var to = extra ? extra.replace(/^[A-Za-z]{3}\s+(?=[A-Za-z]{3}\s)/, '') : '';
+        o.html = '<div class="sm-row moved">' + dcol + '<div class="sm-what"><span class="sm-opp">vs ' + esc(opp) + '</span><span class="sm-sub moved">Moved' + (to ? ' to ' + esc(to) : '') + '</span></div></div>'; return o;
       }
-      var right = x.next && x.status === 'upcoming' ? '<span class="chip next">Next</span>' : label[x.status] ? '<span class="chip ' + x.status + '">' + esc(x.status === 'makeup' && extra ? 'Moved to ' + extra.replace(/^[A-Za-z]{3}\s+(?=[A-Za-z]{3}\s)/, '') : label[x.status]) + '</span>' :
-        it ? '<svg class="go" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' : '';
-      var me = you(), mine = me && (me === p.name || isAdmin());
-      var rsAble = mine && x.status === 'upcoming' && (x.rs || (x.extras || []).some(function (m) { return m.rs; }));
-      var vsAll = [opp].concat((x.extras || []).map(function (m) { return m.opp; })).join(' and ');
+      var sc = /^\s*(\d+)\s*[–-]\s*(\d+)\s*$/.exec(x.score || '');
+      var pill = '';
+      if (x.status === 'W' || x.status === 'L' || x.status === 'T') {
+        var word = { W: 'Won', L: 'Lost', T: 'Tied' }[x.status];
+        pill = '<span class="sm-pill ' + x.status + '">' + word + (sc ? ' ' + sc[1] + '–' + sc[2] : '') + '</span>';
+      } else if (x.status === 'pending') pill = '<span class="sm-pill P">Pending</span>';
       var extras = (x.extras || []).map(function (m) {
-        return '<span class="sd-x"><span class="opp">vs ' + esc(m.opp) + '</span><span class="chip moved" title="Rescheduled from ' + esc(m.from) + '">' + esc(m.from) + '</span></span>';
+        return '<span class="sm-line"><span class="sm-opp">vs ' + esc(m.opp) + '</span><span class="sm-from">from ' + esc(m.from) + '</span></span>';
       }).join('');
-      if (rsAble) right = '<span role="button" tabindex="0" class="rs-btn" aria-label="Reschedule ' + esc(x.date) + '" data-rs="' + esc(JSON.stringify({ night: (x.rs || x.extras.filter(function (m) { return m.rs; })[0].rs).night, player: p.name, vs: vsAll, date: x.date })) + '">' +
-        '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Reschedule</span></span>';
-      return open + 'sd-wk' + (x.next ? ' next' : '') + '">' + when + '<span class="sd-what">' + extras + '<span class="opp">vs ' + esc(opp) + '</span><span class="sub">' + esc(sub) + '</span></span>' + right + close;
-    }).join('');
-    hint.classList.toggle('hide', !any);
+      var sub = x.course + (/^one.?way$/i.test(extra) ? ' · one-way' : extra && !sc ? ' · ' + extra : '');
+      var upcoming = x.status === 'upcoming';
+      var rsAble = mine && upcoming && (x.rs || (x.extras || []).some(function (m) { return m.rs; }));
+      var vsAll = [opp].concat((x.extras || []).map(function (m) { return m.opp; })).join(' and ');
+      var rs = '';
+      if (rsAble) rs = '<span role="button" tabindex="0" class="rs-btn" aria-label="Reschedule ' + esc(x.date) + '" data-rs="' + esc(JSON.stringify({ night: (x.rs || x.extras.filter(function (m) { return m.rs; })[0].rs).night, player: p.name, vs: vsAll, date: x.date })) + '">' + rsIcon + '<span>Reschedule</span></span>';
+      var calData = null;
+      if (upcoming && night) {
+        var T = x.times || {};
+        calData = { night: night, eh: T.eh != null ? T.eh : 18, em: T.em || 0, lh: T.lh != null ? T.lh : 20, lm: T.lm || 0, course: x.course, uid: p.name.replace(/\W+/g, ''),
+          title: 'Roost Golf: vs ' + vsAll + ' — ' + x.course };
+      }
+      var panel = '';
+      if (night) panel = '<div class="sm-panel"><button type="button" class="sm-btn solid" data-see="' + esc(night) + '">' + (upcoming ? 'See matchups' : 'See results') + '</button>' +
+        (calData ? '<button type="button" class="sm-btn" data-cal="' + esc(JSON.stringify(calData)) + '">Add to calendar</button>' : '') + '</div>';
+      o.html = '<div class="sm-row' + (night ? ' can' : '') + (x.next ? ' next' : '') + '">' + dcol +
+        '<div class="sm-what">' + (extras ? extras + '<span class="sm-line"><span class="sm-opp">vs ' + esc(opp) + '</span></span>' : '<span class="sm-opp">vs ' + esc(opp) + '</span>') + '<span class="sm-sub">' + esc(sub) + '</span></div>' +
+        '<div class="sm-right">' + (pill || rs) + '</div>' +
+        (night ? '<button type="button" class="sm-chev" aria-expanded="false" aria-label="Details for ' + esc(x.date) + '">' + chev + '</button>' : '') + panel + '</div>';
+      o.upcoming = upcoming; o.cal = calData; o.rs = rs; o.vsAll = vsAll; o.sub = sub;
+      return o;
+    });
+    // Up next card: the first night not yet played.
+    var nx = rows.filter(function (o) { return o.x.next && o.upcoming; })[0] || rows.filter(function (o) { return o.upcoming; })[0];
+    var un = document.getElementById('upnext');
+    if (nx) {
+      var d0 = nx.x.date, it0 = info.by[d0], G0 = null;
+      var tl = '';
+      if (nx.x.times) tl = ' · ' + nx.x.times.early + ' / ' + nx.x.times.late;
+      un.innerHTML = '<div class="un-card"><div class="un-top"><span class="un-k">UP NEXT</span>' + nx.rs + '</div>' +
+        '<div class="un-date">' + esc((it0 ? it0.dow + ', ' : '') + d0) + '</div>' +
+        '<div class="un-opp">vs ' + esc(nx.vsAll) + '</div><div class="un-sub">' + esc(nx.x.course) + '</div>' +
+        '<div class="un-btns">' + (nx.night ? '<button type="button" class="sm-btn solid" data-see="' + esc(nx.night) + '">See matchups</button>' : '') +
+        (nx.cal ? '<button type="button" class="sm-btn" data-cal="' + esc(JSON.stringify(nx.cal)) + '">Add to calendar</button>' : '') + '</div></div>';
+    } else un.innerHTML = '';
+    // Month-by-month cards.
+    var out = '', cur = '', open = false;
+    rows.forEach(function (o) {
+      if (o.mon !== cur) { if (open) out += '</div>'; cur = o.mon; open = true; out += '<div class="sm-mon">' + esc((MON[o.mon] || o.mon).toUpperCase()) + '</div><div class="sm-card">'; }
+      out += o.html;
+    });
+    if (open) out += '</div>';
+    document.getElementById('weeks').innerHTML = out;
+    hint.classList.add('hide');
   }
 
   document.getElementById('cardwho').addEventListener('change', function () { setMe(this.value); });
@@ -1935,20 +2005,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=135"></script>
-<script src="settings.js?v=135"></script>
-<script src="flip.js?v=135"></script>
-<script src="match.js?v=135"></script>
-<script src="msg.js?v=135"></script>
-<script src="puttstand.js?v=135"></script>
-<script src="stats.js?v=135"></script>
-<script src="bios.js?v=135"></script>
-<script src="ctp.js?v=135"></script>
-<script src="fine.js?v=135"></script>
-<script src="tonight.js?v=135"></script>
-<script src="anim.js?v=135"></script>
-<script src="bbb.js?v=135"></script>
-<script src="earnings.js?v=135"></script>
+<script src="tee.js?v=136"></script>
+<script src="settings.js?v=136"></script>
+<script src="flip.js?v=136"></script>
+<script src="match.js?v=136"></script>
+<script src="msg.js?v=136"></script>
+<script src="puttstand.js?v=136"></script>
+<script src="stats.js?v=136"></script>
+<script src="bios.js?v=136"></script>
+<script src="ctp.js?v=136"></script>
+<script src="fine.js?v=136"></script>
+<script src="tonight.js?v=136"></script>
+<script src="anim.js?v=136"></script>
+<script src="bbb.js?v=136"></script>
+<script src="earnings.js?v=136"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
