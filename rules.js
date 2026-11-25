@@ -85,10 +85,10 @@
       note: 'With more than two players, only the lowest and highest count. The hole-by-hole view tags "Flipped" when nobody made par. Best played Net.'
     },
     'Money Ball': {
-      sum: 'One player has the money ball each hole, and their score counts double.',
-      how: 'The money ball <b>rotates through the team in order</b>, one player per hole. On each hole the team scores <b>the money ball × 2, plus the best score of the rest</b> of the team.',
-      ex: { Net: 'Ty has the money ball and makes net 5; partner makes net 4 → team scores <b>14</b> (5 × 2 + 4). Nobody hides on their hole.', Stableford: 'Money ball scores 3 points, best of the rest 2 → team scores <b>8</b> (3 × 2 + 2).' },
-      note: 'The rotation starts over at hole 7 or 13 when only holes 7-12 or 13-18 count (teams get reshuffled). The hole-by-hole view marks the money ball with <b>$</b>.'
+      sum: 'Each hole, one player on the team has the money ball, and their score counts twice.',
+      how: 'Players take turns holding the money ball, one hole each, in the order the team is listed. On each hole the team score is <b>the money ball player\'s score twice, plus the best score from the rest of the team</b>.',
+      ex: { Net: 'Ty and Clint are a team, and Ty has the money ball on hole 10. Ty makes net 5 and Clint makes net 4, so the team scores <b>5 + 5 + 4 = 14</b>. On hole 11 the money ball passes to Clint: Clint makes net 6 and Ty makes net 4, so the team scores <b>6 + 6 + 4 = 16</b>. A bad hole by whoever has the money ball hurts twice, so nobody can lean on their partner.', Stableford: 'Ty has the money ball and scores 3 points; Clint scores 2 → the team scores <b>3 + 3 + 2 = 8</b>. With points, a good hole by the money ball player counts twice.' },
+      note: 'With three on a team, the money ball goes Player 1, 2, 3, then back to 1. The two players without it just count whichever of them did better. If teams get reshuffled for holes 7-12 or 13-18, the money ball starts over with the first player at hole 7 or 13. In the hole-by-hole view, a <b>$</b> marks who has the money ball.'
     },
     'Team Skins - Best Ball': {
       sum: 'Best ball against every other team, one hole at a time. Win it outright to take the skin.',
