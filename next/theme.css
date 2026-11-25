@@ -1342,7 +1342,6 @@ button.pk-line { cursor: pointer; }
 
 /* Main action pinned above the tab bar on long admin pages */
 .pin-bar { position: sticky; bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 5; display: flex; flex-direction: column; gap: 6px; margin: 12px -14px 0; padding: 10px 14px; background: var(--bg); border-top: 1px solid var(--line); }
-.card .pin-bar { margin: 12px 0 0; padding: 10px 0 4px; background: var(--card); }
 .pin-bar .en-save { width: 100%; margin: 0; border: 0; font-size: 16px; cursor: pointer; }
 .pin-hint { font-size: 12.5px; line-height: 1.4; color: var(--muted); text-align: center; margin-top: 6px; }
 .pin-bar .pin-hint { margin-top: 0; }
@@ -1363,15 +1362,15 @@ button.pk-line { cursor: pointer; }
 .eg-hole small { font-size: 12px; color: var(--muted); }
 .eg-hole button, .eg-st button { all: unset; box-sizing: border-box; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex: none; background: var(--card2); border: 1px solid var(--line2); color: var(--ink); cursor: pointer; }
 .eg-hole button { border-radius: 10px; }
-.eg-st button { border-radius: 50%; }
+.eg-st button { border-radius: 50%; width: 40px; height: 40px; }
 .eg-hole button svg, .eg-st button svg { width: 18px; height: 18px; }
 .eg-hole button:disabled, .eg-st button:disabled { opacity: .35; cursor: default; }
-.eg-head, .eg-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 120px; gap: 6px; align-items: center; }
+.eg-head, .eg-row { display: grid; grid-template-columns: minmax(0, 1fr) 106px 106px; gap: 8px; align-items: center; }
 .eg-head { margin-top: 12px; padding-bottom: 4px; font: 700 11px Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: center; }
 .eg-row { min-height: 58px; border-top: 1px solid var(--line); }
 .eg-n { min-width: 0; display: flex; flex-direction: column; }
 .eg-n b { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.eg-n small { font-size: 11.5px; color: var(--muted); }
+.eg-n small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .eg-n small.ok { color: var(--win); }
 .eg-n small.err { color: var(--loss); }
 .eg-st { display: flex; align-items: center; justify-content: space-between; }
@@ -1427,7 +1426,7 @@ button.pk-line { cursor: pointer; }
 .tta-toast span { flex: 1; }
 .tta-toast button { all: unset; padding: 8px 12px; color: var(--amber); font-weight: 700; cursor: pointer; }
 .tta-bar .tt-confirm { margin-top: 0; }
-.tta-bar .tt-small, .tta .tt-small { margin: 0 auto; }
+.tta .tt-small { margin: 8px auto 0; }
 .tta .tt-msg { margin: 0 0 10px; }
 
 /* Message: quick starts */
