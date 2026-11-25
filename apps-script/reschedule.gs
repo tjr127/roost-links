@@ -217,9 +217,29 @@ function apiReschedule_(req) {
   var ss = SpreadsheetApp.getActive() || SpreadsheetApp.openById(LEAGUE_SHEET_ID);
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
-  try { return rsPlan_(ss, req, user, req.apply === true); }
+  try { return rsAll_(ss, req, user, req.apply === true); }
   catch (e) { return { ok: false, error: String(e && e.message || e) }; }
   finally { lock.releaseLock(); }
+}
+
+/**
+ * Reschedules every match the player has on that night (a regular match plus any makeup played then),
+ * one after another, so one tap moves the whole night. Dry runs show each step as planned on today's sheet.
+ */
+function rsAll_(ss, req, user, apply) {
+  var tz = ss.getSpreadsheetTimeZone(), key = String(req.night || ''), P = String(req.player || user.name);
+  var rows = rsRows_(ss, tz);
+  var list = rows.filter(function (m) {
+    return (m.date === key && !rsMoved_(m) && (m.a === P || (m.b === P && m.type !== 'One-way'))) || (m.on === key && m.a === P);
+  }).map(function (m) { return { a: m.a, b: m.b }; });
+  if (!list.length) throw new Error('No match found for ' + P + ' that night. Pull down to refresh and try again.');
+  var texts = [], alertTy = false;
+  list.forEach(function (x) {
+    var r = rsPlan_(ss, { night: key, a: x.a, b: x.b, player: P }, user, apply);
+    texts.push(r.text);
+    if (r.alertTy) alertTy = true;
+  });
+  return { ok: true, text: texts.join('\n\n'), alertTy: alertTy, count: list.length };
 }
 
 /** schedule_ plus, per week: the match that can be rescheduled (rs) and makeups played that night (extras). */

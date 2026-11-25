@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=132">
-<link rel="stylesheet" href="theme.css?v=132">
+<link rel="stylesheet" href="app.css?v=133">
+<link rel="stylesheet" href="theme.css?v=133">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=132"></script>
-<script src="app.js?v=132"></script>
-<script src="rules.js?v=132"></script>
+<script src="live.js?v=133"></script>
+<script src="app.js?v=133"></script>
+<script src="rules.js?v=133"></script>
 </head>
 <body>
 <header>
@@ -693,16 +693,15 @@
       }
       var right = x.next && x.status === 'upcoming' ? '<span class="chip next">Next</span>' : label[x.status] ? '<span class="chip ' + x.status + '">' + esc(x.status === 'makeup' && extra ? 'Moved to ' + extra.replace(/^[A-Za-z]{3}\s+(?=[A-Za-z]{3}\s)/, '') : label[x.status]) + '</span>' :
         it ? '<svg class="go" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' : '';
-      var me = you(), canRs = function (r) { return r && me && (me === p.name || isAdmin()); };
-      var rsBtn = function (r, vs) {
-        return canRs(r) ? '<span role="button" tabindex="0" class="rs-btn" data-rs="' + esc(JSON.stringify({ night: r.night, a: r.a, b: r.b, player: p.name, vs: vs, date: x.date })) + '">' +
-          '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>Reschedule</span>' : '';
-      };
+      var me = you(), mine = me && (me === p.name || isAdmin());
+      var rsAble = mine && x.status === 'upcoming' && (x.rs || (x.extras || []).some(function (m) { return m.rs; }));
+      var vsAll = [opp].concat((x.extras || []).map(function (m) { return m.opp; })).join(' and ');
       var extras = (x.extras || []).map(function (m) {
-        return '<span class="sd-x"><span class="opp">vs ' + esc(m.opp) + '</span><span class="chip moved">From ' + esc(m.from) + '</span>' + rsBtn(m.rs, m.opp) + '</span>';
+        return '<span class="sd-x"><span class="opp">vs ' + esc(m.opp) + '</span><span class="chip moved">From ' + esc(m.from) + '</span></span>';
       }).join('');
-      var mainRs = x.status === 'upcoming' ? rsBtn(x.rs, opp) : '';
-      return open + 'sd-wk' + (x.next ? ' next' : '') + '">' + when + '<span class="sd-what"><span class="sd-x"><span class="opp">vs ' + esc(opp) + '</span>' + mainRs + '</span><span class="sub">' + esc(sub) + '</span>' + extras + '</span>' + right + close;
+      if (rsAble) right = '<span role="button" tabindex="0" class="rs-btn" aria-label="Reschedule ' + esc(x.date) + '" data-rs="' + esc(JSON.stringify({ night: (x.rs || x.extras.filter(function (m) { return m.rs; })[0].rs).night, player: p.name, vs: vsAll, date: x.date })) + '">' +
+        '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Reschedule</span></span>';
+      return open + 'sd-wk' + (x.next ? ' next' : '') + '">' + when + '<span class="sd-what"><span class="opp">vs ' + esc(opp) + '</span><span class="sub">' + esc(sub) + '</span>' + extras + '</span>' + right + close;
     }).join('');
     hint.classList.toggle('hide', !any);
   }
@@ -717,13 +716,13 @@
     var d; try { d = JSON.parse(el.getAttribute('data-rs')); } catch (x) { return; }
     var a = RL.user();
     if (!a || !a.token) { alert('Sign in first.'); return; }
-    var body = { action: 'reschedule', token: a.token, night: d.night, a: d.a, b: d.b, player: d.player };
+    var body = { action: 'reschedule', token: a.token, night: d.night, player: d.player };
     rsBusy = true; el.classList.add('busy'); el.lastChild.textContent = 'Checking…';
     var done = function () { rsBusy = false; el.classList.remove('busy'); el.lastChild.textContent = 'Reschedule'; };
     RL.post(body).then(function (r) {
       r = r && r.data !== undefined ? r.data : r;
       if (!r || !r.ok) { done(); alert((r && r.error) || 'Could not reschedule.'); return; }
-      if (!confirm('Reschedule your ' + d.date + ' match vs ' + d.vs + '?\n\n' + r.text + '\n\nEveryone involved gets an alert.')) { done(); return; }
+      if (!confirm('Reschedule ' + d.date + ' (vs ' + d.vs + ')?\n\n' + r.text + '\n\nEveryone involved gets an alert.')) { done(); return; }
       el.lastChild.textContent = 'Moving…';
       body.apply = true;
       return RL.post(body).then(function (r2) {
@@ -1936,20 +1935,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=132"></script>
-<script src="settings.js?v=132"></script>
-<script src="flip.js?v=132"></script>
-<script src="match.js?v=132"></script>
-<script src="msg.js?v=132"></script>
-<script src="puttstand.js?v=132"></script>
-<script src="stats.js?v=132"></script>
-<script src="bios.js?v=132"></script>
-<script src="ctp.js?v=132"></script>
-<script src="fine.js?v=132"></script>
-<script src="tonight.js?v=132"></script>
-<script src="anim.js?v=132"></script>
-<script src="bbb.js?v=132"></script>
-<script src="earnings.js?v=132"></script>
+<script src="tee.js?v=133"></script>
+<script src="settings.js?v=133"></script>
+<script src="flip.js?v=133"></script>
+<script src="match.js?v=133"></script>
+<script src="msg.js?v=133"></script>
+<script src="puttstand.js?v=133"></script>
+<script src="stats.js?v=133"></script>
+<script src="bios.js?v=133"></script>
+<script src="ctp.js?v=133"></script>
+<script src="fine.js?v=133"></script>
+<script src="tonight.js?v=133"></script>
+<script src="anim.js?v=133"></script>
+<script src="bbb.js?v=133"></script>
+<script src="earnings.js?v=133"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
