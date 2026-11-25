@@ -261,7 +261,9 @@
     if (k === 'team' && !(dd.teams || []).length && (dd.teamGame || {}).game) {
       if (window.showTab) showTab('teams');
       if (!window.rulesOpen) { var rb = document.getElementById('grulesbtn'); if (rb) rb.click(); }
-      var gi = document.getElementById('gameinfo'); if (gi && gi.scrollIntoView) try { gi.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) {}
+      // The game card is the top of the Team tab: jump to the top once the tab and the Tonight card have settled
+      // (scrolling to the card straight away landed at the bottom on phones).
+      window.scrollTo(0, 0); setTimeout(function () { window.scrollTo(0, 0); }, 60); setTimeout(function () { window.scrollTo(0, 0); }, 350);
       return;
     }
     var tab = { match: 'tonight', team: 'teams', pot: 'field', tee: 'schedule', score: 'field', net: 'field', season: 'standings' }[k];
