@@ -35,7 +35,7 @@ var CTP_KEY_ = 'CTP_STATE', CTP_UNDO_N_ = 3, CTP_HIST_ = 12, CTP_LOG_TAB_ = 'CTP
 
 function ctpNew_(players, now, rnd) {
   var st = { v: 2, on: true, id: String(now), started: now, rev: 0, n: 0, players: [], order: [], hole: null, pot: 0,
-    wins: {}, lastWin: {}, seq: 0, money: {}, out: [], last: null, hist: [], need: '', ch: null };
+    wins: {}, lastWin: {}, seq: 0, money: {}, out: [], last: null, hist: [], need: '', ch: null, potIn: {} };
   players.forEach(function (p) { if (st.players.indexOf(p) < 0) { st.players.push(p); st.money[p] = 0; } });
   if (st.players.length < 2) throw new Error('Pick at least two players.');
   ctpStartHole_(st, ctpShuffle_(st.players.slice(), rnd), now);
@@ -58,9 +58,12 @@ function ctpStartHole_(st, order, now) {
   st.order = order;
   st.hole = { n: st.n, shots: [], ante: order.slice(), t: now };
   st.ch = null;
-  order.forEach(function (p) { st.money[p] = (st.money[p] || 0) - 1; st.pot += 1; });
+  order.forEach(function (p) { st.money[p] = (st.money[p] || 0) - 1; st.pot += 1; ctpPaid_(st, p, 1); });
   st.need = '';
 }
+
+/** Who has put what into the pot since it was last won (Nov 24: so ending CTP mid-hole can hand it back). */
+function ctpPaid_(st, p, amt) { if (!st.potIn) st.potIn = {}; st.potIn[p] = (st.potIn[p] || 0) + amt; }
 
 function ctpDrop_(st, p) {
   st.players = st.players.filter(function (x) { return x !== p; });
@@ -137,7 +140,7 @@ function ctpPush_(st, res, now) {   // tie: one tie, all tie. Pot rolls over, sa
 function ctpWin_(st, res, w, ft, now, rnd) {
   res.r = 'win'; res.w = w; res.ft = ft; res.pot = st.pot;
   st.money[w] = (st.money[w] || 0) + st.pot;
-  st.pot = 0;
+  st.pot = 0; st.potIn = {};
   st.seq++; st.wins[w] = (st.wins[w] || 0) + 1; st.lastWin[w] = st.seq;
   ctpFinish_(st, res, ctpOrderAfterWin_(st, w, rnd), now);
 }
@@ -178,7 +181,7 @@ function ctpResolve_(st, now, rnd) {
       }
       yes.forEach(function (p) {   // each challenger's own draw: 2 .. pot + 1 dollars (or the leader's flat price)
         var c = ch.fixed ? ch.fixed : 2 + Math.floor((rnd || Math.random)() * ch.pot0);
-        ch.cost[p] = c; st.money[p] = (st.money[p] || 0) - c; st.pot += c;
+        ch.cost[p] = c; st.money[p] = (st.money[p] || 0) - c; st.pot += c; ctpPaid_(st, p, c);
       });
       ch.order = yes; ch.shots = []; ch.phase = 'shoot';
       ch.reveal = ch.fixed ? yes.slice() : [];   // randomizer buy-ins stay hidden in the app until the host reveals them (Nov 20)
@@ -325,7 +328,7 @@ function ctpApply_(st, b, isAdmin, now, rnd, who) {
         if (st.money[name] == null) st.money[name] = 0;
         st.order.push(name);
         st.hole.ante.push(name);
-        st.money[name] -= 1; st.pot += 1;
+        st.money[name] -= 1; st.pot += 1; ctpPaid_(st, name, 1);
       }
     } else if (op === 'remove') {
       if (!inGame(name)) throw new Error(name + ' isn\'t in the game.');
@@ -341,7 +344,18 @@ function ctpApply_(st, b, isAdmin, now, rnd, who) {
     } else if (op === 'resolve') {
       // nothing to change: decide now (after Undo brought back a finished step for fixing)
     } else if (op === 'end') {
-      st.on = false; st.ended = now;
+      // Ending with a pot nobody has won (an unfinished hole, a no qualy or tie rolled over, challenge buy-ins):
+      // everyone gets back what they put into it (Ty, Nov 24). Games started before this have no potIn: hand back
+      // this hole's dollar from each player who put one in.
+      var back = {};
+      if (st.pot > 0) {
+        if (st.potIn) back = st.potIn;
+        else (st.hole ? st.hole.ante : []).forEach(function (p) { back[p] = (back[p] || 0) + 1; });
+        Object.keys(back).forEach(function (p) { st.money[p] = (st.money[p] || 0) + back[p]; st.pot -= back[p]; });
+        if (st.pot < 0) st.pot = 0;
+      }
+      st.refund = back; st.potIn = {};
+      st.on = false; st.ended = now; st.ch = null;
       return { st: st, res: null };
     } else throw new Error('Unknown CTP action.');
   }

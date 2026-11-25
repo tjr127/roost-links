@@ -221,7 +221,8 @@
       names.map(function (p) {
         var m = st.money[p], gone = st.players.indexOf(p) < 0;
         return '<tr' + (gone ? ' class="gone"' : '') + '><td>' + e(p) + (gone ? ' <i>left</i>' : '') + '</td><td class="n">' + (st.wins[p] || 0) + '</td><td class="n ' + (m > 0 ? 'up' : m < 0 ? 'dn' : '') + '">' + money(m) + '</td></tr>';
-      }).join('') + '</table><div class="paykey">$1 a hole each. Money = winnings minus dollars put in' + (st.pot ? ', with $' + st.pot + ' in the pot now' : '') + '.</div></div>';
+      }).join('') + '</table><div class="paykey">$1 a hole each. Money = winnings minus dollars put in' + (st.pot ? ', with $' + st.pot + ' in the pot now' : '') + '.' +
+      (st.ended && st.refund && Object.keys(st.refund).length ? ' Ended with $' + Object.keys(st.refund).reduce(function (t, p) { return t + st.refund[p]; }, 0) + ' nobody had won yet: handed back to the players who put it in.' : '') + '</div></div>';
   }
 
   function history() {
