@@ -1260,3 +1260,6 @@ table.ern-t td button i { font-style: normal; color: var(--muted); font-weight: 
 .sm-row.open .sm-panel { display: flex; }
 .sm-right .rs-btn, .un-top .rs-btn { width: auto; border: 0; padding: 6px 4px; gap: 4px; font-size: 13px; border-radius: 8px; }
 .sm-row.moved .sm-right, .sm-row.bye .sm-right { display: none; }
+.sd-trow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sd-trow .sd-title { min-width: 0; }
+.sd-trow .rs-btn { flex: none; width: auto; border: 0; padding: 6px 4px; gap: 4px; font-size: 13px; border-radius: 8px; margin-top: 4px; }

@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=138">
-<link rel="stylesheet" href="theme.css?v=138">
+<link rel="stylesheet" href="app.css?v=139">
+<link rel="stylesheet" href="theme.css?v=139">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=138"></script>
-<script src="app.js?v=138"></script>
-<script src="rules.js?v=138"></script>
+<script src="live.js?v=139"></script>
+<script src="app.js?v=139"></script>
+<script src="rules.js?v=139"></script>
 </head>
 <body>
 <header>
@@ -282,7 +282,6 @@
     </div>
     <div id="svplayer">
       <div class="sd-prow"><select id="who" aria-label="Player"></select><div class="sd-rec" id="schedsum"></div></div>
-      <div id="upnext"></div>
       <div class="sd-weeks2" id="weeks"></div>
       <div class="sd-hint hide" id="weekshint"></div>
     </div>
@@ -697,7 +696,6 @@
     var hint = document.getElementById('weekshint');
     if (!p) {
       document.getElementById('schedsum').innerHTML = '';
-      document.getElementById('upnext').innerHTML = '';
       document.getElementById('weeks').innerHTML = '<div class="empty">Pick a name to see their schedule</div>';
       hint.classList.add('hide');
       return;
@@ -757,19 +755,6 @@
       o.upcoming = upcoming; o.cal = calData; o.rs = rs; o.vsAll = vsAll; o.sub = sub;
       return o;
     });
-    // Up next card: the first night not yet played.
-    var nx = rows.filter(function (o) { return o.x.next && o.upcoming; })[0] || rows.filter(function (o) { return o.upcoming; })[0];
-    var un = document.getElementById('upnext');
-    if (nx) {
-      var d0 = nx.x.date, it0 = info.by[d0], G0 = null;
-      var tl = '';
-      if (nx.x.times) tl = ' · ' + nx.x.times.early + ' / ' + nx.x.times.late;
-      un.innerHTML = '<div class="un-card"><div class="un-top"><span class="un-k">UP NEXT</span>' + nx.rs + '</div>' +
-        '<div class="un-date">' + esc((it0 ? it0.dow + ', ' : '') + d0) + '</div>' +
-        '<div class="un-opp">vs ' + esc(nx.vsAll) + '</div><div class="un-sub">' + esc(nx.x.course) + '</div>' +
-        '<div class="un-btns">' + (nx.night ? '<button type="button" class="sm-btn solid" data-see="' + esc(nx.night) + '">See matchups</button>' : '') +
-        (nx.cal ? '<button type="button" class="sm-btn" data-cal="' + esc(JSON.stringify(nx.cal)) + '">Add to calendar</button>' : '') + '</div></div>';
-    } else un.innerHTML = '';
     // Month-by-month cards.
     var out = '', cur = '', open = false;
     rows.forEach(function (o) {
@@ -2010,20 +1995,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=138"></script>
-<script src="settings.js?v=138"></script>
-<script src="flip.js?v=138"></script>
-<script src="match.js?v=138"></script>
-<script src="msg.js?v=138"></script>
-<script src="puttstand.js?v=138"></script>
-<script src="stats.js?v=138"></script>
-<script src="bios.js?v=138"></script>
-<script src="ctp.js?v=138"></script>
-<script src="fine.js?v=138"></script>
-<script src="tonight.js?v=138"></script>
-<script src="anim.js?v=138"></script>
-<script src="bbb.js?v=138"></script>
-<script src="earnings.js?v=138"></script>
+<script src="tee.js?v=139"></script>
+<script src="settings.js?v=139"></script>
+<script src="flip.js?v=139"></script>
+<script src="match.js?v=139"></script>
+<script src="msg.js?v=139"></script>
+<script src="puttstand.js?v=139"></script>
+<script src="stats.js?v=139"></script>
+<script src="bios.js?v=139"></script>
+<script src="ctp.js?v=139"></script>
+<script src="fine.js?v=139"></script>
+<script src="tonight.js?v=139"></script>
+<script src="anim.js?v=139"></script>
+<script src="bbb.js?v=139"></script>
+<script src="earnings.js?v=139"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {

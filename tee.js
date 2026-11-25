@@ -180,7 +180,17 @@
     var title = opps.length ? 'You vs ' + opps.map(e).join(' &amp; ') : casual ? 'Casual round' : inLeague && !sched[me] && !isGuest(tt, me) ? 'Bye this week' : 'Tee times';
     var pill = function (who, n) { var x = teesOf(tt, n); return T && T.players && T.players[n] ? '<span>' + who + ' <b>HDCP ' + hcTxt(chOf(tt, n)) + '</b>' + (x ? ' · ' + e(x) : '') + '</span>' : ''; };
     var pills = inLeague ? pill('You', me) + opps.map(function (o) { return pill(e(o), o); }).join('') : '';
-    return '<div class="sd-hh"><div class="sd-eye">' + when + (course ? ' · ' + e(course) : '') + (nine ? ' · ' + nine : '') + '</div><div class="sd-title">' + title + '</div></div>' +
+    // Nov 25 (Ty): Reschedule chip beside "You vs X", same as the ones in My schedule (index.html's rsTap handles the tap).
+    var rs = '';
+    if (opps.length && !casual && d) {
+      var lab = MON[d.getMonth()] + ' ' + d.getDate();
+      var mine = ((window.data && window.data.schedule) || []).filter(function (p) { return p.name === me; })[0];
+      var wk = mine && mine.weeks.filter(function (x) { return x.status === 'upcoming' && (x.date === lab || (x.rs && x.rs.night === tt.night)); })[0];
+      var r1 = wk && (wk.rs || ((wk.extras || []).filter(function (m) { return m.rs; })[0] || {}).rs);
+      if (r1) rs = '<span role="button" tabindex="0" class="rs-btn" aria-label="Reschedule ' + e(lab) + '" data-rs="' + e(JSON.stringify({ night: r1.night, player: me, vs: opps.join(' and '), date: lab })) + '">' +
+        '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Reschedule</span></span>';
+    }
+    return '<div class="sd-hh"><div class="sd-eye">' + when + (course ? ' · ' + e(course) : '') + (nine ? ' · ' + nine : '') + '</div><div class="sd-trow"><div class="sd-title">' + title + '</div>' + rs + '</div></div>' +
       (pills ? '<div class="sd-pills">' + pills + '</div>' : '');
   }
   function pickers(tt, me) {
