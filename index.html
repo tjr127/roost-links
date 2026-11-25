@@ -393,7 +393,7 @@
   function resolveTab(tab) {
     if (tab === 'board') return boardDefault();
     if (tab === 'scores') { var s0 = store('scoresTab'); return s0 && s0 !== 'enter' ? s0 : (canSelfEnter() ? 'enter' : 'cards'); }
-    if (tab === 'admin') return 'adminhome';   // Nov 25: Admin home, not the last admin page
+    if (tab === 'admin') return isAdmin() ? 'adminhome' : boardDefault();   // Nov 25: Admin home, not the last admin page
     if (tab === 'news') return store('newsTab') || 'newsres';
     if (tab === 'stand') return store('standTab') || 'standings';
     if (tab === 'enter' && !canSelfEnter()) return 'cards';
