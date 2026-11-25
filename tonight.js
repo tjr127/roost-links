@@ -11,6 +11,12 @@
   function st(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (x) { return null; } }
   function num(s) { var n = parseFloat(s); return isNaN(n) ? null : n; }
   function user() { var a = window.RL && RL.user && RL.user(); return a ? a.name : ''; }
+  // Nov 25 (Ty): before teams are assigned, show the game picked on the Team Game tab (or "To be determined" if none).
+  function teamTbd(d) {
+    var g = (d && d.teamGame) || {};
+    return g.game ? tile('team', 'Team game', e(g.game), (g.scoring ? e(g.scoring) + ' · ' : '') + 'teams set on league night')
+      : tile('team', 'Team game', 'To be determined', 'on the night');
+  }
   function tile(key, label, big, sub, cls) {
     return '<button type="button" class="tn-t" data-tn="' + key + '"><span class="tn-k">' + label + '</span><span class="tn-b' + (cls ? ' ' + cls : '') + '">' + big + '</span>' + (sub ? '<span class="tn-s">' + sub + '</span>' : '') + '</button>';
   }
@@ -154,7 +160,7 @@
       else if (T.state === 'before') out.push(tile('tee', 'Tee time', 'Not open yet', 'Sign-up opens ' + e(T.opens || 'Wednesday')));
       else out.push(tile('tee', 'Tee time', 'Pick a time', T.closes ? 'Closes ' + e(T.closes) : '', 'amb'));
     }
-    out.push(tile('team', 'Team game', 'To be determined', 'on the night'));
+    out.push(teamTbd(d));
     out.push(potTile(d, true));
     return out;
   }
@@ -187,7 +193,7 @@
       else if (tees) teeT = tile('tee', 'Tees', tees, card.hcp !== undefined && card.hcp !== '' ? 'Course handicap ' + e(card.hcp) : '');
     }
     var td = d.teamDetail, teams = (td && td.teams) || [];
-    if (!teams.length || !(d.teams || []).length) out.push(tile('team', 'Team game', 'To be determined', 'on the night'));
+    if (!teams.length || !(d.teams || []).length) out.push(teamTbd(d));
     else {
       var mine = y ? teams.filter(function (t) { return (t.players || []).some(function (p) { return p.name === y; }); })[0] : null;
       var game = e(((td.scoring ? td.scoring + ' ' : '') + (td.game || '')).trim());
@@ -250,6 +256,14 @@
     if (k === 'signin') { if (window.RL && RL.signIn) RL.signIn(); return; }
     window.tnAutoClose();
     if (k === 'bbb') { if (window.showTab) showTab('bbb'); if (window.renderBbb) renderBbb(); window.scrollTo(0, 0); return; }
+    // Nov 25: tapping the team tile before teams exist opens the Team tab with the game's rules showing.
+    var dd = window.data || {};
+    if (k === 'team' && !(dd.teams || []).length && (dd.teamGame || {}).game) {
+      if (window.showTab) showTab('teams');
+      if (!window.rulesOpen) { var rb = document.getElementById('grulesbtn'); if (rb) rb.click(); }
+      var gi = document.getElementById('gameinfo'); if (gi && gi.scrollIntoView) try { gi.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) {}
+      return;
+    }
     var tab = { match: 'tonight', team: 'teams', pot: 'field', tee: 'schedule', score: 'field', net: 'field', season: 'standings' }[k];
     if (tab && window.showTab) { showTab(tab); if (k !== 'tee' && k !== 'season') { var el = document.querySelector(k === 'match' ? '.match.mine' : k === 'pot' || k === 'net' || k === 'score' ? '#fieldcard' : '#teamlist'); if (el && el.scrollIntoView) try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} } else window.scrollTo(0, 0); }
   });
