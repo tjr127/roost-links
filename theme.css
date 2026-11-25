@@ -1211,11 +1211,11 @@ table.ern-t td button i { font-style: normal; color: var(--muted); font-weight: 
 
 /* Nov 24: reschedule. Action = outlined button with an icon; info = filled chip. */
 .sd-x { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
-.sd-what .sd-x { flex-wrap: nowrap; }
-.sd-what .sd-x .opp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.sd-what .sd-x .chip { flex: none; }
+.sd-what .sd-x { flex-wrap: wrap; gap: 2px 6px; }
+.sd-what .sd-x .opp { white-space: nowrap; }
+.sd-what .sd-x .chip { flex: none; font-size: 11px; padding: 2px 6px; min-width: 0; }
 .chip.moved { background: rgba(245,177,60,.16); color: #FFC861; font-size: 12px; }
-.rs-btn { display: inline-flex; align-items: center; justify-content: center; justify-self: end; gap: 5px; width: 116px; box-sizing: border-box; padding: 6px 0; border: 1px solid var(--amber); border-radius: 12px; color: var(--amber); background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rs-btn { display: inline-flex; align-items: center; justify-content: center; justify-self: end; gap: 5px; width: 100px; box-sizing: border-box; padding: 6px 0; border: 1px solid var(--amber); border-radius: 12px; color: var(--amber); background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .rs-btn:active, .rs-btn.busy { background: rgba(245,177,60,.16); }
 .rs-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .sd-wk > .chip { justify-self: end; }
