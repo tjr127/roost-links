@@ -90,12 +90,19 @@
       ex: { Net: 'Ty has the money ball and makes net 5; partner makes net 4 → team scores <b>14</b> (5 × 2 + 4). Nobody hides on their hole.', Stableford: 'Money ball scores 3 points, best of the rest 2 → team scores <b>8</b> (3 × 2 + 2).' },
       note: 'The rotation starts over at hole 7 or 13 when only holes 7-12 or 13-18 count (teams get reshuffled). The hole-by-hole view marks the money ball with <b>$</b>.'
     },
-    'Team Skins': {
+    'Team Skins - Best Ball': {
       sum: 'Best ball against every other team, one hole at a time. Win it outright to take the skin.',
       how: 'On every hole, each team\'s number is its <b>best ball</b>. The team with the best one, <b>outright</b>, wins the skin. If two or more teams tie for best, nobody wins it and the skin <b>carries over</b>: the next hole is worth 2, then 3, until someone wins one outright.',
       ex: { Net: 'Hole 12: best balls 3, 3, 2 and 5 → the team with the 2 wins the skin (plus any that carried over).', Stableford: 'Hole 12: best balls 2, 2, 3 and 0 points → the team with the 3 wins it.' },
       win: '<b>Most skins wins.</b> Skins still riding after the last hole aren\'t won by anyone. Tied on skins → lowest combined net, then lowest combined putts.',
       note: 'A hole is decided once <b>every team</b> has finished it, and a carried skin waits for the hole before it. With Early and Late groups, the Early teams\' skins fill in as the Late group plays.'
+    },
+    'Team Skins - Combined Score': {
+      sum: 'Everyone\'s score counts: the team\'s combined score against every other team, one hole at a time.',
+      how: 'On every hole, each team\'s number is <b>everyone\'s scores combined</b>. The team with the best one, <b>outright</b>, wins the skin. If two or more teams tie for best, nobody wins it and the skin <b>carries over</b>: the next hole is worth 2, then 3, until someone wins one outright.',
+      ex: { Net: 'Hole 12: Ty 3 + Tom 4 = 7, Schertzer 4 + Donnie 4 = 8, KOB 3 + Nick 3 = 6 → KOB and Nick win the skin.', Stableford: 'Points are added the same way, and the most points wins the hole.' },
+      win: '<b>Most skins wins.</b> Skins still riding after the last hole aren\'t won by anyone. Tied on skins → lowest combined net, then lowest combined putts.',
+      note: 'When teams are different sizes (a twosome against a threesome), teams are compared on their <b>average</b> per player so the threesome isn\'t punished for the extra score. A hole is decided once <b>every team</b> has finished it.'
     },
     'Low Ball/Low Total': {
       sum: 'Two points on every hole: one for the best ball, one for the best team score.',

@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=147">
-<link rel="stylesheet" href="theme.css?v=147">
+<link rel="stylesheet" href="app.css?v=148">
+<link rel="stylesheet" href="theme.css?v=148">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=147"></script>
-<script src="app.js?v=147"></script>
-<script src="rules.js?v=147"></script>
+<script src="live.js?v=148"></script>
+<script src="app.js?v=148"></script>
+<script src="rules.js?v=148"></script>
 </head>
 <body>
 <header>
@@ -1603,7 +1603,7 @@ window.tpTxt = tpTxt; window.tpHtml = tpHtml; window.tpCard = tpCard;
 // Worked out here rather than trusting the feed's lowWins, so new games rank right even before the server knows them.
 function tdLow(game, scoring) {
   game = String(game || '');
-  if (game === 'Team Skins' || game === 'Low Ball/Low Total') return false;
+  if (/^Team Skins/.test(game) || game === 'Low Ball/Low Total') return false;
   if (/Vegas/.test(game) || game === 'Daytona') return true;
   return String(scoring || 'Net') !== 'Stableford';
 }
@@ -1691,8 +1691,8 @@ function tdHoleUse(game, hole, vals, flipped, birdie, cx) {
         u.use[rest.filter(function (i) { return vals[i] === rb; })[0]] = true;
       }
       break;
-    case 'Team Skins':
-      all(best);
+    case 'Team Skins - Best Ball': case 'Team Skins - Combined Score':
+      if (/Combined/.test(game)) idx.forEach(function (i) { u.use[i] = true; }); else all(best);
       if (cx.won > 0) u.tag = cx.won > 1 ? cx.won + ' skins' : 'Skin';
       else if (cx.carry) u.tag = 'Carry';
       break;
@@ -1777,9 +1777,9 @@ function teamLegend(game) {
     (/Vegas|Daytona/.test(game) ? ' · <b>L</b> low, <b>H</b> high' + (game === '3 Man Vegas' ? ', <b>M</b> middle' : '') : '') +
     (game === 'Daytona' ? ' · <b>Flipped</b>: nobody made net par, so high goes first' : '') +
     (game === 'Money Ball' ? ' · <b>$</b> money ball (counts double)' : '') +
-    (game === 'Team Skins' ? ' · Team = skins won on the hole · <b>Carry</b>: tied, the skin rides to the next hole' : '') +
+    (/^Team Skins/.test(game) ? ' · Team = skins won on the hole · <b>Carry</b>: tied, the skin rides to the next hole' : '') +
     (game === 'Low Ball/Low Total' ? ' · Team = points won on the hole (best ball 1, best team average 1; ties split it)' : '') +
-    (game === 'Team Skins' || game === 'Low Ball/Low Total' ? ' · A hole is decided once every team has finished it</div>' :
+    (/^Team Skins/.test(game) || game === 'Low Ball/Low Total' ? ' · A hole is decided once every team has finished it</div>' :
     ' · Team score shows once every player has finished the hole</div>');
 }
 function openTeam(name) {
@@ -1829,7 +1829,7 @@ function teamDetailHtml(td, t, o, thru, inline) {
     if (done && t.eligible) {
       if (game === 'Daytona') { var hp = tdNum(h.par); cx.flip = cx.stab ? Math.max.apply(null, vals) < 2 : (hp !== null && Math.min.apply(null, vals) > hp); }
       if (game === 'Money Ball') cx.mb = tdMoneyIdx(td, h.hole, vals.length);
-      if (game === 'Team Skins') {
+      if (/^Team Skins/.test(game)) {
         cx.won = tdNum(teamV) || 0;
         var tv = elig.map(function (tm) { return tdNum(tm.team[x.i]); });
         cx.carry = tv.length > 1 && tv.every(function (v) { return v !== null; }) && tv.every(function (v) { return v === 0; });
@@ -1989,7 +1989,7 @@ function renderField() {
     return '<div class="card tbasic"><div class="sc-lbl">' + esc(tm.game) + ' · ' + esc(tm.scoring) + '</div><table class="bp-tbl">' + teams.map(function (x, i) {
       var sc = x.score === '' || x.score == null;
       return '<tr' + (i === 0 && !sc ? ' class="bp-win"' : '') + '><td class="n">' + (sc ? '' : (i + 1)) + '</td><td>' + esc(x.players) + '</td><td class="n b">' + (sc ? '<span class="muted">no score</span>' : esc(tdVal(tm.game, x.score))) + '</td></tr>';
-    }).join('') + '</table><div class="paykey">' + (tm.game === 'Team Skins' ? 'Most skins wins.' : tm.game === 'Low Ball/Low Total' ? 'Most points wins.' : (low ? 'Lowest' : 'Highest') + ' total wins.') + '</div></div>';
+    }).join('') + '</table><div class="paykey">' + (/^Team Skins/.test(tm.game) ? 'Most skins wins.' : tm.game === 'Low Ball/Low Total' ? 'Most points wins.' : (low ? 'Lowest' : 'Highest') + ' total wins.') + '</div></div>';
   }
   // Nov 23: night over and posted. If the Tonight tab's team totals no longer match what was saved on the night
   // (handicaps moved since), show the saved team results instead of the recalculated ones.
@@ -2227,22 +2227,22 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=147"></script>
-<script src="settings.js?v=147"></script>
-<script src="admin.js?v=147"></script>
-<script src="flip.js?v=147"></script>
-<script src="match.js?v=147"></script>
-<script src="msg.js?v=147"></script>
-<script src="puttstand.js?v=147"></script>
-<script src="stats.js?v=147"></script>
-<script src="bios.js?v=147"></script>
-<script src="ctp.js?v=147"></script>
-<script src="fine.js?v=147"></script>
-<script src="tonight.js?v=147"></script>
-<script src="scorebar.js?v=147"></script>
-<script src="anim.js?v=147"></script>
-<script src="bbb.js?v=147"></script>
-<script src="earnings.js?v=147"></script>
+<script src="tee.js?v=148"></script>
+<script src="settings.js?v=148"></script>
+<script src="admin.js?v=148"></script>
+<script src="flip.js?v=148"></script>
+<script src="match.js?v=148"></script>
+<script src="msg.js?v=148"></script>
+<script src="puttstand.js?v=148"></script>
+<script src="stats.js?v=148"></script>
+<script src="bios.js?v=148"></script>
+<script src="ctp.js?v=148"></script>
+<script src="fine.js?v=148"></script>
+<script src="tonight.js?v=148"></script>
+<script src="scorebar.js?v=148"></script>
+<script src="anim.js?v=148"></script>
+<script src="bbb.js?v=148"></script>
+<script src="earnings.js?v=148"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {

@@ -143,16 +143,16 @@ function faTeams_() {
   var d = getBoardData(true);   // always a fresh build, so the final hole is included
   var g = d.teamGame || {}, teams = (d.teams || []).filter(function (t) { return t.players; });
   if (!teams.length || !g.game) return null;
-  // Nov 25: Team Skins and Low Ball/Low Total are most-wins; Vegas games and Daytona lowest-wins; else Net low, Stableford high.
+  // Nov 25: Team Skins (both kinds) and Low Ball/Low Total are most-wins; Vegas games and Daytona lowest-wins; else Net low, Stableford high.
   var gm = String(g.game);
-  var lowWins = gm === 'Team Skins' || gm === 'Low Ball/Low Total' ? false : /vegas/i.test(gm) || gm === 'Daytona' ? true : String(g.scoring) !== 'Stableford';
+  var lowWins = /^Team Skins/.test(gm) || gm === 'Low Ball/Low Total' ? false : /vegas/i.test(gm) || gm === 'Daytona' ? true : String(g.scoring) !== 'Stableford';
   var ok = teams.filter(function (t) { return t.score !== '' && t.score !== null && !isNaN(Number(t.score)); });
   var out = teams.filter(function (t) { return ok.indexOf(t) < 0; });
   ok.sort(function (a, b) { return lowWins ? a.score - b.score : b.score - a.score; });
   // teams are called by their members' names (Nov 13): Ty/Clint
   var who = function (t) { return String(t.players).split(/\s*,\s*/).join('/'); };
   var lines = [];
-  var unit = gm === 'Team Skins' ? ' skins' : gm === 'Low Ball/Low Total' ? ' pts' : '';
+  var unit = /^Team Skins/.test(gm) ? ' skins' : gm === 'Low Ball/Low Total' ? ' pts' : '';
   var fmt = function (v) { return String(Math.round(Number(v) * 100) / 100); };
   ok.forEach(function (t, i) { lines.push((i + 1) + '. ' + who(t) + ': ' + fmt(t.score) + unit); });
   out.forEach(function (t) { lines.push(who(t) + ': no score (not enough players)'); });
