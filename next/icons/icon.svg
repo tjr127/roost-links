@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f6b3a"/>
+      <stop offset="1" stop-color="#0f3d22"/>
+    </linearGradient>
+    <linearGradient id="beer" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e08a12"/>
+      <stop offset="0.45" stop-color="#f6b330"/>
+      <stop offset="1" stop-color="#c8720c"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="0.38" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.7" stop-color="#eef1ee"/>
+      <stop offset="1" stop-color="#b9c2bb"/>
+    </radialGradient>
+    <clipPath id="glassClip">
+      <path d="M128 118 L340 118 L314 428 Q312 440 300 440 L168 440 Q156 440 154 428 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- background (full bleed, safe for maskable icons) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="232" fill="#ffffff" opacity="0.05"/>
+
+  <!-- beer + foam inside glass -->
+  <g clip-path="url(#glassClip)">
+    <rect x="120" y="168" width="230" height="280" fill="url(#beer)"/>
+    <!-- bubbles -->
+    <g fill="#fff3c4" opacity="0.7">
+      <circle cx="180" cy="390" r="5"/><circle cx="200" cy="330" r="4"/>
+      <circle cx="170" cy="270" r="3.5"/><circle cx="230" cy="400" r="3"/>
+      <circle cx="215" cy="230" r="3"/><circle cx="250" cy="360" r="4"/>
+    </g>
+    <!-- foam -->
+    <path d="M120 118 L350 118 L350 172 Q330 186 308 174 Q288 190 262 176 Q240 192 214 177 Q192 191 168 176 Q146 188 120 174 Z" fill="#fffaf0"/>
+    <!-- glass highlight -->
+    <path d="M150 130 L170 130 L188 420 L176 420 Z" fill="#ffffff" opacity="0.35"/>
+  </g>
+  <!-- foam overflow on rim -->
+  <path d="M120 122 Q118 92 150 96 Q160 74 192 84 Q214 66 240 82 Q266 66 290 84 Q318 74 330 98 Q356 98 348 124 Z" fill="#fffaf0"/>
+  <circle cx="132" cy="138" r="9" fill="#fffaf0"/>
+
+  <!-- glass outline -->
+  <path d="M128 118 L340 118 L314 428 Q312 440 300 440 L168 440 Q156 440 154 428 Z"
+        fill="none" stroke="#e8f4ee" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- cracks radiating from impact point -->
+  <g fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M318 262 L284 236 L262 246 L232 214"/>
+    <path d="M318 262 L276 278 L250 270 L214 300"/>
+    <path d="M318 262 L292 314 L300 346 L276 384"/>
+    <path d="M318 262 L300 196 L312 170"/>
+    <path d="M284 236 L276 206"/>
+    <path d="M276 278 L268 312"/>
+  </g>
+
+  <!-- beer splash escaping the impact -->
+  <g fill="#f6b330">
+    <path d="M300 300 Q330 330 316 360 Q306 340 292 334 Z"/>
+    <circle cx="336" cy="372" r="9"/>
+    <circle cx="352" cy="400" r="6"/>
+    <circle cx="322" cy="396" r="5"/>
+  </g>
+
+  <!-- glass shards flying off -->
+  <g fill="#dff3ff" stroke="#ffffff" stroke-width="2" opacity="0.95">
+    <path d="M392 168 L414 150 L410 180 Z"/>
+    <path d="M430 214 L458 206 L440 230 Z"/>
+    <path d="M404 340 L432 352 L408 364 Z"/>
+    <path d="M440 290 L462 280 L456 302 Z"/>
+    <path d="M372 132 L384 112 L392 136 Z"/>
+  </g>
+
+  <!-- motion lines behind the ball -->
+  <g stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.55">
+    <line x1="430" y1="248" x2="486" y2="236"/>
+    <line x1="430" y1="284" x2="490" y2="284"/>
+    <line x1="424" y1="318" x2="478" y2="330"/>
+  </g>
+
+  <!-- golf ball -->
+  <circle cx="372" cy="282" r="60" fill="url(#ball)" stroke="#8f9a92" stroke-width="3"/>
+  <g fill="#9aa59d" opacity="0.6">
+    <circle cx="352" cy="256" r="6"/><circle cx="376" cy="250" r="6"/><circle cx="398" cy="262" r="6"/>
+    <circle cx="340" cy="280" r="6"/><circle cx="364" cy="276" r="6"/><circle cx="388" cy="284" r="6"/><circle cx="410" cy="290" r="6"/>
+    <circle cx="350" cy="304" r="6"/><circle cx="374" cy="302" r="6"/><circle cx="398" cy="310" r="6"/>
+    <circle cx="364" cy="326" r="5"/><circle cx="388" cy="330" r="5"/>
+    <circle cx="364" cy="232" r="5"/><circle cx="388" cy="234" r="5"/>
+  </g>
+</svg>
