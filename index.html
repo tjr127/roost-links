@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=129">
-<link rel="stylesheet" href="theme.css?v=129">
+<link rel="stylesheet" href="app.css?v=130">
+<link rel="stylesheet" href="theme.css?v=130">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=129"></script>
-<script src="app.js?v=129"></script>
-<script src="rules.js?v=129"></script>
+<script src="live.js?v=130"></script>
+<script src="app.js?v=130"></script>
+<script src="rules.js?v=130"></script>
 </head>
 <body>
 <header>
@@ -684,14 +684,14 @@
       if (bye) return open + 'sd-wk bye">' + when + '<span class="sd-what"><span class="sub">Bye · ' + esc(x.course) + '</span></span>' + close;
       var sc = /^\s*(\d+)\s*[–-]\s*(\d+)\s*$/.exec(x.score || '');
       var sub = sc ? who + ' ' + sc[1] + ' · ' + opp + ' ' + sc[2] + ' · ' + x.course : x.course;
-      if (x.status === 'makeup' && extra) sub = 'Moved: plays ' + extra;
+      if (x.status === 'makeup') { /* chip says 'Moved to Mon D' */ }
       else if (/^one.?way$/i.test(extra)) sub += ' · one-way';
       else if (extra) sub += ' · ' + extra;
       if (x.next && it && window.teeGroups) {
         var G = teeGroups(it.night);
         if (G && G.early.indexOf(p.name) >= 0) sub += ' · Early ' + G.times.Early; else if (G && G.late.indexOf(p.name) >= 0) sub += ' · Late ' + G.times.Late;
       }
-      var right = x.next && x.status === 'upcoming' ? '<span class="chip next">Next</span>' : label[x.status] ? '<span class="chip ' + x.status + '">' + label[x.status] + '</span>' :
+      var right = x.next && x.status === 'upcoming' ? '<span class="chip next">Next</span>' : label[x.status] ? '<span class="chip ' + x.status + '">' + esc(x.status === 'makeup' && extra ? 'Moved to ' + extra.replace(/^[A-Za-z]{3}\s+(?=[A-Za-z]{3}\s)/, '') : label[x.status]) + '</span>' :
         it ? '<svg class="go" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' : '';
       return open + 'sd-wk' + (x.next ? ' next' : '') + '">' + when + '<span class="sd-what"><span class="opp">vs ' + esc(opp) + '</span><span class="sub">' + esc(sub) + '</span></span>' + right + close;
     }).join('');
@@ -1891,20 +1891,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=129"></script>
-<script src="settings.js?v=129"></script>
-<script src="flip.js?v=129"></script>
-<script src="match.js?v=129"></script>
-<script src="msg.js?v=129"></script>
-<script src="puttstand.js?v=129"></script>
-<script src="stats.js?v=129"></script>
-<script src="bios.js?v=129"></script>
-<script src="ctp.js?v=129"></script>
-<script src="fine.js?v=129"></script>
-<script src="tonight.js?v=129"></script>
-<script src="anim.js?v=129"></script>
-<script src="bbb.js?v=129"></script>
-<script src="earnings.js?v=129"></script>
+<script src="tee.js?v=130"></script>
+<script src="settings.js?v=130"></script>
+<script src="flip.js?v=130"></script>
+<script src="match.js?v=130"></script>
+<script src="msg.js?v=130"></script>
+<script src="puttstand.js?v=130"></script>
+<script src="stats.js?v=130"></script>
+<script src="bios.js?v=130"></script>
+<script src="ctp.js?v=130"></script>
+<script src="fine.js?v=130"></script>
+<script src="tonight.js?v=130"></script>
+<script src="anim.js?v=130"></script>
+<script src="bbb.js?v=130"></script>
+<script src="earnings.js?v=130"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
