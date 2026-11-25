@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=127">
-<link rel="stylesheet" href="theme.css?v=127">
+<link rel="stylesheet" href="app.css?v=128">
+<link rel="stylesheet" href="theme.css?v=128">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=127"></script>
-<script src="app.js?v=127"></script>
-<script src="rules.js?v=127"></script>
+<script src="live.js?v=128"></script>
+<script src="app.js?v=128"></script>
+<script src="rules.js?v=128"></script>
 </head>
 <body>
 <header>
@@ -1420,7 +1420,7 @@ function teamDetailHtml(td, t, o, thru, inline) {
     (r ? ' · <b>' + tdPlaceText(r) + '</b> ' + esc(tdGapText(r)) : '') + '</div>' +
     (td.desc ? '<div class="gdesc">' + esc(td.desc) + '</div>' : '')) +
     '<div class="tplayers">' + t.players.map(function (p, i) {
-      return esc(p.name) + (minThru[i] ? ' <span class="th' + (minThru[i] === 'F' ? ' f' : '') + '">' + esc(minThru[i] === 'F' ? 'Finished' : 'Thru ' + minThru[i]) + '</span>' : '');
+      return esc(p.name) + (minThru[i] ? ' <span class="th' + (minThru[i] === 'F' ? ' f' : '') + '">' + esc(minThru[i] === 'F' ? 'Finished' : String(minThru[i]) === '0' ? 'Yet to Start' : 'Thru ' + minThru[i]) + '</span>' : '');
     }).join(' · ') + '</div>' +
     (t.eligible ? '' : '<div class="inel">Not eligible: ' + esc(game) + ' needs at least ' + td.minPlayers + ' players</div>') + '</div>';
   var short = function (n) { var sn = ((data && data.shortNames) || {})[n]; if (sn) return sn; return n.length > 7 ? n.slice(0, 6) + '…' : n; };
@@ -1522,7 +1522,7 @@ function renderField() {
     document.getElementById('fieldcard').innerHTML = list.length ?
       '<table class="fld"><colgroup><col class="c-p"><col><col class="c-m c-w"><col class="c-m c-w"><col class="c-m"><col class="c-m"></colgroup><tr><th>#</th><th>Player</th>' + th('gross', 'Gross') + th('net', 'Net') + th('pts', 'STBF') + th('putts', 'Putts') + '</tr>' +
       rows.map(function (r, i) {
-        var x = r.x, t = num(x.thru), st = t === null ? '' : (holesF && t >= holesF ? 'Finished' : 'Thru ' + t);
+        var x = r.x, t = num(x.thru), st = t === null ? '' : (holesF && t >= holesF ? 'Finished' : t ? 'Thru ' + t : 'Yet to Start');
         function fx(k) { return ' data-fx="f|' + esc(x.player) + '|' + k + '"'; }
         return '<tr data-fxrow="' + esc(x.player) + '"><td class="fld-p">' + pos[i] + '</td><td class="fld-n">' + nm(x.player) + (st ? '<small data-fxstate="fin2|' + esc(x.player) + '" data-v="' + (st === 'Finished' ? 1 : 0) + '">' + st + '</small>' : '') + '</td><td class="n' + (by === 'gross' ? ' b' : '') + '"' + fx('gross') + '>' + bv(x, 'gross', bestGross) +
           '</td><td class="n' + (by === 'net' ? ' b' : '') + '"' + fx('net') + '>' + bv(x, 'net', bestNet) +
@@ -1805,20 +1805,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=127"></script>
-<script src="settings.js?v=127"></script>
-<script src="flip.js?v=127"></script>
-<script src="match.js?v=127"></script>
-<script src="msg.js?v=127"></script>
-<script src="puttstand.js?v=127"></script>
-<script src="stats.js?v=127"></script>
-<script src="bios.js?v=127"></script>
-<script src="ctp.js?v=127"></script>
-<script src="fine.js?v=127"></script>
-<script src="tonight.js?v=127"></script>
-<script src="anim.js?v=127"></script>
-<script src="bbb.js?v=127"></script>
-<script src="earnings.js?v=127"></script>
+<script src="tee.js?v=128"></script>
+<script src="settings.js?v=128"></script>
+<script src="flip.js?v=128"></script>
+<script src="match.js?v=128"></script>
+<script src="msg.js?v=128"></script>
+<script src="puttstand.js?v=128"></script>
+<script src="stats.js?v=128"></script>
+<script src="bios.js?v=128"></script>
+<script src="ctp.js?v=128"></script>
+<script src="fine.js?v=128"></script>
+<script src="tonight.js?v=128"></script>
+<script src="anim.js?v=128"></script>
+<script src="bbb.js?v=128"></script>
+<script src="earnings.js?v=128"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {

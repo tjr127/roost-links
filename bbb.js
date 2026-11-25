@@ -126,7 +126,7 @@
     if (selHole === null || selHole >= s.holes.length) selHole = s.holes.length - 1;
     var mine = s.pts[me] ? placeOf(s, me) : '';
     // status line + leader strip
-    var status = s.final ? '' : '<div class="gb-st"><span>' + (s.holes.length ? '<i class="gb-live"></i>Thru ' + s.holes.length + ' of ' + s.total : 'Not started') + '</span><span>' + s.left + ' pts left</span><span>Pot <b>$' + s.pot + '</b>' + (s.carry ? ' <small>($' + s.carry + ' carried)</small>' : '') + '</span></div>';
+    var status = s.final ? '' : '<div class="gb-st"><span>' + (s.holes.length ? '<i class="gb-live"></i>Thru ' + s.holes.length + ' of ' + s.total : 'Yet to Start') + '</span><span>' + s.left + ' pts left</span><span>Pot <b>$' + s.pot + '</b>' + (s.carry ? ' <small>($' + s.carry + ' carried)</small>' : '') + '</span></div>';
     var strip;
     if (!s.holes.length) strip = '<div class="gb-lead"><div><span class="gb-k">Garbage tonight</span><b>' + s.ps.length + ' players</b><small>' + s.total * 3 + ' points up for grabs · $1 each</small></div><div class="gb-big">$' + s.pot + '<small>pot</small></div></div>';
     else {

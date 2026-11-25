@@ -78,7 +78,7 @@
     var mine = s.pts[y], p = '';
     if (mine) { var better = s.order.filter(function (q) { return s.pts[q].t > mine.t; }).length, tie = s.order.filter(function (q) { return s.pts[q].t === mine.t; }).length > 1; p = (tie ? 'T' : '') + (better + 1); }
     var fin = done && s.final, youLead = lead.indexOf(y) >= 0;
-    var big = mine ? ord(p) + ' · ' + mine.t + (mine.t === 1 ? ' pt' : ' pts') : (lead.length ? names(lead) + ' ' + top : 'Not started');
+    var big = mine ? ord(p) + ' · ' + mine.t + (mine.t === 1 ? ' pt' : ' pts') : (lead.length ? names(lead) + ' ' + top : 'Yet to Start');
     var pot = '$' + s.pot;
     var sub = !s.holes.length ? s.ps.length + ' playing · pot ' + pot : fin ? (lead.length > 1 ? 'Tie (' + names(lead) + ') · ' + pot + ' carries to next week' : youLead ? 'You won ' + pot : names(lead) + ' won ' + pot + ' with ' + top)
       : (youLead && lead.length === 1 ? 'You lead' : 'Leading: ' + names(lead) + ' ' + top) + ' · pot ' + pot;
@@ -165,7 +165,7 @@
       var m = (d.matches || []).filter(function (x) { return x.a === y || x.b === y; })[0];
       if (m) {
         var left = m.a === y, my = num(left ? m.ap : m.bp), op = num(left ? m.bp : m.ap), opp = left ? m.b : m.a, thru = left ? m.aThru : m.bThru;
-        var where = thru ? (thru === 'F' ? 'Finished' : e(thru)) : 'Not started';
+        var where = thru ? (thru === 'F' ? 'Finished' : e(thru)) : 'Yet to Start';
         var lead = my === null || op === null ? '' : my > op ? 'You lead by ' + (my - op) : my < op ? e(opp) + ' leads by ' + (op - my) : 'Level';
         if (done && my !== null && op !== null) out.push(tile('match', 'Your match', (my > op ? 'Won ' : my < op ? 'Lost ' : 'Halved ') + my + ' – ' + op, 'vs ' + e(opp), my > op ? 'win' : my < op ? 'loss' : ''));
         else out.push(tile('match', 'Your match', (my === null ? '–' : my) + ' – ' + (op === null ? '–' : op) + ' vs ' + e(opp), where + (lead ? ' · ' + lead : ''), my !== null && op !== null && my > op ? 'win' : ''));
@@ -178,7 +178,7 @@
           var gt = fr && num(fr.gross) !== null ? num(fr.gross) : q.sg, nt = fr && num(fr.net) !== null ? num(fr.net) : null;
           var nd = (d.posted || fin) && nt !== null ? nt - q.pg : (q.nn ? q.sn - q.pn : null);
           var big = tpHtml(gt - q.pg, gt, fin) + ' <span class="tn-u">gross</span>' + (nd !== null ? ' · ' + tpHtml(nd, nt !== null ? nt : q.sn, fin) + ' <span class="tn-u">net</span>' : '');
-          scoreT = tile('score', 'Your score', big, fin ? 'Finished' : 'Thru ' + q.played);
+          scoreT = tile('score', 'Your score', big, fin ? 'Finished' : q.played ? 'Thru ' + q.played : 'Yet to Start');
         }
       }
       var c = T && T.confirmed, grp = c ? ((c.early || []).indexOf(y) >= 0 ? 'Early' : (c.late || []).indexOf(y) >= 0 ? 'Late' : '') : '';
