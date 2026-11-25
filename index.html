@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=141">
-<link rel="stylesheet" href="theme.css?v=141">
+<link rel="stylesheet" href="app.css?v=142">
+<link rel="stylesheet" href="theme.css?v=142">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=141"></script>
-<script src="app.js?v=141"></script>
-<script src="rules.js?v=141"></script>
+<script src="live.js?v=142"></script>
+<script src="app.js?v=142"></script>
+<script src="rules.js?v=142"></script>
 </head>
 <body>
 <header>
@@ -781,7 +781,7 @@
   function rlAsk(title, text, ok, cancel) {
     return new Promise(function (res) {
       var w = document.createElement('div'); w.className = 'rl-scrim';
-      var lines = String(text || '').split(/\n+/).filter(Boolean).map(function (l) { return '<p>' + esc(l) + '</p>'; }).join('');
+      var lines = String(text || '').split(/\n+/).filter(Boolean).map(function (l) { return '<p' + (/^Everyone involved/.test(l) ? ' class="note"' : '') + '>' + esc(l) + '</p>'; }).join('');
       w.innerHTML = '<div class="rl-dlg" role="dialog" aria-modal="true" aria-labelledby="rldt"><h3 id="rldt">' + esc(title) + '</h3><div class="rl-body">' + lines + '</div>' +
         '<div class="rl-acts">' + (cancel ? '<button type="button" class="sm-btn" data-x="0">' + esc(cancel) + '</button>' : '') + '<button type="button" class="sm-btn solid" data-x="1">' + esc(ok || 'OK') + '</button></div></div>';
       var prev = document.activeElement;
@@ -2144,21 +2144,21 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=141"></script>
-<script src="settings.js?v=141"></script>
-<script src="admin.js?v=141"></script>
-<script src="flip.js?v=141"></script>
-<script src="match.js?v=141"></script>
-<script src="msg.js?v=141"></script>
-<script src="puttstand.js?v=141"></script>
-<script src="stats.js?v=141"></script>
-<script src="bios.js?v=141"></script>
-<script src="ctp.js?v=141"></script>
-<script src="fine.js?v=141"></script>
-<script src="tonight.js?v=141"></script>
-<script src="anim.js?v=141"></script>
-<script src="bbb.js?v=141"></script>
-<script src="earnings.js?v=141"></script>
+<script src="tee.js?v=142"></script>
+<script src="settings.js?v=142"></script>
+<script src="admin.js?v=142"></script>
+<script src="flip.js?v=142"></script>
+<script src="match.js?v=142"></script>
+<script src="msg.js?v=142"></script>
+<script src="puttstand.js?v=142"></script>
+<script src="stats.js?v=142"></script>
+<script src="bios.js?v=142"></script>
+<script src="ctp.js?v=142"></script>
+<script src="fine.js?v=142"></script>
+<script src="tonight.js?v=142"></script>
+<script src="anim.js?v=142"></script>
+<script src="bbb.js?v=142"></script>
+<script src="earnings.js?v=142"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
