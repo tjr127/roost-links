@@ -210,7 +210,7 @@
     // Nov 24 (Ty): match, team, BBB (or your score), putting pot, low net, then your score / tee time to fill the grid.
     var bb = bbbTile(y, done, d);
     out.push(bb || scoreT);
-    out.push(potLive(d, y, done));
+    if (d.roundType !== 'Casual') out.push(potLive(d, y, done));   // Nov 25 (Ty): casual rounds aren't part of the putting pot
     out.push(netTile(d, y, done));
     out.push(bb ? scoreT : (done ? '' : teeT) || '');
     if (!done && !y) out.push(teeT);
