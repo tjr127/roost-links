@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=137">
-<link rel="stylesheet" href="theme.css?v=137">
+<link rel="stylesheet" href="app.css?v=138">
+<link rel="stylesheet" href="theme.css?v=138">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=137"></script>
-<script src="app.js?v=137"></script>
-<script src="rules.js?v=137"></script>
+<script src="live.js?v=138"></script>
+<script src="app.js?v=138"></script>
+<script src="rules.js?v=138"></script>
 </head>
 <body>
 <header>
@@ -712,6 +712,8 @@
     var MON = { Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', May: 'May', Jun: 'June', Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October', Nov: 'November', Dec: 'December' };
     var rows = p.weeks.map(function (x) {
       var it = info.by[x.date], night = x.night || (it && it.night) || '';
+      var pm = /^([A-Za-z]{3})\s+(\d+)/.exec(x.date);
+      if (!night && pm) { var mi = 'JanFebMarAprMayJunJulAugSepOctNovDec'.indexOf(pm[1]) / 3 + 1; night = (mi >= 7 ? 2026 : 2027) + '-' + (mi < 10 ? '0' : '') + mi + '-' + (+pm[2] < 10 ? '0' : '') + pm[2]; }
       var om = /^(.*?)\s*\((.*)\)$/.exec(x.opp || ''), opp = om ? om[1] : x.opp, extra = om ? om[2] : '';
       var parts = x.date.split(' '), dow = it ? it.dow : '';
       var dcol = '<div class="sm-date"><span class="dow' + (it && it.off ? ' off' : '') + '">' + esc(dow) + '</span><b>' + esc(parts[1] || '') + '</b></div>';
@@ -739,6 +741,9 @@
       var calData = null;
       if (upcoming && night) {
         var T = x.times || {};
+        if (!T.early && window.teeGroups) { var G = teeGroups(night), pt = function (s) { var m = /(\d+)(?::(\d+))?\s*([AP])M/i.exec(s || ''); return m ? [(+m[1] % 12) + (/p/i.test(m[3]) ? 12 : 0), +(m[2] || 0)] : null; };
+          var e1 = G && G.times && pt(G.times.Early), l1 = G && G.times && pt(G.times.Late);
+          if (e1 && l1) T = { eh: e1[0], em: e1[1], lh: l1[0], lm: l1[1] }; }
         calData = { night: night, eh: T.eh != null ? T.eh : 18, em: T.em || 0, lh: T.lh != null ? T.lh : 20, lm: T.lm || 0, course: x.course, uid: p.name.replace(/\W+/g, ''),
           title: 'Roost Golf: vs ' + vsAll + ' — ' + x.course };
       }
@@ -2005,20 +2010,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=137"></script>
-<script src="settings.js?v=137"></script>
-<script src="flip.js?v=137"></script>
-<script src="match.js?v=137"></script>
-<script src="msg.js?v=137"></script>
-<script src="puttstand.js?v=137"></script>
-<script src="stats.js?v=137"></script>
-<script src="bios.js?v=137"></script>
-<script src="ctp.js?v=137"></script>
-<script src="fine.js?v=137"></script>
-<script src="tonight.js?v=137"></script>
-<script src="anim.js?v=137"></script>
-<script src="bbb.js?v=137"></script>
-<script src="earnings.js?v=137"></script>
+<script src="tee.js?v=138"></script>
+<script src="settings.js?v=138"></script>
+<script src="flip.js?v=138"></script>
+<script src="match.js?v=138"></script>
+<script src="msg.js?v=138"></script>
+<script src="puttstand.js?v=138"></script>
+<script src="stats.js?v=138"></script>
+<script src="bios.js?v=138"></script>
+<script src="ctp.js?v=138"></script>
+<script src="fine.js?v=138"></script>
+<script src="tonight.js?v=138"></script>
+<script src="anim.js?v=138"></script>
+<script src="bbb.js?v=138"></script>
+<script src="earnings.js?v=138"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
