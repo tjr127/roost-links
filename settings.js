@@ -37,7 +37,14 @@
     cog.innerHTML = '<span class="pc' + (t.length > 2 ? ' pc3' : '') + '" aria-hidden="true">' + e(t) + '</span><span class="st-nm">' + e(a.name) + '</span>';
   }
   // Leave just enough room on the right of the title for the chip, so the page name under "Roost Golf" gets the rest.
-  function chipRoom() { var cog = document.getElementById('stbtn'), br = document.querySelector('header .brand'); if (cog && br && cog.offsetWidth) br.style.paddingRight = (cog.offsetWidth + 22) + 'px'; }
+  // Nov 25: admins also have the Admin button (admin.js) just left of the chip; it needs room too.
+  function chipRoom() {
+    var cog = document.getElementById('stbtn'), br = document.querySelector('header .brand'), ab = document.getElementById('admbtn');
+    if (!cog || !br || !cog.offsetWidth) return;
+    var extra = ab && !ab.classList.contains('hide') ? ab.offsetWidth + 8 : 0;
+    if (ab) ab.style.right = (14 + cog.offsetWidth + 8) + 'px';
+    br.style.paddingRight = (cog.offsetWidth + extra + 22) + 'px';
+  }
   window.updateHeaderChip = function () { build(); chipDraw(); chipRoom(); };
   function open() {
     build();
