@@ -131,6 +131,122 @@
       '</div>';
   }
 
+  // ---- Member view (reworked Nov 24) ----
+  // The Schedule tab's top card: your night (who you play, when sign-up closes), the time and tee pickers while you
+  // still owe an answer, and one summary line with a Change button once you've answered. The roster and groups moved
+  // into the Matchups card below it (index.html renderNightly, through window.teeGroups).
+  // Tee colours as they read on the dark cards (plain CSS "blue" is too harsh); any other colour name is used as is.
+  var DOT = { blue: '#3B6BE0', green: '#2E9E57', red: '#E0483B', gold: '#D9A520', yellow: '#E8CE3B', black: '#0B0D0C', white: '#FFFFFF', silver: '#C9D1CC' };
+  var openPick = false;   // the member tapped Change, or just answered: keep the pickers open until Done
+  var DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function nightDate(night) { var p = String(night || '').split('-'); return p.length === 3 ? new Date(+p[0], p[1] - 1, +p[2]) : null; }
+  function shortTime(s) { var m = /^(\d+):(\d\d)/.exec(s || ''); return m ? (m[2] === '00' ? m[1] : m[1] + ':' + m[2]) : s; }
+  function hcTxt(ch) { return ch === '' || ch === undefined || ch === null ? '–' : (ch < 0 ? '+' + (-ch) : String(ch)); }
+  function chOf(tt, n) { var T = tt.tees, p = T && T.players && T.players[n], x = teesOf(tt, n); return p && x && p.chs[x] !== undefined ? p.chs[x] : ''; }
+  // The groups to show for a night: confirmed, else Ty's saved arrangement, else the suggestion. null when the
+  // tee-times card is for another night. Used by the Matchups card and My schedule.
+  window.teeGroups = function (night) {
+    var tt = t();
+    if (!tt || tt.night !== night) return null;
+    var conf = tt.confirmed, sched = scheduled(tt), g = { early: [], late: [] };
+    var playing = tt.players.some(function (p) { var c = choiceOf(tt, p.name); return c === 'Early' || c === 'Late' || c === 'Either'; });
+    if (conf) g = conf;
+    else if (playing && (tt.draft || tt.suggested)) g = normalize(tt, tt.draft || tt.suggested);
+    // With no saved arrangement from Ty, a pick made a moment ago shows in its own group right away (the
+    // server's suggestion catches up on the next refresh).
+    if (!conf && !tt.draft) tt.players.forEach(function (p) {
+      var c = choiceOf(tt, p.name), to = c === 'Early' ? 'early' : c === 'Late' ? 'late' : '';
+      if (!to || g[to].indexOf(p.name) >= 0) return;
+      g = { early: g.early.filter(function (n) { return n !== p.name; }), late: g.late.filter(function (n) { return n !== p.name; }) };
+      g[to].push(p.name);
+    });
+    var out = [], none = [];
+    tt.players.forEach(function (p) {
+      var c = choiceOf(tt, p.name), placed = g.early.indexOf(p.name) >= 0 || g.late.indexOf(p.name) >= 0;
+      if (c === 'Out' && !placed) out.push(p.name);
+      else if (!c && !placed && !conf && sched[p.name] && !isGuest(tt, p.name)) none.push(p.name);
+    });
+    return { early: g.early, late: g.late, times: tt.times, final: !!conf, out: out, none: none,
+      choice: function (n) { return choiceOf(tt, n); }, nopick: function (n) { return !conf && noPick(tt, n); },
+      tee: function (n) { return teesOf(tt, n); }, ch: function (n) { return chOf(tt, n); } };
+  };
+  function heroHead(tt, me, sched) {
+    var T = tt.tees, d = nightDate(tt.night), casual = !!tt.casual;
+    var course = (T && T.course) || tt.course || '', nine = T && (T.nine === 'Front' || T.nine === 'Back') ? T.nine + ' 9' : '';
+    var when = casual || !d ? e(tt.label) : '<b' + (d.getDay() !== 4 ? ' class="off"' : '') + '>' + DOW[d.getDay()] + '</b> ' + MON[d.getMonth()] + ' ' + d.getDate();
+    var opps = [];
+    tt.pairs.forEach(function (p) { if (p[0] === me && opps.indexOf(p[1]) < 0) opps.push(p[1]); else if (p[1] === me && opps.indexOf(p[0]) < 0) opps.push(p[0]); });
+    var inLeague = me && tt.players.some(function (p) { return p.name === me; });
+    var title = opps.length ? 'You vs ' + opps.map(e).join(' &amp; ') : casual ? 'Casual round' : inLeague && !sched[me] && !isGuest(tt, me) ? 'Bye this week' : 'Tee times';
+    var pill = function (who, n) { var x = teesOf(tt, n); return T && T.players && T.players[n] ? '<span>' + who + ' <b>HDCP ' + hcTxt(chOf(tt, n)) + '</b>' + (x ? ' · ' + e(x) : '') + '</span>' : ''; };
+    var pills = inLeague ? pill('You', me) + opps.map(function (o) { return pill(e(o), o); }).join('') : '';
+    return '<div class="sd-hh"><div class="sd-eye">' + when + (course ? ' · ' + e(course) : '') + (nine ? ' · ' + nine : '') + '</div><div class="sd-title">' + title + '</div></div>' +
+      (pills ? '<div class="sd-pills">' + pills + '</div>' : '');
+  }
+  function pickers(tt, me) {
+    var T = tt.tees, p = T && T.players && T.players[me], cur = choiceOf(tt, me), tcur = teesOf(tt, me);
+    var times = ['Early', 'Late', 'Either'].map(function (c) {
+      var sub = c === 'Either' ? shortTime(tt.times.Early) + ' or ' + shortTime(tt.times.Late) : tt.times[c];
+      return '<button type="button" data-tee="' + c + '" class="' + (cur === c ? 'on' : '') + '"' + (cur === c ? ' aria-pressed="true"' : '') + '><b>' + LABEL[c] + '</b><small>' + e(sub) + '</small></button>';
+    }).join('');
+    var tees = !T || !p ? '' : '<div class="sd-lab">Your tees <span>Big number = your handicap</span></div><div class="sd-tees">' +
+      T.tees.filter(function (x) { return x.ok; }).map(function (x) {
+        var ch = p.chs[x.tee];
+        return '<button type="button" data-ttee="' + e(x.tee) + '" class="' + (x.tee === tcur ? 'on' : '') + '"' + (x.tee === tcur ? ' aria-pressed="true"' : '') + '>' +
+          '<span class="sd-tl"><span class="sd-tn">' + (x.color ? '<i class="tp-dot" style="background:' + e(DOT[x.color.toLowerCase()] || x.color.toLowerCase()) + '"></i>' : '') + e(x.tee) + (x.tee === p.def ? '<em>usual</em>' : '') + '</span>' +
+          '<small>' + (x.yards ? Number(x.yards).toLocaleString('en-US') + ' yds' : e(x.color)) + '</small></span><b>' + hcTxt(ch) + '</b></button>';
+      }).join('') + '</div>';
+    return '<div class="sd-lab">When can you play?</div><div class="sd-times">' + times + '</div>' +
+      '<button type="button" data-tee="Out" class="sd-out' + (cur === 'Out' ? ' on' : '') + '"' + (cur === 'Out' ? ' aria-pressed="true"' : '') + '>Can\'t play this week</button>' +
+      (note.text ? '<div class="tt-msg' + (note.err ? ' err' : '') + '" role="status">' + e(note.text) + '</div>' : '') + tees;
+  }
+  var CHECK = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+  function statusRow(kind, main, sub, btn) {
+    return '<div class="sd-row"><div class="sd-rl"><span class="sd-ico ' + kind + '">' + (kind === 'ok' ? CHECK : kind === 'out' ? '✕' : kind === 'lock' ? '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>' : '–') + '</span>' +
+      '<div><div class="sd-main">' + main + '</div>' + (sub ? '<div class="sd-sub">' + sub + '</div>' : '') + '</div></div>' + (btn || '') + '</div>';
+  }
+  function playerCard(tt, a) {
+    var conf = tt.confirmed, casual = !!tt.casual, me = a ? a.name : '', sched = scheduled(tt);
+    if (tt.state === 'before' && !conf) return '';   // Nov 13 (Ty): nothing for players until sign-up opens
+    var inLeague = !!a && tt.players.some(function (p) { return p.name === me; });
+    var my = inLeague ? choiceOf(tt, me) : '', myTees = inLeague ? teesOf(tt, me) : '';
+    var teeLine = myTees ? e(myTees) + ' tees · HDCP ' + hcTxt(chOf(tt, me)) : '';
+    var closes = casual ? 'Open until the first group tees off' : 'Closes ' + e(tt.closes);
+    var head = heroHead(tt, me, sched), html = '', need = false;
+    var G = window.teeGroups(tt.night), grp = !G ? '' : G.early.indexOf(me) >= 0 ? 'Early' : G.late.indexOf(me) >= 0 ? 'Late' : '';
+    if (conf) {
+      openPick = false;
+      var by = 'Groups set by ' + e(conf.by) + (conf.at ? ' · ' + e(conf.at) : '');
+      html = head + '<div class="sd-div"></div>' + (!inLeague ? statusRow('lock', 'Groups are set', by)
+        : grp ? statusRow('lock', 'You\'re in: ' + grp + ' · ' + e(tt.times[grp]), (teeLine ? teeLine + ' · ' : '') + 'locked') + '<div class="sd-foot">' + by + '</div>'
+        : statusRow('none', my === 'Out' ? 'You\'re out this week' : !sched[me] ? 'You have a bye this week' : 'You\'re not in a group this week', by));
+    } else if (inLeague && tt.state === 'open') {
+      var bye = !sched[me] && !isGuest(tt, me);
+      need = !my && !bye;
+      if (openPick || need) {
+        html = '<div class="sd-top">' + (need ? '<span class="sd-need">Your answer needed</span>' : '<span class="sd-yp">Your pick</span>') + '<span class="sd-close">' + closes + '</span></div>' + head + '<div class="sd-div"></div>' +
+          (bye ? '<div class="sd-foot">You have a bye this week. Pick a time only if you\'re coming to play.</div>' : '') + pickers(tt, me) +
+          (need ? '<div class="sd-foot">Saves when you tap. Change it any time until sign-up closes.</div>' : '<button type="button" class="sd-btn wide" id="sddone">Done</button>');
+      } else {
+        var chg = '<button type="button" class="sd-btn" id="sdchange">' + (my ? 'Change' : 'Play anyway') + '</button>';
+        var main = my === 'Out' ? 'You\'re out this week' : my === 'Either' ? 'You\'re in: Either time' : my ? 'You\'re in: ' + my + ' · ' + e(tt.times[my]) : 'No match for you this week';
+        var sub = my === 'Out' ? '' : my ? teeLine + (my === 'Either' && grp ? ' · ' + grp + ' group so far' : '') : 'Coming to play anyway? Pick a time.';
+        html = head + '<div class="sd-div"></div>' + statusRow(my === 'Out' ? 'out' : my ? 'ok' : 'none', main, sub, chg) +
+          (note.text ? '<div class="tt-msg' + (note.err ? ' err' : '') + '" role="status">' + e(note.text) + '</div>' : '') +
+          '<div class="sd-foot">' + (casual ? closes + '.' : 'You can change it until ' + e(tt.closes) + '.') + '</div>';
+      }
+    } else if (inLeague) {
+      openPick = false;
+      html = head + '<div class="sd-div"></div>' + statusRow(my && my !== 'Out' ? 'ok' : 'none',
+        my === 'Out' ? 'You\'re out this week' : my ? 'You picked ' + LABEL[my] + (tt.times[my] ? ' · ' + e(tt.times[my]) : '') : 'No pick from you',
+        (my && my !== 'Out' && teeLine ? teeLine + ' · ' : '') + (casual ? 'Closed · the first group has teed off' : 'Sign-up closed · groups being set'));
+    } else {
+      html = '<div class="sd-top"><span class="sd-yp">Tee times</span><span class="sd-close">' + (tt.state === 'open' ? closes : casual ? 'Closed' : 'Sign-up closed') + '</span></div>' + head +
+        (!a && tt.state === 'open' ? '<button type="button" class="sd-btn wide amber" id="ttsignin">Sign in to pick your time</button>' : '');
+    }
+    return '<div class="card sd-hero' + (need ? ' need' : '') + '">' + html + '</div>';
+  }
+
   // Nov 13: the Schedule tab shows everyone (Ty included) the player view; Ty's admin controls live in Admin > Schedule.
   function cardId() { return window.TEE_ADMIN ? 'adminteecard' : 'teecard'; }
   function cardEl() { return document.getElementById(cardId()); }
@@ -142,6 +258,8 @@
     var tt = t();
     if (!tt) { el.innerHTML = window.TEE_ADMIN ? '<div class="card empty">No upcoming league night on the Season tab.</div>' : ''; return; }
     var a = RL.user(), admin = !!(a && a.admin) && !!window.TEE_ADMIN, me = a ? a.name : '';
+    // Nov 24: the Schedule tab gets the member card; everything below is Ty's Admin > Schedule card.
+    if (!window.TEE_ADMIN) { el.innerHTML = playerCard(tt, a); delete el.dataset.groups; return; }
     // Nov 13 (Ty): players don't see the card until sign-up opens (Wed 8 AM). Ty's Admin > Schedule still shows it.
     if (!admin && tt.state === 'before' && !tt.confirmed) { el.innerHTML = ''; return; }
     var casual = !!tt.casual;   // casual round on Tonight: open now, locks at the first score, guests included
@@ -246,7 +364,10 @@
     body.token = a && a.token;
     return RL.post(body);
   }
-  function setNote(text, err) { note = { text: text, err: !!err }; renderTee(); }
+  function setNote(text, err) {
+    note = { text: text, err: !!err }; renderTee();
+    if (!window.TEE_ADMIN && typeof window.renderNightly === 'function' && !document.getElementById('svnight').classList.contains('hide')) window.renderNightly();
+  }
 
   document.addEventListener('click', function (ev) {
     var tt = t();
@@ -257,6 +378,7 @@
       var sel = document.getElementById('ttfor');
       var who = a && a.admin && sel ? sel.value : a && a.name;
       var c = b.getAttribute('data-tee'), id = ++seq;
+      if (!window.TEE_ADMIN) openPick = true;
       pend[who] = { v: c, id: id, state: 'saving', at: Date.now() };
       setNote('Saving ' + who + ': ' + LABEL[c] + '…');
       queue('t|' + who, function () { return post({ action: 'tee', name: who, choice: c }); }).then(function () {
@@ -279,6 +401,7 @@
       var au = RL.user(), sl = document.getElementById('ttfor');
       var w = au && au.admin && sl ? sl.value : au && au.name;
       var tv = tb.getAttribute('data-ttee'), tid = ++seq;
+      if (!window.TEE_ADMIN) openPick = true;
       tpend[w] = { v: tv, id: tid, state: 'saving', at: Date.now() };
       setNote('Saving ' + w + ': ' + tv + ' tees…');
       queue('s|' + w, function () { return post({ action: 'tee', name: w, tees: tv }); }).then(function () {
@@ -337,6 +460,8 @@
       });
       return;
     }
+    if (ev.target.id === 'sdchange') { openPick = true; note = { text: '', err: false }; renderTee(); return; }
+    if (ev.target.id === 'sddone') { openPick = false; note = { text: '', err: false }; renderTee(); return; }
     if (ev.target.id === 'ttcancel') { cedit = null; renderTee(); return; }
     if (ev.target.id === 'ttreset') { edit = null; saveDraft(tt, null); renderTee(); return; }
     if (ev.target.id === 'ttsignin') { RL.signIn(); return; }

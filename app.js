@@ -288,8 +288,8 @@
     var t = document.createElement('div');
     t.id = 'rl-tip'; t.className = 'rl-tip';
     t.innerHTML = kind === 'ios'
-      ? '<div><b>Install Roost Links</b><br>Tap <span class="rl-share" aria-label="Share"></span> Share, then <b>Add to Home Screen</b>.</div><button type="button" class="rl-x" aria-label="Close">✕</button>'
-      : '<div><b>Install Roost Links</b><br>Get it on your home screen like an app.</div><button type="button" class="rl-btn rl-inst">Install</button><button type="button" class="rl-x" aria-label="Close">✕</button>';
+      ? '<div><b>Install Roost Golf</b><br>Tap <span class="rl-share" aria-label="Share"></span> Share, then <b>Add to Home Screen</b>.</div><button type="button" class="rl-x" aria-label="Close">✕</button>'
+      : '<div><b>Install Roost Golf</b><br>Get it on your home screen like an app.</div><button type="button" class="rl-btn rl-inst">Install</button><button type="button" class="rl-x" aria-label="Close">✕</button>';
     document.body.appendChild(t);
     t.querySelector('.rl-x').addEventListener('click', function () { ls(TIP_KEY, '1'); t.remove(); });
     var inst = t.querySelector('.rl-inst');

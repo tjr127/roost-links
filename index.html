@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=128">
-<link rel="stylesheet" href="theme.css?v=128">
+<link rel="stylesheet" href="app.css?v=129">
+<link rel="stylesheet" href="theme.css?v=129">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=128"></script>
-<script src="app.js?v=128"></script>
-<script src="rules.js?v=128"></script>
+<script src="live.js?v=129"></script>
+<script src="app.js?v=129"></script>
+<script src="rules.js?v=129"></script>
 </head>
 <body>
 <header>
@@ -275,15 +275,15 @@
   <section id="puttstand" class="hide"><h2>Putt standings</h2><div id="puttleaders"></div><div class="card" id="putttable"></div><div class="card" id="putteven"></div><div class="card" id="puttrules"></div></section>
   <section id="schedule" class="hide">
     <div id="teecard"></div>
-    <div class="fhead"><h2>Schedule</h2><div class="seg" role="group" aria-label="Schedule view"><button type="button" data-sv="night">Nightly</button><button type="button" data-sv="player">Player</button></div></div>
+    <div class="seg sd-seg" role="group" aria-label="Schedule view"><button type="button" data-sv="night">Matchups</button><button type="button" data-sv="player">My schedule</button></div>
     <div id="svnight">
-      <div class="card picker"><label for="nightsel">Night</label><select id="nightsel"></select></div>
+      <div class="sd-chips" id="nightchips" role="group" aria-label="Night"></div>
       <div id="nightbody"></div>
     </div>
     <div id="svplayer">
-      <div class="card picker"><label for="who">Player</label><select id="who"></select></div>
-      <div class="summary" id="schedsum"></div>
-      <div class="card" id="weeks"></div>
+      <div class="sd-prow"><select id="who" aria-label="Player"></select><div class="sd-rec" id="schedsum"></div></div>
+      <div class="card sd-weeks" id="weeks"></div>
+      <div class="sd-hint" id="weekshint">Tap a night to see its matchups.</div>
     </div>
   </section>
   <section id="cards" class="hide">
@@ -513,15 +513,18 @@
   }
   document.getElementById('who').addEventListener('change', function () { setMe(this.value); });
 
-  // Nightly view (Nov 22): pick a night, see its head-to-head matches with each player's index, tees and course handicap.
-  // Data from ?api=nightly[&night=yyyy-MM-dd] (apps-script/nightly.gs).
+  // Schedule tab (reworked Nov 24): Matchups (one night's matches, grouped by tee time on the sign-up night) and
+  // My schedule (one player's season). Night data from ?api=nightly[&night=yyyy-MM-dd] (apps-script/nightly.gs).
   var schedView = store('schedView') || 'night';
   var nightPick = '';
   var nly = { list: null, by: {}, busy: {} };
   document.querySelectorAll('[data-sv]').forEach(function (b) {
     b.addEventListener('click', function () { schedView = b.getAttribute('data-sv'); store('schedView', schedView); renderSchedule(); });
   });
-  document.getElementById('nightsel').addEventListener('change', function () { nightPick = this.value; renderNightly(); });
+  document.getElementById('nightchips').addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-night]');
+    if (b) { nightPick = b.getAttribute('data-night'); renderNightly(); }
+  });
   function nightLoad(night) {
     var k = night || '_';
     var c = nly.by[k];
@@ -534,52 +537,121 @@
         if (j.nights) nly.list = j.nights;
         if (!nightPick && j.night) nightPick = j.night;
       }, function () { nly.by[k] = { d: c ? c.d : { err: true }, at: Date.now() - 240000 }; })
-        .then(function () { nly.busy[k] = false; if (schedView === 'night') renderNightly(); });
+        .then(function () { nly.busy[k] = false; if (schedView === 'night') renderNightly(); else renderSchedule(); });
     }
     return c ? c.d : null;
   }
+  // Every league night with its weekday and short date ("Nov 28"), whether it has been played, and whether its
+  // weekday is the unusual one (a Saturday in a Thursday league), which the page shows in amber.
+  function nightInfo() {
+    var played = {}, count = {}, usual = '', out = { list: [], by: {} };
+    ((data && data.schedule) || []).forEach(function (p) { (p.weeks || []).forEach(function (x) { if (/^[WLT]$/.test(x.status)) played[x.date] = true; }); });
+    (nly.list || []).forEach(function (x) {
+      var head = String(x.label || '').split(' · ')[0], sp = head.indexOf(' ');
+      var it = { night: x.night, dow: sp > 0 ? head.slice(0, sp) : '', md: sp > 0 ? head.slice(sp + 1) : head };
+      it.played = !!played[it.md];
+      count[it.dow] = (count[it.dow] || 0) + 1;
+      out.list.push(it); out.by[it.md] = it;
+    });
+    Object.keys(count).forEach(function (k) { if (!usual || count[k] > count[usual]) usual = k; });
+    out.list.forEach(function (it) { it.off = !!it.dow && it.dow !== usual; });
+    return out;
+  }
+  function renderNightChips() {
+    var el = document.getElementById('nightchips'), info = nightInfo();
+    var key = info.list.map(function (x) { return x.night + (x.played ? '*' : ''); }).join('|') + '#' + nightPick;
+    if (el.dataset.key === key) return;
+    var moved = el.dataset.pick !== nightPick;
+    el.dataset.key = key; el.dataset.pick = nightPick;
+    el.innerHTML = info.list.map(function (x) {
+      return '<button type="button" class="sd-chip' + (x.night === nightPick ? ' on' : '') + (x.played ? ' done' : '') + '" data-night="' + esc(x.night) + '"' + (x.night === nightPick ? ' aria-pressed="true"' : '') + '>' +
+        (x.off ? '<b>' + esc(x.dow) + '</b> ' : '') + esc(x.md) + (x.played ? ' <i aria-label="played">✓</i>' : '') + '</button>';
+    }).join('');
+    var on = el.querySelector('.sd-chip.on');
+    if (on && moved) el.scrollLeft = Math.max(0, on.offsetLeft - el.offsetLeft - (el.clientWidth - on.offsetWidth) / 2);
+  }
   function renderNightly() {
     var d = nightLoad(nightPick);
-    var sel = document.getElementById('nightsel'), body = document.getElementById('nightbody');
-    var list = nly.list || [];
-    var okey = list.map(function (x) { return x.night; }).join('|');
-    if (sel.dataset.opts !== okey) {
-      sel.innerHTML = list.map(function (x) { return '<option value="' + esc(x.night) + '">' + esc(x.label) + '</option>'; }).join('');
-      sel.dataset.opts = okey;
-    }
-    if (nightPick) sel.value = nightPick;
+    var body = document.getElementById('nightbody');
+    renderNightChips();
     if (!d) { body.innerHTML = '<div class="card empty">Loading that night…</div>'; return; }
     if (d.err) { body.innerHTML = '<div class="card empty">Couldn\'t load that night. Pull to refresh and try again.</div>'; return; }
     if (!d.matches || !d.matches.length) { body.innerHTML = '<div class="card empty">No matches set for this night.</div>'; return; }
     var mine = me();
     function hc(v) { return v === '' || v == null ? '–' : plus(v); }
-    function side(p, right, res) {
-      if (res) return '<div class="nm-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '') + '">' +
-        '<div class="nm-name">' + pn(p.name, right, true) + '</div>' +
-        '<div class="nm-ch nm-res' + (res === 'W' ? ' win' : '') + '"><b>' + esc(p.pts === '' ? '–' : p.pts) + '</b><small>STBF</small></div></div>';
-      return '<div class="nm-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '') + '">' +
-        '<div class="nm-name">' + pn(p.name, right, true) + '</div>' +
-        '<div class="nm-ch"><b>' + esc(hc(p.ch)) + '</b><small>HDCP</small></div>' +
-        '<div class="nm-sub">Index ' + esc(hc(p.index)) + (p.tee ? ' · ' + esc(p.tee) : '') + '</div></div>';
+    var G = !d.posted && window.teeGroups ? teeGroups(d.night) : null;   // tee-time groups, on the sign-up night only
+    function where(n) { return !G ? '' : G.early.indexOf(n) >= 0 ? 'E' : G.late.indexOf(n) >= 0 ? 'L' : ''; }
+    function side(p, right, res, note) {
+      var cls = 'sd-p' + (right ? ' r' : '') + (p.name === mine ? ' me' : '');
+      var name = '<div class="sd-pn">' + pn(p.name, right, true) + '</div>';
+      if (res) return '<div class="' + cls + '">' + name + '<div class="sd-pts' + (res === 'W' ? ' win' : '') + '"><b>' + esc(p.pts === '' ? '–' : p.pts) + '</b><small>STBF</small></div></div>';
+      var tee = G && G.tee(p.name) || p.tee, ch = G && G.ch(p.name) !== '' ? G.ch(p.name) : p.ch;
+      return '<div class="' + cls + '">' + name + '<div class="sd-ps">HDCP ' + esc(hc(ch)) + (tee ? ' · ' + esc(tee) : '') + (note ? ' · <em>' + esc(note) + '</em>' : '') + '</div></div>';
     }
-    var where = esc(d.course) + (d.nine === 'Front' || d.nine === 'Back' ? ' · ' + esc(d.nine) + ' 9' : d.nine === '18' ? ' · 18 holes' : '');
-    body.innerHTML = '<div class="card nm">' + (where ? '<div class="nm-cap">' + where + '</div>' : '') +
-      d.matches.map(function (m) { var ow = m.kind === 'oneway' ? 'One-Way Match' : m.kind === 'makeup' ? 'One-Way Makeup' : '';
-        var res = d.posted && (m.a.pts !== '' || m.b.pts !== '');
-        if (res) {
-          var pa = m.a.pts === '' ? -1e9 : Number(m.a.pts), pb = m.b.pts === '' ? -1e9 : Number(m.b.pts);
-          return '<div class="nm-row">' + side(m.a, false, pa > pb ? 'W' : '-') + '<div class="nm-vs">' + (pa === pb ? 'Tie' : 'vs') + (ow ? '<div class="nm-ow">' + ow + '<span aria-hidden="true">→</span></div>' : '') + '</div>' + side(m.b, true, pb > pa ? 'W' : '-') + '</div>';
-        }
-        return '<div class="nm-row">' + side(m.a) + '<div class="nm-vs">vs' + (ow ? '<div class="nm-ow">' + ow + '<span aria-hidden="true">→</span></div>' : '') + '</div>' + side(m.b, true) + '</div>'; }).join('') +
-      (d.byes && d.byes.length ? '<div class="nm-bye">Bye: ' + d.byes.map(esc).join(', ') + '</div>' : '') +
-      (d.posted ? '<div class="paykey">Final Stableford totals. Winner highlighted.</div>' : '<div class="paykey">HDCP = course handicap for this night\'s course and nine at the tees each player is playing (his pick for the night, else his usual tees). Index is his current index.</div>') + '</div>';
+    function row(m, notes) {
+      var ow = m.kind === 'oneway' ? 'One-way match' : m.kind === 'makeup' ? 'One-way makeup' : '';
+      var res = d.posted && (m.a.pts !== '' || m.b.pts !== ''), mid = 'vs', A, B;
+      if (res) {
+        var pa = m.a.pts === '' ? -1e9 : Number(m.a.pts), pb = m.b.pts === '' ? -1e9 : Number(m.b.pts);
+        A = side(m.a, false, pa > pb ? 'W' : '-'); B = side(m.b, true, pb > pa ? 'W' : '-'); if (pa === pb) mid = 'Tie';
+      } else { A = side(m.a, false, '', notes && notes[0]); B = side(m.b, true, '', notes && notes[1]); }
+      return '<div class="sd-m' + (m.a.name === mine || m.b.name === mine ? ' mine' : '') + '"><div class="sd-mr">' + A + '<div class="sd-vs">' + mid + '</div>' + B + '</div>' +
+        (ow ? '<div class="sd-ow">' + ow + ': counts for ' + esc(m.a.name) + ' only</div>' : '') + '</div>';
+    }
+    function mineFirst(list) { return list.slice().sort(function (x, y) { return (y.a.name === mine || y.b.name === mine ? 1 : 0) - (x.a.name === mine || x.b.name === mine ? 1 : 0); }); }
+    var capR = '', html = '';
+    if (G && (G.early.length || G.late.length)) {
+      // Sign-up night with groups: each group's matches under its tee time; matches not (fully) placed after them.
+      var inE = [], inL = [], rest = [];
+      d.matches.forEach(function (m) {
+        var wa = where(m.a.name), wb = where(m.b.name);
+        if (wa && wa === wb) (wa === 'E' ? inE : inL).push(m);
+        else rest.push(m);
+      });
+      var block = function (title, time, names, list) {
+        if (!names.length) return '';
+        // Group members without a match inside this group (a bye coming to play, a guest, or one half of a
+        // match that is split or not placed yet) are named under it, so a group never shows as an empty heading.
+        var also = names.filter(function (n) { return !list.some(function (m) { return m.a.name === n || m.b.name === n; }); });
+        return '<div class="sd-gh"><b>' + title + ' · ' + esc(time) + '</b><span class="tt-n">' + names.length + '</span></div>' +
+          mineFirst(list).map(function (m) { return row(m, [G.nopick(m.a.name) ? 'no answer' : '', G.nopick(m.b.name) ? 'no answer' : '']); }).join('') +
+          (also.length ? '<div class="sd-line">' + (list.length ? '<b>Also playing:</b> ' : '') + also.map(esc).join(', ') + '</div>' : '');
+      };
+      var lab = function (n) { var w = where(n), c = G.choice(n); return w === 'E' ? 'Early' : w === 'L' ? 'Late' : c === 'Out' ? 'can\'t play' : G.final ? 'not playing' : 'no answer'; };
+      html += block('Early', G.times.Early, G.early, inE) + block('Late', G.times.Late, G.late, inL);
+      if (rest.length) html += '<div class="sd-gh"><b>' + (rest.every(function (m) { return where(m.a.name) && where(m.b.name); }) ? 'Split across groups' : 'Not placed yet') + '</b><span class="tt-n">' + rest.length + '</span></div>' +
+        mineFirst(rest).map(function (m) { return row(m, [lab(m.a.name), lab(m.b.name)]); }).join('');
+      capR = G.final ? '<span class="sd-st ok">Groups set</span>' : '<span class="sd-st">Not final yet</span>';
+    } else {
+      html += mineFirst(d.matches).map(function (m) { return row(m); }).join('');
+    }
+    var tail = '';
+    if (G) {
+      var inG = function (n) { return where(n) !== ''; };
+      if (G.out.length) tail += '<div class="sd-line"><b class="out">Can\'t play:</b> ' + G.out.map(esc).join(', ') + '</div>';
+      if (G.none.length) tail += '<div class="sd-line"><b>No answer yet:</b> ' + G.none.map(esc).join(', ') + '</div>';
+      var byes = (d.byes || []).filter(function (n) { return !inG(n) && G.out.indexOf(n) < 0; });
+      if (byes.length) tail += '<div class="sd-line"><b>Bye:</b> ' + byes.map(esc).join(', ') + '</div>';
+    } else if (d.byes && d.byes.length) tail += '<div class="sd-line"><b>Bye:</b> ' + d.byes.map(esc).join(', ') + '</div>';
+    var place = esc(d.course) + (d.nine === 'Front' || d.nine === 'Back' ? ' · ' + esc(d.nine) + ' 9' : d.nine === '18' ? ' · 18 holes' : '');
+    body.innerHTML = '<div class="card sd-night"><div class="sd-cap"><span>' + place + '</span>' + capR + '</div>' + html +
+      (tail ? '<div class="sd-tail">' + tail + '</div>' : '') +
+      (d.posted ? '<div class="paykey">Final Stableford totals. Winner highlighted.</div>' : '<div class="paykey">HDCP = course handicap for this night\'s course and nine at the tees each player is playing (his pick for the night, else his usual tees).</div>') + '</div>';
   }
 
+  document.getElementById('weeks').addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-night]');
+    if (!b) return;
+    nightPick = b.getAttribute('data-night'); schedView = 'night'; store('schedView', schedView);
+    renderSchedule();
+    var seg = document.querySelector('#schedule .sd-seg');
+    if (seg && seg.scrollIntoView) try { seg.scrollIntoView({ block: 'start' }); window.scrollBy(0, -70); } catch (e) {}
+  });
   function renderSchedule() {
     document.querySelectorAll('[data-sv]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sv') === schedView); });
     document.getElementById('svnight').classList.toggle('hide', schedView !== 'night');
     document.getElementById('svplayer').classList.toggle('hide', schedView !== 'player');
-    if (schedView === 'night') renderNightly();
+    if (schedView === 'night') renderNightly(); else nightLoad(nightPick);
     var list = (data && data.schedule) || [];
     var sel = document.getElementById('who');
     var want = me();
@@ -591,25 +663,39 @@
     sel.value = names.indexOf(want) >= 0 ? want : '';
 
     var p = list.filter(function (x) { return x.name === sel.value; })[0];
+    var hint = document.getElementById('weekshint');
     if (!p) {
-      document.getElementById('schedsum').textContent = '';
+      document.getElementById('schedsum').innerHTML = '';
       document.getElementById('weeks').innerHTML = '<div class="empty">Pick a name to see their schedule</div>';
+      hint.classList.add('hide');
       return;
     }
     var w = 0, l = 0, t = 0;
     p.weeks.forEach(function (x) { if (x.status === 'W') w++; if (x.status === 'L') l++; if (x.status === 'T') t++; });
-    document.getElementById('schedsum').textContent = 'Record ' + w + '-' + l + '-' + t + ' (W-L-T)';
-    var label = { W: 'W', L: 'L', T: 'T', bye: 'Bye', makeup: 'Makeup', pending: 'Pending', upcoming: '' };
+    document.getElementById('schedsum').innerHTML = '<span class="w"><b>' + w + '</b>Won</span><span class="l"><b>' + l + '</b>Lost</span><span><b>' + t + '</b>Tied</span>';
+    var label = { W: 'W', L: 'L', T: 'T', makeup: 'Makeup', pending: 'Pending' };
+    var info = nightInfo(), who = p.name === you() ? 'You' : p.name, any = false;
     document.getElementById('weeks').innerHTML = p.weeks.map(function (x) {
-      var bye = x.status === 'bye';
-      return '<div class="wk' + (x.next ? ' next' : '') + (bye ? ' bye' : '') + '">' +
-        '<div class="when"><div class="date">' + esc(x.date) + '</div>' + (x.next ? '<div class="tag">Next</div>' : '') + '</div>' +
-        '<div class="what"><div class="opp">' + (bye ? 'Bye' : 'vs ' + esc(x.opp)) + '</div>' +
-          '<div class="course">' + esc(x.course) + '</div></div>' +
-        '<div class="res">' + (label[x.status] ? '<span class="chip ' + x.status + '">' + label[x.status] + '</span>' : '') +
-          (x.score ? '<div class="score">' + esc(x.score) + ' STBF</div>' : '') + '</div>' +
-      '</div>';
+      var bye = x.status === 'bye', it = info.by[x.date];
+      var om = /^(.*?)\s*\((.*)\)$/.exec(x.opp || ''), opp = om ? om[1] : x.opp, extra = om ? om[2] : '';
+      var when = '<span class="sd-when"><span class="dow' + (it && it.off ? ' off' : '') + '">' + esc(it ? it.dow : '') + '</span><b>' + esc(x.date) + '</b></span>';
+      var open = it ? '<button type="button" data-night="' + esc(it.night) + '" class="' : '<div class="', close = it ? '</button>' : '</div>';
+      if (it) any = true;
+      if (bye) return open + 'sd-wk bye">' + when + '<span class="sd-what"><span class="sub">Bye · ' + esc(x.course) + '</span></span>' + close;
+      var sc = /^\s*(\d+)\s*[–-]\s*(\d+)\s*$/.exec(x.score || '');
+      var sub = sc ? who + ' ' + sc[1] + ' · ' + opp + ' ' + sc[2] + ' · ' + x.course : x.course;
+      if (x.status === 'makeup' && extra) sub = 'Moved: plays ' + extra;
+      else if (/^one.?way$/i.test(extra)) sub += ' · one-way';
+      else if (extra) sub += ' · ' + extra;
+      if (x.next && it && window.teeGroups) {
+        var G = teeGroups(it.night);
+        if (G && G.early.indexOf(p.name) >= 0) sub += ' · Early ' + G.times.Early; else if (G && G.late.indexOf(p.name) >= 0) sub += ' · Late ' + G.times.Late;
+      }
+      var right = x.next && x.status === 'upcoming' ? '<span class="chip next">Next</span>' : label[x.status] ? '<span class="chip ' + x.status + '">' + label[x.status] + '</span>' :
+        it ? '<svg class="go" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' : '';
+      return open + 'sd-wk' + (x.next ? ' next' : '') + '">' + when + '<span class="sd-what"><span class="opp">vs ' + esc(opp) + '</span><span class="sub">' + esc(sub) + '</span></span>' + right + close;
     }).join('');
+    hint.classList.toggle('hide', !any);
   }
 
   document.getElementById('cardwho').addEventListener('change', function () { setMe(this.value); });
@@ -1805,20 +1891,20 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=128"></script>
-<script src="settings.js?v=128"></script>
-<script src="flip.js?v=128"></script>
-<script src="match.js?v=128"></script>
-<script src="msg.js?v=128"></script>
-<script src="puttstand.js?v=128"></script>
-<script src="stats.js?v=128"></script>
-<script src="bios.js?v=128"></script>
-<script src="ctp.js?v=128"></script>
-<script src="fine.js?v=128"></script>
-<script src="tonight.js?v=128"></script>
-<script src="anim.js?v=128"></script>
-<script src="bbb.js?v=128"></script>
-<script src="earnings.js?v=128"></script>
+<script src="tee.js?v=129"></script>
+<script src="settings.js?v=129"></script>
+<script src="flip.js?v=129"></script>
+<script src="match.js?v=129"></script>
+<script src="msg.js?v=129"></script>
+<script src="puttstand.js?v=129"></script>
+<script src="stats.js?v=129"></script>
+<script src="bios.js?v=129"></script>
+<script src="ctp.js?v=129"></script>
+<script src="fine.js?v=129"></script>
+<script src="tonight.js?v=129"></script>
+<script src="anim.js?v=129"></script>
+<script src="bbb.js?v=129"></script>
+<script src="earnings.js?v=129"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
