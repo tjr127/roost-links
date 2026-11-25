@@ -258,6 +258,126 @@
   }
 
   // Nov 13: the Schedule tab shows everyone (Ty included) the player view; Ty's admin controls live in Admin > Schedule.
+  // ---- Admin > Tee times (Nov 25): Answers / Groups views, Confirm pinned above the tab bar, Undo after a move ----
+  // Answers: count tiles (with Waiting), one row per player who's scheduled or has answered; tap a row to answer or change
+  // tees for them. Byes and guests with no answer fold into one row. Groups: Early / Late cards of move chips.
+  var aview = 'answers', byeOpen = false, addOpen = false, lastMove = null, nudge = [];
+  var CHEV = '<svg class="tta-chev" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+  var CHEVD = '<svg class="tta-chev" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  var SWAP = '<svg class="tta-swap" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16"/><path d="M4 17l3 3 3-3"/><path d="M17 20V4"/><path d="M14 7l3-3 3 3"/></svg>';
+  function adminGroups(tt) {
+    var conf = tt.confirmed;
+    if (conf) return cedit || { night: tt.night, early: conf.early.slice(), late: conf.late.slice() };
+    var sd = edit || savedDraft(tt), g = normalize(tt, sd || tt.suggested);
+    if (sd) edit = g;
+    return g;
+  }
+  function adminCard(tt, a, status) {
+    var casual = !!tt.casual, conf = tt.confirmed, sched = scheduled(tt), canPick = !conf;
+    var league = tt.players.map(function (p) { return p.name; });
+    var isBye = function (n) { return !sched[n] && !isGuest(tt, n); };
+    var by = { Early: [], Late: [], Either: [], Out: [] }, none = [], rest = [];
+    league.forEach(function (n) {
+      var c = choiceOf(tt, n);
+      if (by[c]) by[c].push(n); else if (sched[n] && !isGuest(tt, n)) none.push(n); else rest.push(n);
+    });
+    if (league.indexOf(forName) < 0 || !canPick) forName = '';
+    var g = adminGroups(tt), split = splitPairs(tt, g.early, g.late);
+    if (lastMove && (lastMove.night !== tt.night || g[lastMove.to].indexOf(lastMove.n) < 0)) lastMove = null;
+
+    var html = '<div class="tta"><div class="tta-sub">' + e(tt.label) + ' · <span' + (conf ? ' class="done"' : '') + '>' + status + '</span></div>' +
+      '<div class="seg2" role="group" aria-label="Tee times view">' +
+      '<button type="button" data-ttview="answers" class="' + (aview === 'answers' ? 'on' : '') + '" aria-pressed="' + (aview === 'answers') + '">Answers</button>' +
+      '<button type="button" data-ttview="groups" class="' + (aview === 'groups' ? 'on' : '') + '" aria-pressed="' + (aview === 'groups') + '">Groups</button></div>';
+    if (note.text) html += '<div class="tt-msg' + (note.err ? ' err' : '') + '">' + e(note.text) + '</div>';
+
+    if (aview === 'answers') {
+      var row = function (n) {
+        var c = choiceOf(tt, n), bye = isBye(n), open = canPick && forName === n;
+        var tag = c ? LABEL[c] : isGuest(tt, n) ? 'Guest' : bye ? 'Bye' : 'No answer';
+        var h = '<button type="button" class="tta-row' + (open ? ' open' : '') + '"' + (canPick ? ' data-ttwho="' + e(n) + '" aria-expanded="' + open + '"' : ' disabled') + '>' +
+          '<span class="tta-n">' + e(n) + teeTag(tt, n) + (c && bye ? ' <i class="tt-why">bye</i>' : c && isGuest(tt, n) ? ' <i class="tt-why">guest</i>' : '') + '</span>' +
+          '<span class="tta-a' + (c === 'Out' ? ' out' : !c ? ' none' : '') + '">' + tag + '</span>' + (canPick ? CHEV : '') + '</button>';
+        if (open) h += '<div class="tta-pick"><input type="hidden" id="ttfor" value="' + e(n) + '"><div class="tt-btns">' + ORDER.map(function (k) {
+            return '<button type="button" data-tee="' + k + '" class="' + (c === k ? 'on ' : '') + (k === 'Out' ? 'out' : '') + '"' + (c === k ? ' aria-pressed="true"' : '') + '>' +
+              LABEL[k] + (tt.times[k] ? '<small>' + e(tt.times[k]) + '</small>' : '') + '</button>';
+          }).join('') + '</div>' +
+          (bye ? '<div class="tt-byenote">' + (n === a.name ? 'You have' : e(n) + ' has') + ' a bye this week. Pick a time only if ' + (n === a.name ? 'you\'re' : e(n) + ' is') + ' coming to play.</div>' : '') +
+          teeRow(tt, n, true) + '</div>';
+        return h;
+      };
+      var tile = function (k, v, cls) { return '<div class="tta-tile' + (cls ? ' ' + cls : '') + '"><b>' + v + '</b><span>' + k + '</span></div>'; };
+      var rowsNow = by.Early.concat(by.Late, by.Either, by.Out, none);
+      html += '<div class="tta-tiles">' + tile('Early', by.Early.length) + tile('Late', by.Late.length) + tile('Either', by.Either.length) +
+        tile('Can\'t', by.Out.length, by.Out.length ? 'out' : '') + tile('Waiting', none.length, none.length && !conf ? 'wait' : '') + '</div>' +
+        '<div class="card tta-list">' + (rowsNow.length ? rowsNow.map(row).join('') : '<div class="empty">No answers yet.</div>') +
+        '<div class="tta-hint">' + (canPick ? 'Tap a player to answer or change tees for them.' : 'Groups are confirmed, so answers are locked. Reopen sign-up from Groups to change them.') + '</div></div>';
+      nudge = none.slice();
+      if (none.length && canPick && tt.state !== 'before') {
+        html += '<div class="card tta-wait"><div><b>Waiting on ' + none.length + '</b><small>' + none.map(e).join(', ') + '</small></div>' +
+          '<button type="button" class="pk-btn" data-ttnudge="1" data-gotab="adminmsg">Nudge</button></div>';
+      }
+      if (rest.length) {
+        var nb = rest.filter(isBye).length, ng = rest.length - nb;
+        var lab = nb && ng ? 'On a bye (' + nb + ') and ' + ng + (ng === 1 ? ' guest' : ' guests') : nb ? 'On a bye (' + nb + ')' : (ng === 1 ? 'Guest' : 'Guests') + ' (' + ng + ')';
+        html += '<div class="card tta-list tta-more"><button type="button" class="tta-row tta-morebtn" data-ttopen="bye" aria-expanded="' + byeOpen + '">' +
+          '<span class="tta-n">' + lab + '<small>' + rest.map(e).join(', ') + '</small></span>' + CHEVD + '</button>' + (byeOpen ? rest.map(row).join('') : '') + '</div>';
+      }
+    } else {
+      var chip = function (n, to) {
+        var sub = [teesOf(tt, n), choiceOf(tt, n) === 'Either' ? 'either' : ''].filter(Boolean).join(' · ');
+        return '<button type="button" class="tt-chip tta-chip" data-move="' + e(n) + '" data-to="' + to + '" aria-label="Move ' + e(n) + ' to ' + (to === 'late' ? 'Late' : 'Early') + '">' +
+          '<span><b>' + e(n) + '</b>' + (sub ? '<small>' + e(sub) + '</small>' : '') + '</span>' + SWAP + '</button>';
+      };
+      var grp = function (k, list, to) {
+        return '<div class="card tta-g"><div class="tta-gh"><b>' + k + ' · ' + e(tt.times[k]) + '</b><span>' + list.length + (list.length === 1 ? ' player' : ' players') + '</span></div>' +
+          '<div class="tta-chips">' + (list.length ? list.map(function (n) { return chip(n, to); }).join('') : '<span class="tt-none">Nobody yet</span>') + '</div></div>';
+      };
+      var all = league.slice(); (tt.guests || []).forEach(function (n) { if (all.indexOf(n) < 0) all.push(n); });
+      var outN = all.filter(function (n) { return g.early.indexOf(n) < 0 && g.late.indexOf(n) < 0; }).length;
+      html += '<div class="tta-gsub">' + (conf ? (cedit ? 'Groups (unsaved changes)' : 'Confirmed groups') : edit ? 'Your groups' : 'Suggested groups') + '. Tap a name to move it to the other group.</div>' +
+        grp('Early', g.early, 'late') + grp('Late', g.late, 'early') +
+        (split.length ? '<div class="tt-warn">Head-to-head split: ' + split.map(function (p) { return e(p[0]) + ' & ' + e(p[1]); }).join(', ') + '</div>' : '') +
+        (by.Out.length ? '<div class="tta-gsub">Can\'t play: ' + by.Out.map(e).join(', ') + '</div>' : '');
+      if (outN) {
+        html += '<div class="card tta-list tta-more"><button type="button" class="tta-row tta-morebtn" data-ttopen="add" aria-expanded="' + addOpen + '">' +
+          '<span class="tta-n">Add someone else (' + outN + ')<small>On a bye, a guest, or not in a group</small></span>' + CHEVD + '</button>' + (addOpen ? addBlock(tt, g, sched) : '') + '</div>';
+      }
+      var bar = '';
+      if (lastMove) bar += '<div class="tta-toast" role="status"><span>Moved ' + e(lastMove.n) + ' to ' + (lastMove.to === 'late' ? 'Late' : 'Early') + '</span><button type="button" data-ttundo="1">Undo</button></div>';
+      if (!conf) {
+        bar += '<button type="button" class="en-save tt-confirm" id="ttconfirm">Confirm groups</button>' +
+          '<div class="pin-hint">' + (casual ? 'Locks everyone\'s tee time and tees. Casual round: no alert, and nothing is confirmed for you.'
+            : 'Locks times and tees and sends the groups alert. If you don\'t, it confirms on its own at ' + e(String(tt.closes || '').replace(/^.* at /, '')) + '.') + '</div>' +
+          (edit ? '<button type="button" class="rl-link tt-small" id="ttreset">Back to suggested</button>' : '');
+      } else if (cedit) {
+        bar += '<button type="button" class="en-save tt-confirm" id="ttconfirm">Save changes</button>' +
+          '<div class="pin-hint">' + (casual ? 'Casual round: saving sends no alert.' : 'Saving sends everyone the updated groups alert.') + '</div>' +
+          '<button type="button" class="rl-link tt-small" id="ttcancel">Cancel changes</button>';
+      }
+      if (bar) html += '<div class="pin-bar tta-bar">' + bar + '</div>';
+      if (conf) html += '<button type="button" class="rl-link tt-small" id="ttreopen">Reopen sign-up</button>';
+    }
+    return { html: html + '</div>', groups: g };
+  }
+  // Status line for Admin home and the header dot (admin.js).
+  window.teeAdminInfo = function () {
+    var tt = t(); if (!tt) return null;
+    var sched = scheduled(tt), c = { Early: 0, Late: 0, Either: 0, Out: 0 }, none = 0, g = { early: [], late: [] };
+    tt.players.forEach(function (p) { var ch = choiceOf(tt, p.name); if (c[ch] !== undefined) c[ch]++; else if (sched[p.name] && !isGuest(tt, p.name)) none++; });
+    try { g = tt.confirmed || normalize(tt, edit || savedDraft(tt) || tt.suggested); } catch (x) {}
+    return { label: tt.label, state: tt.state, opens: tt.opens, closes: tt.closes, auto: String(tt.closes || '').replace(/^.* at /, ''), casual: !!tt.casual, confirmed: !!tt.confirmed,
+      inn: c.Early + c.Late + c.Either, out: c.Out, none: none, early: (g.early || []).length, late: (g.late || []).length };
+  };
+  document.addEventListener('click', function (ev) {
+    var v = ev.target.closest && ev.target.closest('[data-ttview]');
+    if (v) { aview = v.getAttribute('data-ttview') === 'groups' ? 'groups' : 'answers'; note = { text: '', err: false }; if (window.TEE_ADMIN) window.renderTee(); }
+    if (ev.target.closest && ev.target.closest('[data-ttnudge]') && window.msgPrefill) {
+      var tt = t();
+      window.msgPrefill(nudge, tt ? 'Tee times for ' + tt.label + ': pick Early, Late or Either in the app.' : '');
+    }
+  });
+
   function cardId() { return window.TEE_ADMIN ? 'adminteecard' : 'teecard'; }
   function cardEl() { return document.getElementById(cardId()); }
   window.renderTee = function () {
@@ -286,6 +406,8 @@
       : casual ? 'Closed · the first group has teed off'
       : 'Sign-up closed · groups being set';
 
+    // Nov 25: Ty's Admin > Tee times page has its own layout (adminCard above); the rest of this function is the older shared card.
+    if (admin) { var ac = adminCard(tt, a, status); el.innerHTML = ac.html; el.dataset.groups = JSON.stringify(ac.groups); return; }
     var who = admin ? (league.indexOf(forName) >= 0 ? forName : (league.indexOf(me) >= 0 ? me : league[0])) : me;
     var canPick = !!a && !conf && (admin || (tt.state === 'open' && league.indexOf(me) >= 0));
     var html = '<div class="card tt"><div class="tt-head"><div class="tt-title">' + e(tt.label) + ' · Tee times</div>' +
@@ -382,6 +504,21 @@
   document.addEventListener('click', function (ev) {
     var tt = t();
     if (!tt || !ev.target.closest('#teecard, #adminteecard')) return;
+    var wr = ev.target.closest('[data-ttwho]');
+    if (wr) { var wn = wr.getAttribute('data-ttwho'); forName = forName === wn ? '' : wn; note = { text: '', err: false }; renderTee(); return; }
+    var op = ev.target.closest('[data-ttopen]');
+    if (op) { if (op.getAttribute('data-ttopen') === 'bye') byeOpen = !byeOpen; else addOpen = !addOpen; renderTee(); return; }
+    if (ev.target.closest('[data-ttundo]')) {
+      if (!lastMove) return;
+      var ug = JSON.parse(cardEl().dataset.groups || '{"early":[],"late":[]}'), un = lastMove.n, uf = lastMove.from;
+      ug.early = ug.early.filter(function (x) { return x !== un; });
+      ug.late = ug.late.filter(function (x) { return x !== un; });
+      ug[uf].push(un); lastMove = null;
+      if (tt.confirmed) cedit = { night: tt.night, early: ug.early, late: ug.late };
+      else { edit = ug; saveDraft(tt, ug); }
+      renderTee();
+      return;
+    }
     var b = ev.target.closest('[data-tee]');
     if (b) {
       var a = RL.user();
@@ -433,6 +570,7 @@
     if (m) {
       var g = JSON.parse(cardEl().dataset.groups || '{}');
       var n = m.getAttribute('data-move'), to = m.getAttribute('data-to');
+      lastMove = { night: tt.night, n: n, to: to, from: to === 'late' ? 'early' : 'late' };
       g.early = g.early.filter(function (x) { return x !== n; });
       g.late = g.late.filter(function (x) { return x !== n; });
       g[to].push(n);
@@ -472,14 +610,14 @@
     }
     if (ev.target.id === 'sdchange') { openPick = true; note = { text: '', err: false }; renderTee(); return; }
     if (ev.target.id === 'sddone') { openPick = false; note = { text: '', err: false }; renderTee(); return; }
-    if (ev.target.id === 'ttcancel') { cedit = null; renderTee(); return; }
-    if (ev.target.id === 'ttreset') { edit = null; saveDraft(tt, null); renderTee(); return; }
+    if (ev.target.id === 'ttcancel') { cedit = null; lastMove = null; renderTee(); return; }
+    if (ev.target.id === 'ttreset') { edit = null; lastMove = null; saveDraft(tt, null); renderTee(); return; }
     if (ev.target.id === 'ttsignin') { RL.signIn(); return; }
     if (ev.target.id === 'ttconfirm') {
       var gg = JSON.parse(cardEl().dataset.groups || '{}');
       var wt = function (l) { return l.map(function (n) { var x = teesOf(tt, n); return n + (x ? ' (' + x + ')' : ''); }).join(', '); };
       if (!confirm('Confirm groups?\n\nEarly (' + gg.early.length + '): ' + wt(gg.early) + '\nLate (' + gg.late.length + '): ' + wt(gg.late) + '\n\nTee times and tees will be locked' + (tt.casual ? '.' : ' and everyone gets the alert.'))) return;
-      setNote('Confirming groups…');
+      lastMove = null; setNote('Confirming groups…');
       post({ action: 'teeConfirm', night: tt.night, early: gg.early, late: gg.late }).then(function () {
         tt.confirmed = { early: gg.early, late: gg.late, by: RL.user().name, at: 'just now' };
         var was = !!cedit;

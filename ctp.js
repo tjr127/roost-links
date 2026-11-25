@@ -19,6 +19,8 @@
   function on() { return !!(st ? st.on : (window.data && data.ctp && data.ctp.on)); }
   window.ctpOn = on;
   function players() { var en = window.data && window.data.entry; return (en && en.players) || []; }
+  function tonight() { var all = players().map(function (p) { return p.name; }); return ((window.data && window.data.cards) || []).map(function (c) { return c.name; }).filter(function (nm) { return all.indexOf(nm) >= 0; }); }
+  window.ctpInfo = function () { return on() ? { on: true, hole: st ? st.n : null, pot: st ? st.pot : null } : { on: false }; };
   function money(v) { v = Number(v) || 0; return (v < 0 ? '−$' : v > 0 ? '+$' : '$') + Math.abs(v); }
   function ft(x) { if (x == null) return ''; var i = Math.round(Number(x) * 12), f = Math.floor(i / 12); return f ? f + '′' + (i % 12) + '″' : (i % 12) + '″'; }   // under a foot: inches only
   function liveShots() { return st && st.ch ? (st.ch.phase === 'offer' ? [] : st.ch.shots) : (st && st.hole ? st.hole.shots : []); }
@@ -240,18 +242,23 @@
       return;
     }
     var pl = players();
-    if (!pick) { pick = {}; }
-    var n = Object.keys(pick).filter(function (k) { return pick[k]; }).length;
-    box.innerHTML = '<div class="card esw msg"><div class="esw-top"><b>Closest to the Pin</b><div class="esw-sub">Pick who\'s playing. The first hole\'s order is random. $1 a hole each; closest on the green takes the pot. ' +
-      'Starting it shows the CTP tab to everyone.</div></div>' +
-      '<div class="msg-quick"><button type="button" data-ctp="pickall">Select all</button><button type="button" data-ctp="picknone">Clear</button></div>' +
-      (pl.length ? pl.map(function (p) {
-        var o = !!pick[p.name];
-        return '<div class="esw-row"><span>' + e(p.name) + (p.guest ? ' <i>guest</i>' : '') + '</span><button type="button" class="sw' + (o ? ' on' : '') + '" role="switch" aria-checked="' + o + '" aria-label="' + e(p.name) + ' plays" data-ctp="pick" data-v="' + e(p.name) + '"><i></i></button></div>';
-      }).join('') : '<div class="empty">Loading players…</div>') +
-      '<button type="button" class="en-save msg-go" data-ctp="start"' + (n >= 2 && !busy ? '' : ' disabled') + '>' + (n >= 2 ? 'Start CTP with ' + n + ' players' : 'Pick at least two players') + '</button>' +
+    // Nov 25: tonight's players start picked; names are chips (shared picker in admin.js).
+    if (!pick && pl.length) { pick = {}; tonight().forEach(function (nm) { pick[nm] = true; }); }
+    var pk = pick || {}, tn = tonight();
+    var n = pl.filter(function (p) { return pk[p.name]; }).length;
+    var played = st && st.ended && st.money && ((st.hist || []).length || Object.keys(st.money).some(function (k) { return st.money[k] || (st.wins && st.wins[k]); }));
+    box.innerHTML = '<div class="card esw msg"><div class="esw-top"><div class="esw-sub">$1 a hole each; closest on the green takes the pot. The first hole\'s order is random.</div></div>' +
+      (pl.length && window.pkHtml ? pkHtml({
+        shortcuts: [tn.length ? ['Tonight\'s ' + tn.length, 'data-ctp="picktonight"'] : null, ['All', 'data-ctp="pickall"'], ['None', 'data-ctp="picknone"']],
+        items: pl.map(function (p) { return { name: p.name, tag: p.guest ? 'guest' : '' }; }),
+        on: function (nm) { return !!pk[nm]; },
+        attr: function (nm) { return 'data-ctp="pick" data-v="' + e(nm) + '" aria-label="' + e(nm) + ' plays"'; }
+      }) : '<div class="empty">Loading players…</div>') +
+      '<div class="pk-count"><b>' + n + '</b> playing</div>' +
+      '<div class="pin-bar"><button type="button" class="en-save msg-go" data-ctp="start"' + (n >= 2 && !busy ? '' : ' disabled') + '>' + (n >= 2 ? 'Start CTP with ' + n : 'Start CTP') + '</button>' +
+      '<div class="pin-hint">' + (n >= 2 ? 'Starting shows the CTP tab to everyone.' : 'Pick at least two players.') + '</div></div>' +
       '<div class="esw-msg' + (err ? ' err' : '') + '">' + e(msg) + '</div></div>' +
-      (st && st.ended && st.money ? ledger().replace('<h2>TONIGHT</h2>', '<h2>LAST CTP GAME</h2>') : '');
+      (played ? ledger().replace('<h2>TONIGHT</h2>', '<h2>LAST CTP GAME</h2>') : st && st.ended ? '<div class="card pk-line"><b>Last CTP game</b><small>No holes played</small></div>' : '');
   }
 
   // ---------- taps ----------
@@ -272,14 +279,15 @@
     var b = ev.target.closest && ev.target.closest('[data-ctp]'); if (!b) return;
     var k = b.getAttribute('data-ctp'), v = b.getAttribute('data-v');
     if (k === 'open') { open = open === v ? '' : v; msg = ''; draw(); return; }
-    if (k === 'pick') { pick[v] = !pick[v]; msg = ''; draw(); return; }
-    if (k === 'pickall') { players().forEach(function (p) { pick[p.name] = true; }); draw(); return; }
+    if (k === 'pick') { pick = pick || {}; pick[v] = !pick[v]; msg = ''; draw(); return; }
+    if (k === 'pickall') { pick = {}; players().forEach(function (p) { pick[p.name] = true; }); draw(); return; }
+    if (k === 'picktonight') { pick = {}; tonight().forEach(function (nm) { pick[nm] = true; }); draw(); return; }
     if (k === 'picknone') { pick = {}; draw(); return; }
     if (k === 'end') { confirmEnd = true; draw(); return; }
     if (k === 'endno') { confirmEnd = false; draw(); return; }
     if (b.disabled) return;
     if (k === 'start') {
-      var names = players().map(function (p) { return p.name; }).filter(function (n) { return pick[n]; });
+      var names = players().map(function (p) { return p.name; }).filter(function (n) { return pick && pick[n]; });
       act({ op: 'start', players: names }, 'Started. Order is on the CTP tab.');
       pick = null;
       return;

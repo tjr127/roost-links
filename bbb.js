@@ -166,23 +166,33 @@
   // ---- Admin > BBB ----
   function renderAdmin() {
     var el = document.getElementById('adminbbbbody'); if (!el) return;
-    var c = cfg(), all = tonightNames(), sel = inPlayers(), guests = {};
+    var c = cfg(), all = tonightNames(), sel = inPlayers(), guests = {}, carry = Number(c.carry) || 0;
     ((d().entry && d().entry.players) || []).forEach(function (p) { if (p.guest) guests[p.name] = 1; });
-    el.innerHTML = '<div class="card bbba"><div class="bbba-h"><div><b>Garbage</b><small>' + e(d().title || 'Tonight') + '</small></div>' +
+    // Nov 25: PREVIEW is said up front, names are chips (shared picker in admin.js), and the pot gets its own card.
+    el.innerHTML = '<div class="pv-note"><i class="pv-badge">Preview</i><span>Saved on this phone only, with demo points.</span></div>' +
+      '<div class="card bbba"><div class="bbba-h"><div><b>' + (c.on ? 'On tonight' : 'Off tonight') + '</b><small>' + e(d().title || 'Tonight') + '</small></div>' +
       '<button type="button" class="bbb-sw' + (c.on ? ' on' : '') + '" id="bbbsw" role="switch" aria-checked="' + !!c.on + '" aria-label="Garbage on tonight"><span></span></button></div>' +
-      (c.on ? '<div class="bbba-l"><span>Who\'s playing (from Tonight)</span><span><button type="button" data-bbball="1">All</button> · <button type="button" data-bbball="0">None</button></span></div>' +
+      (c.on ? '<div class="bbba-l"><span>Who\'s playing <small>from tonight\'s card</small></span></div>' +
         ((d().cards || []).some(function (c) { return BBB_EXCLUDE.test(String(c.name).trim()); }) ? '<div class="bbba-f" style="border:0;padding:0">Jeff is left out of Garbage for now (remote play).</div>' : '') +
-        (all.length ? all.map(function (n) { return '<label class="bbba-p"><input type="checkbox" data-bbbp="' + e(n) + '"' + (sel.indexOf(n) >= 0 ? ' checked' : '') + '>' + e(n) + (guests[n] ? ' <i>guest</i>' : '') + '</label>'; }).join('') : '<div class="empty">Nobody on Tonight yet.</div>') +
-        '<label class="bbba-p" style="justify-content:space-between">Carried over from last week <span>$ <input type="number" min="0" step="1" inputmode="numeric" data-bbbcarry="1" value="' + (Number(c.carry) || 0) + '" style="width:64px;height:36px;font-size:15px;background:#101412;color:inherit;border:1px solid #2c3530;border-radius:8px;padding:0 8px"></span></label>' +
-        '<div class="bbba-f">' + sel.length + ' playing · pot $' + (sel.length + (Number(c.carry) || 0)) + ' ($1 each' + (Number(c.carry) ? ' + carry' : '') + ')' + (sel.length < 2 ? ' · needs at least 2' : '') + '. Preview: saved on this phone only, with demo points.</div>' : '<div class="bbba-f">Off. Turn it on to pick tonight\'s BBB players.</div>') + '</div>';
+        (all.length && window.pkHtml ? pkHtml({
+          shortcuts: [['All', 'data-bbball="1"'], ['None', 'data-bbball="0"']],
+          items: all.map(function (n) { return { name: n, tag: guests[n] ? 'guest' : '' }; }),
+          on: function (n) { return sel.indexOf(n) >= 0; },
+          attr: function (n) { return 'data-bbbchip="' + e(n) + '"'; }
+        }) : '<div class="empty">Nobody on Tonight yet.</div>') : '<div class="bbba-f">Turn it on to pick tonight\'s Garbage players.</div>') + '</div>' +
+      (c.on ? '<div class="card bbba bbba-pot"><div class="bbba-ph"><div><small>Pot tonight</small><b>$' + (sel.length + carry) + '</b></div><span>' + sel.length + ' playing × $1' + (carry ? ' + $' + carry + ' carried' : '') + (sel.length < 2 ? ' · needs at least 2' : '') + '</span></div>' +
+        '<label class="bbba-p bbba-carry"><span>Carried over from last week</span><span>$ <input type="number" min="0" step="1" inputmode="numeric" data-bbbcarry="1" value="' + carry + '"></span></label>' +
+        '<div class="bbba-f">Leader at the end of the night takes the pot. A tie carries it to next week.</div></div>' : '');
   }
   window.renderAdminBbb = renderAdmin;
+  window.bbbAdminInfo = function () { var c = cfg(), n = c.on ? inPlayers().length : 0; return { on: !!c.on, n: n, pot: n + (Number(c.carry) || 0) }; };
   function refresh() { syncPill(); renderAdmin(); if (typeof window.renderField === 'function') window.renderField(); renderPage(); }
 
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest ? ev.target : null; if (!t) return;
     var c;
     if (t.closest('#bbbsw')) { c = cfg(); c.on = !c.on; save(c); refresh(); }
+    else if (t.closest('[data-bbbchip]')) { c = cfg(); var cn = t.closest('[data-bbbchip]').getAttribute('data-bbbchip'), cur0 = inPlayers(); c.players = cur0.indexOf(cn) >= 0 ? cur0.filter(function (x) { return x !== cn; }) : cur0.concat([cn]); save(c); refresh(); }
     else if (t.closest('[data-bbball]')) { c = cfg(); c.players = t.closest('[data-bbball]').getAttribute('data-bbball') === '1' ? tonightNames() : []; save(c); refresh(); }
     else if (t.closest('#bbbopen')) { if (window.showTab) showTab('bbb'); renderPage(); window.scrollTo(0, 0); }
     else if (t.closest('[data-gbh]')) { selHole = Number(t.closest('[data-gbh]').getAttribute('data-gbh')); renderPage(); }

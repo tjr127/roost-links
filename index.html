@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=139">
-<link rel="stylesheet" href="theme.css?v=139">
+<link rel="stylesheet" href="app.css?v=140">
+<link rel="stylesheet" href="theme.css?v=140">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=139"></script>
-<script src="app.js?v=139"></script>
-<script src="rules.js?v=139"></script>
+<script src="live.js?v=140"></script>
+<script src="app.js?v=140"></script>
+<script src="rules.js?v=140"></script>
 </head>
 <body>
 <header>
@@ -249,7 +249,7 @@
   <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11"/><path d="M12 20V5"/><path d="M19 20v-6"/></svg><span>Stats</span></button>
   <button type="button" data-tab="news" data-group="newsres newsann newsbio"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><path d="M12 17v4"/><path d="M9 21h6"/></svg><span>Press</span></button>
   <button type="button" data-tab="ctp" id="ctpbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V3"/><path d="M12 3l7 3-7 3"/><ellipse cx="12" cy="21" rx="6" ry="1.5"/></svg><span>CTP</span></button>
-  <button type="button" data-tab="admin" data-group="adminenter adminsched adminmsg adminctp adminbbb" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10"/><path d="M18 7h2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Admin</span></button>
+  <button type="button" data-tab="admin" data-group="adminhome adminenter adminsched adminmsg adminctp adminbbb" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10"/><path d="M18 7h2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Admin</span></button>
 </nav>
 <main>
   <div id="tncard" class="livebd hide"></div>
@@ -259,6 +259,7 @@
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Individual</button><button type="button" data-tab="puttstand">Putts</button><button type="button" data-tab="earnings">Earnings</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
   <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button><button type="button" data-tab="adminctp">CTP</button><button type="button" data-tab="adminbbb">Garbage</button></nav>
+  <div id="admbar" class="admbar hide"><button type="button" data-gotab="admin" aria-label="Back to Admin"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><h2 id="admbart"></h2></div>
   <section id="tonight">
     <div id="teestrip" class="teestrip hide livebd"></div>
     <div id="pastH2H" class="pastbd"></div>
@@ -294,7 +295,9 @@
   </section>
   <section id="enter" class="hide">
     <h2>Enter score</h2>
+    <div class="seg2 hide" id="enmode" role="group" aria-label="Enter scores for"><button type="button" data-enmode="one">One player</button><button type="button" data-enmode="group">Whole group</button></div>
     <div class="card picker">
+      <div id="enchips" class="pk-grid en-chips hide"></div>
       <label for="enwho">Player</label><select id="enwho"></select>
       <label for="enhole" style="margin-top:12px">Hole</label><select id="enhole"></select>
       <div class="en-info" id="eninfo"></div>
@@ -312,14 +315,16 @@
       <button type="button" class="en-clear" id="enclear">Clear this hole</button>
     </div>
     <div class="card" id="enholes"></div>
+    <div class="card engrp hide" id="engrp"></div>
   </section>
-  <section id="entrysw" class="hide"><h2>Enter scores for anyone</h2><div id="eswbody"></div></section>
+  <section id="entrysw" class="hide"><div id="eswbody"></div></section>
   <section id="stats" class="hide">
     <div id="sxbody"></div>
   </section>
   <section id="newsres" class="hide"><div id="newsresbody"></div></section>
   <section id="newsann" class="hide"><div id="newsannbody"></div></section>
   <section id="newsbio" class="hide"><div id="newsbiobody"></div></section>
+  <section id="adminhome" class="hide"><div id="adminhomebody"></div></section>
   <section id="adminsched" class="hide"><div id="adminteecard"></div></section>
   <section id="adminmsg" class="hide"><div id="msgbody"></div></section>
   <section id="adminbbb" class="hide"><div id="adminbbbbody"></div></section>
@@ -388,7 +393,7 @@
   function resolveTab(tab) {
     if (tab === 'board') return boardDefault();
     if (tab === 'scores') { var s0 = store('scoresTab'); return s0 && s0 !== 'enter' ? s0 : (canSelfEnter() ? 'enter' : 'cards'); }
-    if (tab === 'admin') return store('adminTab') || 'adminenter';
+    if (tab === 'admin') return 'adminhome';   // Nov 25: Admin home, not the last admin page
     if (tab === 'news') return store('newsTab') || 'newsres';
     if (tab === 'stand') return store('standTab') || 'standings';
     if (tab === 'enter' && !canSelfEnter()) return 'cards';
@@ -435,6 +440,7 @@
     if (window.ctpShown) ctpShown(tab);
     var on = document.querySelector('nav.subnav button[data-tab="' + tab + '"]') || document.querySelector('nav.tabbar button[data-tab="' + tab + '"]');
     if (on) document.getElementById('curtab').textContent = on.textContent;
+    if (window.adminShown) adminShown(tab, grp);   // Nov 25: back bar, header button
     setMenu(false);
   }
   // Team game card: tap for the full rules (rules.js).
@@ -466,7 +472,8 @@
   setH2hView(store('h2hView'));
   // Admin tab only for admins; Enter score pill only for players allowed to enter their own scores.
   window.updateNav = function () {
-    document.getElementById('adminbtn').classList.toggle('hide', !isAdmin());
+    document.getElementById('adminbtn').classList.add('hide');   // Nov 25: Admin lives in the header now (admin.js)
+    if (window.adminRefresh) adminRefresh();
     document.getElementById('ctpbtn').classList.toggle('hide', !(window.ctpOn && ctpOn()));
     var tb = document.querySelector('nav.tabbar'); if (tb) { var more = function () { tb.classList.toggle('more', tb.scrollWidth - tb.clientWidth - tb.scrollLeft > 4); }; more(); if (!tb.dataset.mw) { tb.dataset.mw = 1; tb.addEventListener('scroll', more, { passive: true }); window.addEventListener('resize', more); } }
     document.getElementById('enterpill').classList.toggle('hide', !canSelfEnter());
@@ -1062,6 +1069,107 @@
   document.getElementById('ensave').addEventListener('click', function () { sendScore(entry.val); });
   document.getElementById('enclear').addEventListener('click', function () { sendScore(''); });
 
+  // ---- Whole group (Nov 25): one hole, a row per player, one Save. For the times GSPro misses a hole. ----
+  // Rows start at the saved score, or par and 2 putts. Save sends every player who has no score on the hole yet, plus any row
+  // Ty changed; rows already saved and left alone are skipped. Saves go one at a time through the same saveScore call.
+  var enGrp = { on: false, hole: null, vals: {}, busy: false, msg: '', err: false };
+  function grpHoles() { var hs = []; ((data && data.cards) || []).forEach(function (c) { c.holes.forEach(function (h) { if (hs.indexOf(h.hole) < 0) hs.push(h.hole); }); }); return hs; }
+  function grpRec(c, hole) { return c.holes.filter(function (h) { return h.hole === hole; })[0]; }
+  function grpVal(c, hole) { var h = grpRec(c, hole); return enGrp.vals[pkey(c.name, hole)] || { v: startVal(h), pt: startPutts(h) }; }
+  function grpOpen(hole) { return ((data && data.cards) || []).some(function (c) { var h = grpRec(c, hole); return !!h && h.g === ''; }); }
+  function grpTodo(hole) {
+    return ((data && data.cards) || []).filter(function (c) {
+      var h = grpRec(c, hole); if (!h) return false;
+      var k = pkey(c.name, hole), x = enGrp.vals[k], q = pending[k];
+      if (q && q.state === 'saving') return false;
+      if (h.g === '' || (q && q.state === 'failed')) return true;
+      return !!x && (Number(h.g) !== x.v || String(h.pt === undefined ? '' : h.pt) !== String(x.pt));
+    });
+  }
+  function renderGroup() {
+    var box = document.getElementById('engrp'), list = (data && data.cards) || [], hs = grpHoles();
+    if (!list.length || !hs.length) { box.innerHTML = '<div class="empty">Nobody on tonight\'s card yet.</div>'; return; }
+    if (hs.indexOf(enGrp.hole) < 0) { var fo = hs.filter(grpOpen)[0]; enGrp.hole = fo !== undefined ? fo : hs[hs.length - 1]; }
+    var hole = enGrp.hole, i = hs.indexOf(hole), ref = null, rows = list.filter(function (c) { return !!grpRec(c, hole); });
+    rows.some(function (c) { ref = grpRec(c, hole); return true; });
+    var todo = grpTodo(hole), dis = enGrp.busy ? ' disabled' : '';
+    var MIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
+    var PLS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
+    var step = function (name, k, val, lab) {
+      return '<div class="eg-st"><button type="button" data-eg="' + esc(name) + '" data-k="' + k + '" data-d="-1" aria-label="One less ' + lab + ' for ' + esc(name) + '"' + dis + '>' + MIN + '</button><b>' + val + '</b>' +
+        '<button type="button" data-eg="' + esc(name) + '" data-k="' + k + '" data-d="1" aria-label="One more ' + lab + ' for ' + esc(name) + '"' + dis + '>' + PLS + '</button></div>';
+    };
+    box.innerHTML = '<div class="eg-hole"><button type="button" data-egh="-1" aria-label="Previous hole"' + (i <= 0 || enGrp.busy ? ' disabled' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>' +
+      '<div><b>Hole ' + hole + '</b><small>' + (ref ? 'Par ' + esc(ref.par) + ' · Hcp ' + esc(ref.idx) : '') + '</small></div>' +
+      '<button type="button" data-egh="1" aria-label="Next hole"' + (i >= hs.length - 1 || enGrp.busy ? ' disabled' : '') + '><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button></div>' +
+      '<div class="eg-head"><span></span><span>Score</span><span>Putts</span></div>' +
+      rows.map(function (c) {
+        var h = grpRec(c, hole), x = grpVal(c, hole), q = pending[pkey(c.name, hole)], s = n(h.s) || 0;
+        var bad = q && q.state === 'failed';
+        var sub = q && q.state === 'saving' ? 'Saving…' : bad ? 'Not saved' : h.g !== '' ? 'Saved ' + esc(h.g) + (h.pt !== '' && h.pt !== undefined ? ' · ' + esc(h.pt) + (Number(h.pt) === 1 ? ' putt' : ' putts') : '')
+          : s ? 'Gets ' + s + (s === 1 ? ' stroke' : ' strokes') : 'No score yet';
+        return '<div class="eg-row"><div class="eg-n"><b>' + esc(c.name) + '</b><small class="' + (bad ? 'err' : h.g !== '' && !(q && q.state === 'saving') ? 'ok' : '') + '">' + sub + '</small></div>' +
+          step(c.name, 'v', x.v, 'stroke') + step(c.name, 'pt', x.pt, 'putt') + '</div>';
+      }).join('') +
+      '<div class="eg-hint">Everyone starts at par with 2 putts. Change only what\'s different, then save the hole once.</div>' +
+      '<button type="button" class="en-save" id="egsave"' + (todo.length && !enGrp.busy ? '' : ' disabled') + '>' +
+        (enGrp.busy ? 'Saving…' : todo.length ? 'Save hole ' + hole + ' for ' + (todo.length === rows.length ? 'all ' + rows.length : todo.length + (todo.length === 1 ? ' player' : ' players')) : 'Hole ' + hole + ' is saved') + '</button>' +
+      '<div class="en-msg' + (enGrp.err ? ' err' : '') + '" id="egmsg">' + esc(enGrp.msg) + '</div>';
+  }
+  function grpSave() {
+    var hole = enGrp.hole, bad = [];
+    var q = grpTodo(hole).map(function (c) { var x = grpVal(c, hole); return { who: c.name, v: x.v, pt: x.pt }; });
+    if (!q.length || enGrp.busy) return;
+    enGrp.busy = true; enGrp.err = false; enGrp.msg = 'Saving hole ' + hole + '…';
+    (function next(i) {
+      if (i >= q.length) {
+        var ok = q.length - bad.length;
+        enGrp.busy = false; enGrp.err = bad.length > 0;
+        enGrp.msg = bad.length ? 'Not saved: ' + bad.join(', ') + '. Tap Save to try again.' : 'Saved hole ' + hole + ' for ' + ok + (ok === 1 ? ' player' : ' players') + ' ✓';
+        if (!bad.length) { var hs = grpHoles(), nx = hs.filter(function (x) { return hs.indexOf(x) > hs.indexOf(hole) && grpOpen(x); })[0]; if (nx !== undefined) enGrp.hole = nx; }
+        renderEntry(); renderCard(); scheduleRefresh();
+        return;
+      }
+      var it = q[i], k = pkey(it.who, hole), id = ++saveId;
+      pending[k] = { v: it.v, pt: it.pt, state: 'saving', id: id };
+      applyPending(data, 0); renderGroup();
+      google.script.run.withSuccessHandler(function () {
+        var p = pending[k]; if (p && p.id === id) { p.state = 'saved'; p.savedAt = Date.now(); }
+        delete enGrp.vals[k]; next(i + 1);
+      }).withFailureHandler(function (err) {
+        var p = pending[k]; if (p && p.id === id) p.state = 'failed';
+        bad.push(it.who + (err && err.message ? ' (' + err.message + ')' : '')); next(i + 1);
+      }).saveScore(it.who, hole, it.v, it.pt);
+    })(0);
+  }
+  document.getElementById('engrp').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b || b.disabled) return;
+    if (b.hasAttribute('data-egh')) {
+      var hs = grpHoles(), nh = hs[hs.indexOf(enGrp.hole) + Number(b.getAttribute('data-egh'))];
+      if (nh !== undefined) { enGrp.hole = nh; enGrp.msg = ''; enGrp.err = false; renderGroup(); }
+      return;
+    }
+    if (b.hasAttribute('data-eg')) {
+      var name = b.getAttribute('data-eg'), c = ((data && data.cards) || []).filter(function (y) { return y.name === name; })[0];
+      if (!c) return;
+      var x0 = grpVal(c, enGrp.hole), x = { v: x0.v, pt: x0.pt }, d = Number(b.getAttribute('data-d'));
+      if (b.getAttribute('data-k') === 'v') x.v = Math.max(1, Math.min(20, x.v + d)); else x.pt = Math.max(0, Math.min(10, x.pt + d));
+      enGrp.vals[pkey(name, enGrp.hole)] = x; enGrp.msg = ''; enGrp.err = false; renderGroup();
+      return;
+    }
+    if (b.id === 'egsave') grpSave();
+  });
+  document.getElementById('enchips').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-enwho]'); if (!b) return;
+    var s = document.getElementById('enwho'); s.value = b.getAttribute('data-enwho'); s.dispatchEvent(new Event('change'));
+  });
+  document.getElementById('enmode').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-enmode]'); if (!b) return;
+    enGrp.on = b.getAttribute('data-enmode') === 'group'; enGrp.msg = ''; enGrp.err = false; renderEntry();
+  });
+
+  // Nov 25: the self-entry list is folded behind a one-line summary; names are chips (shared picker in admin.js).
+  var eswOpen = false;
   function renderEntrySw() {
     var el = document.getElementById('eswbody'); if (!el) return;
     if (!isAdmin()) { el.innerHTML = ''; return; }
@@ -1069,18 +1177,22 @@
     if (!e || !e.players) { el.innerHTML = '<div class="card esw"><div class="empty">The per-player switches appear once the server update is in.</div></div>'; return; }
     var list = e.players.slice().sort(function (x, y) { return (y.admin ? 1 : 0) - (x.admin ? 1 : 0); });  // admins (Ty) first
     var pl = list.filter(function (p) { return !p.admin; });
-    var allOn = pl.length && pl.every(function (p) { return !!e.on[p.name]; }), allOff = pl.every(function (p) { return !e.on[p.name]; });
-    el.innerHTML = '<div class="card esw">' +
-      '<div class="esw-top"><div><b>Players entering their own scores</b><div class="esw-sub">Off hides Enter score on the Stats tab for them (you too). GSPro still records their scores, and you can always enter anyone\'s above. Everyone on / off doesn\'t change your own switch.</div></div></div>' +
-      '<div class="esw-all"><button type="button" class="tog' + (allOn ? ' on' : '') + '" data-esw="*" data-on="1">Everyone on</button><button type="button" class="tog' + (allOff ? ' on' : '') + '" data-esw="*" data-on="0">Everyone off</button></div>' +
-      list.map(function (p) {
-        var on = !!e.on[p.name];
-        return '<div class="esw-row"><span>' + esc(p.name) + (p.admin ? ' <i>you</i>' : '') + (p.guest ? ' <i>guest</i>' : '') + '</span>' +
-          '<button type="button" class="sw' + (on ? ' on' : '') + '" role="switch" aria-checked="' + on + '" aria-label="' + esc(p.name) + ' can enter scores" data-esw="' + esc(p.name) + '" data-on="' + (on ? '0' : '1') + '"><i></i></button></div>';
-      }).join('') +
-      '<div class="esw-msg" id="eswmsg"></div></div>';
+    var nOn = pl.filter(function (p) { return !!e.on[p.name]; }).length;
+    var sum = !pl.length ? '' : !nOn ? 'Off for everyone' : nOn === pl.length ? 'On for everyone' : 'On for ' + nOn + ' of ' + pl.length + ' players';
+    var html = '<div class="card esw"><div class="esw-sum"><div><b>Who can enter their own scores</b><div class="esw-sub">' + sum + '</div></div>' +
+      '<button type="button" class="pk-btn" data-eswopen="1" aria-expanded="' + eswOpen + '">' + (eswOpen ? 'Done' : 'Change') + '</button></div>';
+    if (eswOpen && window.pkHtml) html += '<div class="esw-sub esw-why">Off hides Enter score on the Stats tab for them (you too). GSPro still records their scores, and you can always enter anyone\'s above. Everyone on / off doesn\'t change your own.</div>' +
+      pkHtml({
+        shortcuts: [['Everyone on', 'data-esw="*" data-on="1"'], ['Everyone off', 'data-esw="*" data-on="0"']],
+        items: list.map(function (p) { return { name: p.name, tag: p.admin ? 'you' : p.guest ? 'guest' : '' }; }),
+        on: function (nm0) { return !!e.on[nm0]; },
+        attr: function (nm0, on) { return 'data-esw="' + esc(nm0) + '" data-on="' + (on ? '0' : '1') + '" aria-label="' + esc(nm0) + ' can enter scores"'; }
+      }) + '<div class="esw-msg" id="eswmsg"></div>';
+    el.innerHTML = html + '</div>';
   }
   document.addEventListener('click', function (ev) {
+    var op = ev.target.closest && ev.target.closest('[data-eswopen]');
+    if (op) { eswOpen = !eswOpen; renderEntrySw(); return; }
     var b = ev.target.closest && ev.target.closest('[data-esw]');
     if (!b || !data || !data.entry) return;
     var name = b.getAttribute('data-esw'), on = b.getAttribute('data-on') === '1', a = RL.user();
@@ -1103,6 +1215,14 @@
       return adminView || (!!au && au.name === x && entryOn(x));
     });
     var sel = document.getElementById('enwho');
+    // Nov 25 (admin view): player chips instead of the dropdown, and a One player / Whole group switch.
+    var pcard = document.querySelector('#enter .picker'), gbox = document.getElementById('engrp'), hbox = document.getElementById('enholes'), modeEl = document.getElementById('enmode'), chipEl = document.getElementById('enchips');
+    if (!adminView) enGrp.on = false;
+    modeEl.classList.toggle('hide', !adminView || !names.length);
+    [].forEach.call(modeEl.querySelectorAll('button'), function (b) { var o = (b.getAttribute('data-enmode') === 'group') === enGrp.on; b.classList.toggle('on', o); b.setAttribute('aria-pressed', o); });
+    pcard.classList.toggle('en-adm', adminView); chipEl.classList.toggle('hide', !adminView);
+    pcard.classList.toggle('hide', enGrp.on); hbox.classList.toggle('hide', enGrp.on); gbox.classList.toggle('hide', !enGrp.on);
+    if (enGrp.on) { renderGroup(); return; }
     var optKey = (adminView ? 'A|' : 'P|') + names.join('|');
     if (sel.dataset.opts !== optKey) {
       sel.innerHTML = '<option value="">' + (adminView ? 'Choose a player…' : 'Choose your name…') + '</option>' + names.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
@@ -1116,11 +1236,16 @@
     }
     if (entry.who && names.indexOf(entry.who) < 0) { entry.who = ''; entry.hole = null; entry.val = null; entry.putts = null; }
     sel.value = entry.who;
+    if (adminView) chipEl.innerHTML = names.map(function (x) {
+      var c = list.filter(function (y) { return y.name === x; })[0], tot = c ? c.holes.length : 0, done = c ? c.holes.filter(function (h) { return h.g !== ''; }).length : 0;
+      return '<button type="button" class="pk-chip two' + (x === entry.who ? ' on' : '') + '" aria-pressed="' + (x === entry.who) + '" data-enwho="' + esc(x) + '"><span>' + esc(x) + '</span><small>' + (tot ? done + ' of ' + tot : 'no holes') + '</small></button>';
+    }).join('');
 
     var p = enPlayer();
     var hs = document.getElementById('enhole');
     var on = !!p && p.holes.length > 0;
     ['enhole', 'enminus', 'enplus', 'enpminus', 'enpplus', 'ensave', 'enclear'].forEach(function (id) { document.getElementById(id).disabled = !on; });
+    pcard.classList.toggle('en-idle', !on);
     if (!on) {
       hs.innerHTML = ''; document.getElementById('eninfo').textContent = p ? 'No holes set for tonight yet' : adminView ? 'Pick a player to enter scores' : RL.entryHint(names.length > 0); document.getElementById('eninfo').classList.toggle('big', !p);
       document.getElementById('enval').textContent = '–'; document.getElementById('enpval').textContent = '–'; document.getElementById('enrel').textContent = '';
@@ -1137,7 +1262,7 @@
     var s = n(h.s) || 0;
     var hy = teeOf(p.tees), hyd = hy && hy.holes ? hy.holes[h.hole - 1] : '';
     document.getElementById('eninfo').textContent = 'Par ' + h.par + (hyd ? ' · ' + hyd + ' yds' : '') + ' · Hcp ' + h.idx +
-      (s ? ' · You get ' + s + (s === 1 ? ' stroke' : ' strokes') : '') + (h.g !== '' ? ' · Saved: ' + h.g + (h.pt !== '' && h.pt !== undefined ? ', ' + h.pt + (Number(h.pt) === 1 ? ' putt' : ' putts') : '') : '');
+      (s ? ' · ' + (adminView ? entry.who + ' gets ' : 'You get ') + s + (s === 1 ? ' stroke' : ' strokes') : '') + (h.g !== '' ? ' · Saved: ' + h.g + (h.pt !== '' && h.pt !== undefined ? ', ' + h.pt + (Number(h.pt) === 1 ? ' putt' : ' putts') : '') : '');
     document.getElementById('enval').textContent = entry.val;
     document.getElementById('enpval').textContent = entry.putts;
     var diff = entry.val - n(h.par);
@@ -1888,6 +2013,7 @@ function renderField() {
 
     renderField();
     if (window.renderTonightCard) try { renderTonightCard(d); } catch (x) { console.error(x); }
+    if (window.adminRefresh) try { adminRefresh(); } catch (x) { console.error(x); }
     if (window.updateHeaderChip) try { updateHeaderChip(); } catch (x) { console.error(x); }
     if (groupOf(curTab) === 'board') renderBoardPast();
 
@@ -1995,20 +2121,21 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=139"></script>
-<script src="settings.js?v=139"></script>
-<script src="flip.js?v=139"></script>
-<script src="match.js?v=139"></script>
-<script src="msg.js?v=139"></script>
-<script src="puttstand.js?v=139"></script>
-<script src="stats.js?v=139"></script>
-<script src="bios.js?v=139"></script>
-<script src="ctp.js?v=139"></script>
-<script src="fine.js?v=139"></script>
-<script src="tonight.js?v=139"></script>
-<script src="anim.js?v=139"></script>
-<script src="bbb.js?v=139"></script>
-<script src="earnings.js?v=139"></script>
+<script src="tee.js?v=140"></script>
+<script src="settings.js?v=140"></script>
+<script src="admin.js?v=140"></script>
+<script src="flip.js?v=140"></script>
+<script src="match.js?v=140"></script>
+<script src="msg.js?v=140"></script>
+<script src="puttstand.js?v=140"></script>
+<script src="stats.js?v=140"></script>
+<script src="bios.js?v=140"></script>
+<script src="ctp.js?v=140"></script>
+<script src="fine.js?v=140"></script>
+<script src="tonight.js?v=140"></script>
+<script src="anim.js?v=140"></script>
+<script src="bbb.js?v=140"></script>
+<script src="earnings.js?v=140"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {
@@ -2017,6 +2144,7 @@ function renderField() {
       if (vis('earnings') && window.renderEarnings) renderEarnings();
       if (vis('bbb') && window.renderBbb) { renderBbb(); if (window.tnAutoClose) tnAutoClose(); }
       if (vis('adminbbb') && window.renderAdminBbb) renderAdminBbb();
+      if (window.adminShown) { var at = ['adminhome', 'adminsched', 'adminmsg', 'adminctp', 'adminbbb'].filter(vis)[0] || (window.ADMIN_ENTER ? 'adminenter' : ''); adminShown(at, at ? 'admin' : ''); }
       if (vis('newsbio') && window.renderBios) renderBios();
       if (window.ctpShown) { var lt = null; try { lt = localStorage.getItem('tab'); } catch (x) {} if (lt === 'ctp' || lt === 'adminctp') ctpShown(lt); }
     } catch (e) { console.error(e); }
