@@ -1443,3 +1443,11 @@ button.pk-line { cursor: pointer; }
 .bbba-ph span { font-size: 13px; color: var(--muted); text-align: right; }
 .bbba-carry { justify-content: space-between; margin-top: 2px; padding-top: 10px; border-top: 1px solid var(--line); }
 .bbba-carry input { width: 64px; height: 40px; font-size: 15px; background: #101412; color: inherit; border: 1px solid var(--line2); border-radius: 10px; padding: 0 8px; }
+
+/* Nov 25: in-app pop-up (replaces the browser's confirm box) */
+.rl-scrim { position: fixed; inset: 0; z-index: 1000; background: rgba(5,8,6,.72); display: flex; align-items: center; justify-content: center; padding: 20px; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.rl-dlg { width: 100%; max-width: 380px; background: var(--card); border: 1px solid var(--line2); border-radius: 20px; padding: 20px 18px 16px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.rl-dlg h3 { margin: 0 0 10px; font: 700 20px/1.2 var(--num); color: var(--ink); }
+.rl-body p { margin: 0 0 8px; font-size: 15px; line-height: 1.4; color: var(--ink); }
+.rl-body p:last-child { color: var(--muted); font-size: 13px; margin-bottom: 0; }
+.rl-acts { display: flex; gap: 8px; margin-top: 16px; }
