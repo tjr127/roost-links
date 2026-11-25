@@ -1506,3 +1506,6 @@ body.sb-open #enter .pill button { width: 48px; height: 48px; }
 body.sb-open #enter .pill button svg { width: 24px; height: 24px; }
 body.sb-open #enter .pill-val { font-size: 38px; min-height: 38px; }
 body.sb-open #enter .en-save { margin-top: 10px; }
+/* Nov 25: on a two-match night the "from Nov 19" tag drops under the name instead of cutting the name off */
+.sm-line { flex-wrap: wrap; column-gap: 6px; row-gap: 0; }
+.sm-line .sm-opp { overflow: visible; text-overflow: clip; }
