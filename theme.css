@@ -1509,3 +1509,12 @@ body.sb-open #enter .en-save { margin-top: 10px; }
 /* Nov 25: on a two-match night the "from Nov 19" tag drops under the name instead of cutting the name off */
 .sm-line { flex-wrap: wrap; column-gap: 6px; row-gap: 0; }
 .sm-line .sm-opp { overflow: visible; text-overflow: clip; }
+/* Nov 25: never clip an opponent's name — give the text column room and let it wrap */
+.sm-row { column-gap: 8px; padding-left: 12px; padding-right: 8px; }
+.sm-row .sm-opp { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; line-height: 1.2; }
+.sm-line { flex-wrap: wrap; column-gap: 6px; }
+.sm-line .sm-opp { flex: 0 0 auto; }
+.sm-right .rs-btn { font-size: 12px; gap: 3px; padding: 6px 2px; white-space: nowrap; }
+.sm-chev { width: 24px; }
+.sm-row { grid-template-columns: 38px minmax(0, 1fr) auto 24px; }
+@media (max-width: 400px) { .sm-right .rs-btn svg { display: none; } }
