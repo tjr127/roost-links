@@ -254,10 +254,10 @@
         on: function (nm) { return !!pk[nm]; },
         attr: function (nm) { return 'data-ctp="pick" data-v="' + e(nm) + '" aria-label="' + e(nm) + ' plays"'; }
       }) : '<div class="empty">Loading players…</div>') +
-      '<div class="pk-count"><b>' + n + '</b> playing</div>' +
+      '<div class="pk-count"><b>' + n + '</b> playing</div></div>' +
       '<div class="pin-bar"><button type="button" class="en-save msg-go" data-ctp="start"' + (n >= 2 && !busy ? '' : ' disabled') + '>' + (n >= 2 ? 'Start CTP with ' + n : 'Start CTP') + '</button>' +
-      '<div class="pin-hint">' + (n >= 2 ? 'Starting shows the CTP tab to everyone.' : 'Pick at least two players.') + '</div></div>' +
-      '<div class="esw-msg' + (err ? ' err' : '') + '">' + e(msg) + '</div></div>' +
+      '<div class="pin-hint">' + (n >= 2 ? 'Starting shows the CTP tab to everyone.' : 'Pick at least two players.') + '</div>' +
+      (msg ? '<div class="esw-msg' + (err ? ' err' : '') + '" style="text-align:center;margin:0">' + e(msg) + '</div>' : '') + '</div>' +
       (played ? ledger().replace('<h2>TONIGHT</h2>', '<h2>LAST CTP GAME</h2>') : st && st.ended ? '<div class="card pk-line"><b>Last CTP game</b><small>No holes played</small></div>' : '');
   }
 

@@ -348,14 +348,14 @@
       if (!conf) {
         bar += '<button type="button" class="en-save tt-confirm" id="ttconfirm">Confirm groups</button>' +
           '<div class="pin-hint">' + (casual ? 'Locks everyone\'s tee time and tees. Casual round: no alert, and nothing is confirmed for you.'
-            : 'Locks times and tees and sends the groups alert. If you don\'t, it confirms on its own at ' + e(String(tt.closes || '').replace(/^.* at /, '')) + '.') + '</div>' +
-          (edit ? '<button type="button" class="rl-link tt-small" id="ttreset">Back to suggested</button>' : '');
+            : 'Locks times and tees and sends the groups alert. If you don\'t, it confirms on its own at ' + e(String(tt.closes || '').replace(/^.* at /, '')) + '.') + '</div>';
       } else if (cedit) {
         bar += '<button type="button" class="en-save tt-confirm" id="ttconfirm">Save changes</button>' +
-          '<div class="pin-hint">' + (casual ? 'Casual round: saving sends no alert.' : 'Saving sends everyone the updated groups alert.') + '</div>' +
-          '<button type="button" class="rl-link tt-small" id="ttcancel">Cancel changes</button>';
+          '<div class="pin-hint">' + (casual ? 'Casual round: saving sends no alert.' : 'Saving sends everyone the updated groups alert.') + '</div>';
       }
       if (bar) html += '<div class="pin-bar tta-bar">' + bar + '</div>';
+      if (!conf && edit) html += '<button type="button" class="rl-link tt-small" id="ttreset">Back to suggested</button>';
+      if (conf && cedit) html += '<button type="button" class="rl-link tt-small" id="ttcancel">Cancel changes</button>';
       if (conf) html += '<button type="button" class="rl-link tt-small" id="ttreopen">Reopen sign-up</button>';
     }
     return { html: html + '</div>', groups: g };
