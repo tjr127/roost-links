@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=142">
-<link rel="stylesheet" href="theme.css?v=142">
+<link rel="stylesheet" href="app.css?v=143">
+<link rel="stylesheet" href="theme.css?v=143">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=142"></script>
-<script src="app.js?v=142"></script>
-<script src="rules.js?v=142"></script>
+<script src="live.js?v=143"></script>
+<script src="app.js?v=143"></script>
+<script src="rules.js?v=143"></script>
 </head>
 <body>
 <header>
@@ -246,7 +246,7 @@
   <button type="button" data-tab="board" data-group="tonight teams field bbb" class="on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h12l-3 4 3 4H4"/></svg><span>Nightly</span></button>
   <button type="button" data-tab="stand" data-group="standings puttstand earnings"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a3 3 0 0 1-3 3"/><path d="M7 6H4a3 3 0 0 0 3 3"/></svg><span>Season</span></button>
   <button type="button" data-tab="schedule"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg><span>Schedule</span></button>
-  <button type="button" data-tab="scores" data-group="enter cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11"/><path d="M12 20V5"/><path d="M19 20v-6"/></svg><span>Stats</span></button>
+  <button type="button" data-tab="scores" data-group="cards hcp stats"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11"/><path d="M12 20V5"/><path d="M19 20v-6"/></svg><span>Stats</span></button>
   <button type="button" data-tab="news" data-group="newsres newsann newsbio"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><path d="M12 17v4"/><path d="M9 21h6"/></svg><span>Press</span></button>
   <button type="button" data-tab="ctp" id="ctpbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V3"/><path d="M12 3l7 3-7 3"/><ellipse cx="12" cy="21" rx="6" ry="1.5"/></svg><span>CTP</span></button>
   <button type="button" data-tab="admin" data-group="adminhome adminenter adminsched adminmsg adminctp adminbbb" id="adminbtn" class="hide"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10"/><path d="M18 7h2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg><span>Admin</span></button>
@@ -255,7 +255,7 @@
   <div id="tncard" class="livebd hide"></div>
   <nav class="subnav hide" data-for="board" aria-label="Board"><button type="button" data-tab="tonight">Head2Head</button><button type="button" data-tab="teams">Team</button><button type="button" data-tab="field">Individual</button><button type="button" data-tab="bbb" id="bbbpill" class="hide">Garbage</button></nav>
   <div id="bnrow" class="bnrow hide"><div id="bnpick" class="bnchip"><label for="bnsel" class="bn-vh">Night</label><select id="bnsel"></select></div><label class="fsort" data-ctl="field"><span class="bn-vh">Sort by</span><select id="fieldsort" aria-label="Sort the field"><option value="net">Low net</option><option value="gross">Low gross</option><option value="pts">Stableford</option><option value="putts">Fewest putts</option></select></label></div>
-  <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="enter" id="enterpill">Enter score</button><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
+  <nav class="subnav hide" data-for="scores" aria-label="Scores"><button type="button" data-tab="cards">Scorecards</button><button type="button" data-tab="hcp">Handicaps</button><button type="button" data-tab="stats">Shot stats</button></nav>
   <nav class="subnav hide" data-for="stand" aria-label="Standings"><button type="button" data-tab="standings">Individual</button><button type="button" data-tab="puttstand">Putts</button><button type="button" data-tab="earnings">Earnings</button></nav>
   <nav class="subnav hide" data-for="news" aria-label="News"><button type="button" data-tab="newsres">Results</button><button type="button" data-tab="newsann">Announcements</button><button type="button" data-tab="newsbio">Bios</button></nav>
   <nav class="subnav hide" data-for="admin" aria-label="Admin"><button type="button" data-tab="adminenter">Enter score</button><button type="button" data-tab="adminsched">Schedule</button><button type="button" data-tab="adminmsg">Message</button><button type="button" data-tab="adminctp">CTP</button><button type="button" data-tab="adminbbb">Garbage</button></nav>
@@ -377,7 +377,8 @@
     }).join('');
   }
 
-  // Tabs (Nov 13): Board = Head2Head / Team / Individual; Scores = Enter score / Scorecards / Handicaps / Stats;
+  // Tabs (Nov 13): Board = Head2Head / Team / Individual; Scores = Scorecards / Handicaps / Stats;
+  // Nov 25: a player's own Enter score left the Stats tab. It opens as a sheet from the score bar (scorebar.js).
   // Admin (Ty only) = Enter score for anyone + self-entry switches / Schedule admin.
   var SHOW = { adminenter: ['entrysw', 'enter'] };
   var curTab = '';
@@ -392,11 +393,11 @@
   function boardDefault() { return boardPicked() || (data && data.roundType === 'Casual' ? 'field' : 'tonight'); }
   function resolveTab(tab) {
     if (tab === 'board') return boardDefault();
-    if (tab === 'scores') { var s0 = store('scoresTab'); return s0 && s0 !== 'enter' ? s0 : (canSelfEnter() ? 'enter' : 'cards'); }
+    if (tab === 'scores') { var s0 = store('scoresTab'); return s0 && s0 !== 'enter' ? s0 : 'cards'; }
     if (tab === 'admin') return isAdmin() ? 'adminhome' : boardDefault();   // Nov 25: Admin home, not the last admin page
     if (tab === 'news') return store('newsTab') || 'newsres';
     if (tab === 'stand') return store('standTab') || 'standings';
-    if (tab === 'enter' && !canSelfEnter()) return 'cards';
+    if (tab === 'enter') return 'cards';   // Nov 25: Enter score is the score bar's sheet now, not a tab
     if (/^admin/.test(tab) && !isAdmin()) return boardDefault();
     if (tab === 'ctp' && !(window.ctpOn && ctpOn())) return isAdmin() ? 'adminctp' : boardDefault();   // Nov 20: CTP tab only while a game runs
     return document.getElementById(tab) || SHOW[tab] ? tab : boardDefault();
@@ -470,13 +471,12 @@
   }
   document.querySelectorAll('[data-h2h]').forEach(function (b) { b.addEventListener('click', function () { setH2hView(b.getAttribute('data-h2h')); }); });
   setH2hView(store('h2hView'));
-  // Admin tab only for admins; Enter score pill only for players allowed to enter their own scores.
+  // Admin lives in the header (admin.js); the CTP tab only shows while a game runs.
   window.updateNav = function () {
     document.getElementById('adminbtn').classList.add('hide');   // Nov 25: Admin lives in the header now (admin.js)
     if (window.adminRefresh) adminRefresh();
     document.getElementById('ctpbtn').classList.toggle('hide', !(window.ctpOn && ctpOn()));
     var tb = document.querySelector('nav.tabbar'); if (tb) { var more = function () { tb.classList.toggle('more', tb.scrollWidth - tb.clientWidth - tb.scrollLeft > 4); }; more(); if (!tb.dataset.mw) { tb.dataset.mw = 1; tb.addEventListener('scroll', more, { passive: true }); window.addEventListener('resize', more); } }
-    document.getElementById('enterpill').classList.toggle('hide', !canSelfEnter());
     if (curTab && resolveTab(curTab) !== curTab) showTab(curTab, true);
     if (curTab === 'newsbio' && window.renderBios) renderBios(true);
   };
@@ -1204,7 +1204,7 @@
     var sum = !pl.length ? '' : !nOn ? 'Off for everyone' : nOn === pl.length ? 'On for everyone' : 'On for ' + nOn + ' of ' + pl.length + ' players';
     var html = '<div class="card esw"><div class="esw-sum"><div><b>Who can enter their own scores</b><div class="esw-sub">' + sum + '</div></div>' +
       '<button type="button" class="pk-btn" data-eswopen="1" aria-expanded="' + eswOpen + '">' + (eswOpen ? 'Done' : 'Change') + '</button></div>';
-    if (eswOpen && window.pkHtml) html += '<div class="esw-sub esw-why">Off hides Enter score on the Stats tab for them (you too). GSPro still records their scores, and you can always enter anyone\'s above. Everyone on / off doesn\'t change your own.</div>' +
+    if (eswOpen && window.pkHtml) html += '<div class="esw-sub esw-why">On gives them a score bar above the tabs on the night of a round (you too). GSPro still records their scores, and you can always enter anyone\'s above. Everyone on / off doesn\'t change your own.</div>' +
       pkHtml({
         shortcuts: [['Everyone on', 'data-esw="*" data-on="1"'], ['Everyone off', 'data-esw="*" data-on="0"']],
         items: list.map(function (p) { return { name: p.name, tag: p.admin ? 'you' : p.guest ? 'guest' : '' }; }),
@@ -2144,21 +2144,22 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=142"></script>
-<script src="settings.js?v=142"></script>
-<script src="admin.js?v=142"></script>
-<script src="flip.js?v=142"></script>
-<script src="match.js?v=142"></script>
-<script src="msg.js?v=142"></script>
-<script src="puttstand.js?v=142"></script>
-<script src="stats.js?v=142"></script>
-<script src="bios.js?v=142"></script>
-<script src="ctp.js?v=142"></script>
-<script src="fine.js?v=142"></script>
-<script src="tonight.js?v=142"></script>
-<script src="anim.js?v=142"></script>
-<script src="bbb.js?v=142"></script>
-<script src="earnings.js?v=142"></script>
+<script src="tee.js?v=143"></script>
+<script src="settings.js?v=143"></script>
+<script src="admin.js?v=143"></script>
+<script src="flip.js?v=143"></script>
+<script src="match.js?v=143"></script>
+<script src="msg.js?v=143"></script>
+<script src="puttstand.js?v=143"></script>
+<script src="stats.js?v=143"></script>
+<script src="bios.js?v=143"></script>
+<script src="ctp.js?v=143"></script>
+<script src="fine.js?v=143"></script>
+<script src="tonight.js?v=143"></script>
+<script src="scorebar.js?v=143"></script>
+<script src="anim.js?v=143"></script>
+<script src="bbb.js?v=143"></script>
+<script src="earnings.js?v=143"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {

@@ -1451,3 +1451,58 @@ button.pk-line { cursor: pointer; }
 .rl-body p { margin: 0 0 8px; font-size: 15px; line-height: 1.4; color: var(--ink); }
 .rl-body p.note { color: var(--muted); font-size: 13px; margin-bottom: 0; }
 .rl-acts { display: flex; gap: 8px; margin-top: 16px; }
+
+/* ===== Score bar + entry sheet (Nov 25, scorebar.js; Ty picked mockup C) =====
+   The bar sits just above the tab bar on every screen while the player's round is live. The sheet is the page's own
+   Enter score section shown as a bottom sheet while body has .sb-open. */
+.sbar { position: fixed; z-index: 29; left: 12px; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom)); max-width: 536px; margin: 0 auto; }
+body.adm .sbar, body.sb-open .sbar { display: none; }
+.sb-btn { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; background: var(--card2); border: 1.5px solid var(--amber); border-radius: 18px; box-shadow: 0 8px 24px rgba(0,0,0,.55); color: var(--ink); cursor: pointer; }
+.sb-btn:focus-visible, .sb-x:focus-visible, .sb-hole button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.sb-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--win); }
+.sb-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.sb-txt b { font: 700 17px/1.2 var(--num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-par { font: 500 13px Inter, sans-serif; color: var(--muted); }
+.sb-txt i { font-style: normal; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-ok { color: var(--win); }
+.sb-go { flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 13px; background: var(--amber); color: var(--amber-ink); font: 700 15px Inter, sans-serif; }
+.sb-go svg { width: 18px; height: 18px; }
+.sb-done { border-color: var(--line2); }
+.sb-done .sb-dot { display: none; }
+.sb-done .sb-go { background: transparent; color: var(--amber); box-shadow: inset 0 0 0 1.5px var(--amber); }
+body.has-sbar main { padding-bottom: calc(184px + env(safe-area-inset-bottom)); }
+body.has-sbar .rl-tip { bottom: calc(166px + env(safe-area-inset-bottom)); }
+
+.sb-scrim, .sb-head, .sb-hole { display: none; }
+body.sb-open { overflow: hidden; }
+body.sb-open main { z-index: 57; }   /* main is its own layer; lift it over the tab bar while the sheet is up */
+body.sb-open .sb-scrim { display: block; position: fixed; inset: 0; z-index: 55; background: rgba(5,8,6,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+body.sb-open #enter { display: flex !important; flex-direction: column; gap: 12px; position: fixed; z-index: 56; left: 0; right: 0; bottom: 0; max-width: 560px; margin: 0 auto; box-sizing: border-box;
+  max-height: calc(100% - 24px - env(safe-area-inset-top)); overflow-y: auto; overscroll-behavior: contain; background: var(--card); border-top: 1.5px solid var(--amber); border-radius: 22px 22px 0 0;
+  padding: 10px 14px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -16px 40px rgba(0,0,0,.6); animation: sb-up .22s ease-out; }
+@keyframes sb-up { from { transform: translateY(24px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { body.sb-open #enter { animation: none; } }
+body.sb-open #enter > h2, body.sb-open #enmode, body.sb-open #engrp, body.sb-open #enchips, body.sb-open label[for="enwho"], body.sb-open #enwho, body.sb-open label[for="enhole"], body.sb-open #enhole { display: none !important; }
+body.sb-open #enter .card { background: transparent; border: 0; box-shadow: none; padding: 0; margin: 0; }
+body.sb-open #enholes { order: 1; }
+body.sb-open #enter .picker { order: 2; }
+body.sb-open .sb-head { display: block; }
+.sb-grab { width: 40px; height: 4px; border-radius: 2px; background: #3A453E; margin: 0 auto 10px; }
+.sb-hrow { display: flex; align-items: center; gap: 10px; }
+.sb-hrow > div { flex: 1; min-width: 0; }
+.sb-kick { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); }
+.sb-prog { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.sb-prog.ok { color: var(--win); }
+.sb-x, .sb-hole button { all: unset; box-sizing: border-box; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--card2); border: 1px solid var(--line2); display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; }
+.sb-x svg, .sb-hole svg { width: 20px; height: 20px; }
+body.sb-open .sb-hole { display: flex; align-items: center; gap: 8px; }
+.sb-hn { flex: 1; text-align: center; font: 700 26px/1.1 var(--num); }
+body.sb-open #enter .en-info { margin-top: 6px; font-size: 13px; }
+body.sb-open #enter .pills { gap: 10px; margin: 12px 0 4px; }
+body.sb-open #enter .pillcol { flex: 1; min-width: 0; align-items: stretch; background: var(--card2); border-radius: 14px; padding: 10px; }
+body.sb-open #enter .pill-lbl { text-align: center; margin-bottom: 4px; font-size: 11px; }
+body.sb-open #enter .pill { width: auto; flex-direction: row-reverse; justify-content: space-between; gap: 0; padding: 0; background: transparent; border: 0; border-radius: 0; }
+body.sb-open #enter .pill button { width: 48px; height: 48px; }
+body.sb-open #enter .pill button svg { width: 24px; height: 24px; }
+body.sb-open #enter .pill-val { font-size: 38px; min-height: 38px; }
+body.sb-open #enter .en-save { margin-top: 10px; }
