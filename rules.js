@@ -75,6 +75,34 @@
       ex: { Net: 'You have net 4 and 6 (46). Another team both make net birdie, so your 46 becomes <b>64</b>. Ouch.', Stableford: 'A team birdie means everyone on the team scored 3+ points. Your 13 becomes <b>31</b>.' },
       lowAlways: true,
       note: 'A team that made the team birdie itself is never flipped, even if another team also made one. The hole-by-hole view tags "🐦 Birdie" and "Flipped".'
+    },
+    // Nov 25, 2026 (Ty): four new games.
+    'Daytona': {
+      sum: 'Vegas, but you have to earn the low number in front.',
+      how: 'Score it like Vegas (low × 10 + high), but the low score only goes first when <b>someone on the team makes net par or better</b>. If nobody does, the number flips: <b>high score first</b>.',
+      ex: { Net: 'Par 4. Net 4 and 6 → <b>46</b> (someone made par). Net 5 and 6 → <b>65</b> (nobody did). Net 5 and 10 → <b>105</b>.', Stableford: 'Someone made net par (2+ points): points 1 and 2 → <b>12</b>. Nobody did: points 0 and 1 → <b>10</b>.' },
+      lowAlways: true,
+      note: 'With more than two players, only the lowest and highest count. The hole-by-hole view tags "Flipped" when nobody made par. Best played Net.'
+    },
+    'Money Ball': {
+      sum: 'One player has the money ball each hole, and their score counts double.',
+      how: 'The money ball <b>rotates through the team in order</b>, one player per hole. On each hole the team scores <b>the money ball × 2, plus the best score of the rest</b> of the team.',
+      ex: { Net: 'Ty has the money ball and makes net 5; partner makes net 4 → team scores <b>14</b> (5 × 2 + 4). Nobody hides on their hole.', Stableford: 'Money ball scores 3 points, best of the rest 2 → team scores <b>8</b> (3 × 2 + 2).' },
+      note: 'The rotation starts over at hole 7 or 13 when only holes 7-12 or 13-18 count (teams get reshuffled). The hole-by-hole view marks the money ball with <b>$</b>.'
+    },
+    'Team Skins': {
+      sum: 'Best ball against every other team, one hole at a time. Win it outright to take the skin.',
+      how: 'On every hole, each team\'s number is its <b>best ball</b>. The team with the best one, <b>outright</b>, wins the skin. If two or more teams tie for best, nobody wins it and the skin <b>carries over</b>: the next hole is worth 2, then 3, until someone wins one outright.',
+      ex: { Net: 'Hole 12: best balls 3, 3, 2 and 5 → the team with the 2 wins the skin (plus any that carried over).', Stableford: 'Hole 12: best balls 2, 2, 3 and 0 points → the team with the 3 wins it.' },
+      win: '<b>Most skins wins.</b> Skins still riding after the last hole aren\'t won by anyone. Tied on skins → lowest combined net, then lowest combined putts.',
+      note: 'A hole is decided once <b>every team</b> has finished it, and a carried skin waits for the hole before it. With Early and Late groups, the Early teams\' skins fill in as the Late group plays.'
+    },
+    'Low Ball/Low Total': {
+      sum: 'Two points on every hole: one for the best ball, one for the best team score.',
+      how: 'Every hole is worth <b>2 points</b>. <b>Low ball:</b> the team with the best single score gets 1 point. <b>Low total:</b> the team with the best team score gets 1 point (the team\'s average, so a threesome isn\'t punished). When teams tie, they <b>split the point</b>: two teams get ½ each, three get ⅓ each.',
+      ex: { Net: 'Best balls 3, 3, 4 → the two teams with a 3 get ½ each. Team averages 4, 4.5, 5 → the team at 4 gets 1. That team scores 1½ on the hole.', Stableford: 'Best ball is the most points, and the best average is the highest. Same 2 points a hole.' },
+      win: '<b>Most points wins.</b> Tied on points → lowest combined net, then lowest combined putts.',
+      note: 'A hole is decided once <b>every team</b> has finished it.'
     }
   };
 
@@ -82,14 +110,14 @@
     var g = GAMES[game];
     if (!g) return '<p>No write-up for this game yet.</p>';
     var sc = scoring === 'Stableford' ? 'Stableford' : 'Net';
-    var lowWins = sc === 'Net' || g.lowAlways;
+    var lowWins = window.teamLowWins ? window.teamLowWins(game, sc) : (sc === 'Net' || g.lowAlways);
     var min = Number(minPlayers) || 1;
     var html = '<p class="glead">' + e(g.sum) + '</p>' +
       '<h4>Each hole</h4><p>' + SCORING[sc] + '</p><p>' + g.how + '</p>' +
       '<h4>Example</h4><p>' + (g.ex[sc] || g.ex.Net) + '</p>' +
       (g.note ? '<p>' + g.note + '</p>' : '') +
-      '<h4>Winning</h4><p>Add up the team\'s hole scores. <b>' + (lowWins ? 'Lowest' : 'Highest') + ' total wins</b>' +
-      (g.lowAlways && sc === 'Stableford' ? ' (every Vegas game is low-wins, even with Stableford points)' : '') + '.</p>' +
+      '<h4>Winning</h4><p>' + (g.win || 'Add up the team\'s hole scores. <b>' + (lowWins ? 'Lowest' : 'Highest') + ' total wins</b>' +
+      (g.lowAlways && sc === 'Stableford' ? ' (every Vegas game is low-wins, even with Stableford points)' : '') + '.') + '</p>' +
       '<h4>Fine print</h4><ul>' +
       '<li>A team\'s hole score shows up once <b>everyone</b> on the team has finished that hole.</li>' +
       (min > 1 ? '<li>Teams need at least <b>' + min + ' players</b>. A short-handed team gets no score until Ty adds someone.</li>' : '') +

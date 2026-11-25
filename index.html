@@ -1598,6 +1598,36 @@ function tpField(list, cards, posted) {
   });
 }
 window.tpTxt = tpTxt; window.tpHtml = tpHtml; window.tpCard = tpCard;
+// Nov 25: who wins each team game. Team Skins and Low Ball/Low Total are always most-wins (skins / points);
+// every Vegas game and Daytona are always lowest-wins; everything else follows scoring (Net lowest, Stableford highest).
+// Worked out here rather than trusting the feed's lowWins, so new games rank right even before the server knows them.
+function tdLow(game, scoring) {
+  game = String(game || '');
+  if (game === 'Team Skins' || game === 'Low Ball/Low Total') return false;
+  if (/Vegas/.test(game) || game === 'Daytona') return true;
+  return String(scoring || 'Net') !== 'Stableford';
+}
+window.teamLowWins = tdLow;
+// Low Ball/Low Total points split on ties (½, ⅓, ⅚ …): show common fractions, otherwise two decimals.
+var TD_FR = [[1/2,'½'],[1/3,'⅓'],[2/3,'⅔'],[1/4,'¼'],[3/4,'¾'],[1/5,'⅕'],[2/5,'⅖'],[3/5,'⅗'],[4/5,'⅘'],[1/6,'⅙'],[5/6,'⅚'],[1/8,'⅛'],[3/8,'⅜'],[5/8,'⅝'],[7/8,'⅞']];
+function tdPts(v) {
+  var x = parseFloat(v); if (isNaN(x)) return v == null ? '' : String(v);
+  var w = Math.floor(x + 1e-9), f = x - w;
+  if (f < 0.006) return String(w);
+  if (f > 0.994) return String(w + 1);
+  for (var i = 0; i < TD_FR.length; i++) if (Math.abs(f - TD_FR[i][0]) < 0.006) return (w ? w : '') + TD_FR[i][1];
+  return String(Math.round(x * 100) / 100);
+}
+function tdVal(game, v) { return game === 'Low Ball/Low Total' ? tdPts(v) : (v == null ? '' : String(v)); }
+window.tdPts = tdPts;
+// Money Ball: whose turn it is on a hole. Rotates in team order from the first counted hole (restarts at 7 / 13
+// when only holes 7-12 or 13-18 count, since teams are reshuffled then). Same rule as the sheet.
+function tdMoneyIdx(td, hole, n) {
+  var first = Math.min.apply(null, td.holes.map(function (h) { return Number(h.hole); }).filter(function (x) { return !isNaN(x); }));
+  var seg = { 'Holes 7-12': 7, 'Holes 13-18': 13 }[td.counted] || 1;
+  var k = (Number(hole) - Math.max(first, seg)) % n;
+  return k < 0 ? k + n : k;
+}
 // Rank a list of {key, val}; returns map key -> {place, tied, gap}
 function tdRank(list, lowWins) {
   var out = {};
@@ -1620,8 +1650,8 @@ function teamView() { return store('teamView') === 'basic' ? 'basic' : 'detailed
 function tdPlaceText(r) { return r ? (r.tied ? 'T' + r.place : ordinal(r.place)) : ''; }
 function tdGapText(r) {
   if (!r || r.n < 2) return '';
-  if (r.place === 1) return r.tied ? 'tied' : 'by ' + tdFmt(r.lead);
-  return tdFmt(r.gap) + ' back';
+  if (r.place === 1) return r.tied ? 'tied' : 'by ' + tdPts(r.lead);
+  return tdPts(r.gap) + ' back';
 }
 function tdThruMap(d) {
   var t = {};
@@ -1629,12 +1659,14 @@ function tdThruMap(d) {
   return t;
 }
 // Which player cells count on a hole, plus a short tag. vals: numbers (all present).
-function tdHoleUse(game, hole, vals, flipped, birdie) {
+function tdHoleUse(game, hole, vals, flipped, birdie, cx) {
+  cx = cx || {};
   var idx = vals.map(function (v, i) { return i; });
   var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
   var lowI = vals.indexOf(min), highI = vals.lastIndexOf(max);
   if (highI === lowI) highI = idx.filter(function (i) { return i !== lowI; })[0];
-  var u = { use: {}, lo: null, hi: null, mid: null, tag: '' };
+  var u = { use: {}, lo: null, hi: null, mid: null, mb: null, tag: '' };
+  var best = cx.stab ? max : min;
   function all(val) { idx.forEach(function (i) { if (vals[i] === val) u.use[i] = true; }); }
   switch (game) {
     case 'Min': all(min); break;
@@ -1647,6 +1679,27 @@ function tdHoleUse(game, hole, vals, flipped, birdie) {
       if (game === 'Reverse Vegas') u.tag = 'High-Low';
       if (game === 'Vegas Bird Flip') u.tag = birdie ? '🐦 Birdie' : flipped ? 'Flipped' : '';
       break;
+    case 'Daytona':
+      u.lo = lowI; u.hi = highI; u.use[lowI] = u.use[highI] = true;
+      if (cx.flip) u.tag = 'Flipped';
+      break;
+    case 'Money Ball':
+      u.mb = cx.mb; u.use[cx.mb] = true;
+      var rest = idx.filter(function (i) { return i !== cx.mb; });
+      if (rest.length) {
+        var rb = rest.reduce(function (b, i) { return cx.stab ? Math.max(b, vals[i]) : Math.min(b, vals[i]); }, cx.stab ? -Infinity : Infinity);
+        u.use[rest.filter(function (i) { return vals[i] === rb; })[0]] = true;
+      }
+      break;
+    case 'Team Skins':
+      all(best);
+      if (cx.won > 0) u.tag = cx.won > 1 ? cx.won + ' skins' : 'Skin';
+      else if (cx.carry) u.tag = 'Carry';
+      break;
+    case 'Low Ball/Low Total':
+      all(best);
+      u.tag = cx.lb && cx.lt ? 'LB + LT' : cx.lb ? 'Low ball' : cx.lt ? 'Low total' : '';
+      break;
     case '3 Man Vegas':
       var s = idx.slice().sort(function (a, b) { return vals[a] - vals[b] || a - b; });
       u.lo = s[0]; u.hi = s[s.length - 1]; u.mid = s[s.length - 2];
@@ -1658,7 +1711,7 @@ function tdHoleUse(game, hole, vals, flipped, birdie) {
 function tdOrder(td) {
   var tot = td.teams.filter(function (t) { return t.eligible && tdNum(t.total) !== null; })
     .map(function (t) { return { key: t.name, val: tdNum(t.total) }; });
-  var rank = tdRank(tot, td.lowWins);
+  var rank = tdRank(tot, tdLow(td.game, td.scoring));
   var list = td.teams.slice().sort(function (a, b) {
     var ra = rank[a.name], rb = rank[b.name];
     if (ra && rb) return ra.place - rb.place;
@@ -1671,7 +1724,7 @@ function tdOrder(td) {
 // player (Sum). Vegas numbers and Stableford points aren't strokes, so they stay as they are.
 function teamTp(td, t) {
   if (!td || !/net/i.test(td.scoring || '') || !t || !t.eligible) return null;
-  var k = { 'Min': 1, 'Max': 1, 'Alt-Min-Max': 1, 'Min-Max': 1, 'Avg': 1, 'Sum': (t.players || []).length }[td.game];
+  var k = { 'Min': 1, 'Max': 1, 'Alt-Min-Max': 1, 'Min-Max': 1, 'Avg': 1, 'Money Ball': 3, 'Sum': (t.players || []).length }[td.game];
   if (!k) return null;
   var par = 0, any = false, all = true;
   td.holes.forEach(function (h, i) {
@@ -1683,7 +1736,7 @@ function teamTp(td, t) {
   var tot = tdNum(t.total);
   return any && tot !== null ? { d: tot - par, fin: all } : null;
 }
-function teamTotHtml(td, t) { var tp = teamTp(td, t); return tp ? tpHtml(tp.d, t.total, tp.fin) : esc(t.total || '–'); }
+function teamTotHtml(td, t) { var tp = teamTp(td, t); return tp ? tpHtml(tp.d, t.total, tp.fin) : esc(t.total === '' || t.total == null ? '–' : tdVal(td.game, t.total)); }
 function renderTeams(d) {
   try { teamPostedCheck(d); } catch (x) { console.error(x); }
   var td = d.teamDetail, listEl = document.getElementById('teamlist'), det = document.getElementById('teamdetail');
@@ -1721,8 +1774,13 @@ document.addEventListener('click', function (ev) {
 });
 function teamLegend(game) {
   return '<div class="tleg"><span class="sw use"></span> counts for the team' +
-    (/Vegas/.test(game) ? ' · <b>L</b> low, <b>H</b> high' + (game === '3 Man Vegas' ? ', <b>M</b> middle' : '') : '') +
-    ' · Team score shows once every player has finished the hole</div>';
+    (/Vegas|Daytona/.test(game) ? ' · <b>L</b> low, <b>H</b> high' + (game === '3 Man Vegas' ? ', <b>M</b> middle' : '') : '') +
+    (game === 'Daytona' ? ' · <b>Flipped</b>: nobody made net par, so high goes first' : '') +
+    (game === 'Money Ball' ? ' · <b>$</b> money ball (counts double)' : '') +
+    (game === 'Team Skins' ? ' · Team = skins won on the hole · <b>Carry</b>: tied, the skin rides to the next hole' : '') +
+    (game === 'Low Ball/Low Total' ? ' · Team = points won on the hole (best ball 1, best team average 1; ties split it)' : '') +
+    (game === 'Team Skins' || game === 'Low Ball/Low Total' ? ' · A hole is decided once every team has finished it</div>' :
+    ' · Team score shows once every player has finished the hole</div>');
 }
 function openTeam(name) {
   teamSel = name; store('team', name);
@@ -1745,7 +1803,7 @@ function teamDetailHtml(td, t, o, thru, inline) {
       cum[tm.name] = (cum[tm.name] || 0) + v;
       lst.push({ key: tm.name, val: cum[tm.name] });
     });
-    if (tdNum(t.team[x.i]) !== null) run[x.i] = tdRank(lst, td.lowWins)[t.name];
+    if (tdNum(t.team[x.i]) !== null) run[x.i] = tdRank(lst, tdLow(td.game, td.scoring))[t.name];
   });
   var minThru = t.players.map(function (p) { return thru[p.name] || ''; });
   var head = (inline ? '' : '<div class="tnav"><button class="tback">‹ Teams</button><span>' +
@@ -1767,19 +1825,38 @@ function teamDetailHtml(td, t, o, thru, inline) {
     var vals = raw.map(tdNum), done = vals.every(function (v) { return v !== null; });
     var teamV = t.team[x.i], flipped = game === 'Vegas Bird Flip' && done && !t.birdie[x.i] &&
       td.teams.some(function (o2) { return o2 !== t && o2.birdie[x.i]; });
-    var u = done && t.eligible ? tdHoleUse(game, h.hole, vals, flipped, t.birdie[x.i]) : null;
+    var cx = { stab: /stableford/i.test(td.scoring || '') };
+    if (done && t.eligible) {
+      if (game === 'Daytona') { var hp = tdNum(h.par); cx.flip = cx.stab ? Math.max.apply(null, vals) < 2 : (hp !== null && Math.min.apply(null, vals) > hp); }
+      if (game === 'Money Ball') cx.mb = tdMoneyIdx(td, h.hole, vals.length);
+      if (game === 'Team Skins') {
+        cx.won = tdNum(teamV) || 0;
+        var tv = elig.map(function (tm) { return tdNum(tm.team[x.i]); });
+        cx.carry = tv.length > 1 && tv.every(function (v) { return v !== null; }) && tv.every(function (v) { return v === 0; });
+      }
+      if (game === 'Low Ball/Low Total' && tdNum(teamV) !== null) {
+        // which half (or share) this team took: compare every team's best ball and average on the hole
+        var lbOf = function (tm) { var v = tm.players.map(function (p) { return tdNum(p.scores[x.i]); }); if (v.some(function (z) { return z === null; })) return null; return { lb: cx.stab ? -Math.max.apply(null, v) : Math.min.apply(null, v), lt: (cx.stab ? -1 : 1) * v.reduce(function (a, b) { return a + b; }, 0) / v.length }; };
+        var all2 = elig.map(lbOf).filter(Boolean), me = lbOf(t);
+        if (me && all2.length) {
+          cx.lb = Math.abs(me.lb - Math.min.apply(null, all2.map(function (o) { return o.lb; }))) < 1e-9;
+          cx.lt = Math.abs(me.lt - Math.min.apply(null, all2.map(function (o) { return o.lt; }))) < 1e-9;
+        }
+      }
+    }
+    var u = done && t.eligible ? tdHoleUse(game, h.hole, vals, flipped, t.birdie[x.i], cx) : null;
     var cells = raw.map(function (s, i) {
       var cls = '', mark = '';
       if (u) {
         if (u.use[i]) cls = 'use';
-        else if (/Vegas|Min|Max/.test(game)) cls = 'out';
-        if (i === u.lo) mark = 'L'; else if (i === u.hi) mark = 'H'; else if (i === u.mid) mark = 'M';
+        else if (/Vegas|Min|Max|Daytona|Money Ball|Team Skins|Low Ball/.test(game)) cls = 'out';
+        if (i === u.lo) mark = 'L'; else if (i === u.hi) mark = 'H'; else if (i === u.mid) mark = 'M'; else if (i === u.mb) mark = '$';
       }
       return '<td class="n ' + cls + '">' + (s === '' ? '<span class="dash">·</span>' : esc(s)) + (mark ? '<sup>' + mark + '</sup>' : '') + '</td>';
     }).join('');
     var rr = run[x.i];
     return '<tr><td class="n hn">' + h.hole + '</td><td class="n par">' + esc(h.par) + '</td>' + cells +
-      '<td class="n tv">' + esc(teamV) + (u && u.tag ? '<div class="ttag' + (u.tag === 'Flipped' ? ' flip' : '') + '">' + esc(u.tag) + '</div>' : '') + '</td>' +
+      '<td class="n tv">' + esc(tdVal(game, teamV)) + (u && u.tag ? '<div class="ttag' + (u.tag === 'Flipped' ? ' flip' : '') + '">' + esc(u.tag) + '</div>' : '') + '</td>' +
       '<td class="n pos">' + (rr ? '<b>' + tdPlaceText(rr) + '</b><div>' + esc(tdGapText(rr)) + '</div>' : '') + '</td></tr>';
   }).join('');
   var ptot = t.players.map(function (p) {
@@ -1903,10 +1980,16 @@ function renderField() {
     return c ? c.d : null;
   }
   function teamPastHtml(tm) {
-    return '<div class="card tbasic"><div class="sc-lbl">' + esc(tm.game) + ' · ' + esc(tm.scoring) + '</div><table class="bp-tbl">' + tm.teams.map(function (x, i) {
+    var low = tm.game ? tdLow(tm.game, tm.scoring) : tm.lowWins !== false;
+    var teams = tm.teams.slice().sort(function (a, b) {
+      var x = num(a.score), y = num(b.score);
+      if (x === null || y === null) return (x === null) - (y === null);
+      return low ? x - y : y - x;
+    });
+    return '<div class="card tbasic"><div class="sc-lbl">' + esc(tm.game) + ' · ' + esc(tm.scoring) + '</div><table class="bp-tbl">' + teams.map(function (x, i) {
       var sc = x.score === '' || x.score == null;
-      return '<tr' + (i === 0 && !sc ? ' class="bp-win"' : '') + '><td class="n">' + (sc ? '' : (i + 1)) + '</td><td>' + esc(x.players) + '</td><td class="n b">' + (sc ? '<span class="muted">no score</span>' : esc(x.score)) + '</td></tr>';
-    }).join('') + '</table><div class="paykey">' + (tm.lowWins ? 'Lowest' : 'Highest') + ' total wins.</div></div>';
+      return '<tr' + (i === 0 && !sc ? ' class="bp-win"' : '') + '><td class="n">' + (sc ? '' : (i + 1)) + '</td><td>' + esc(x.players) + '</td><td class="n b">' + (sc ? '<span class="muted">no score</span>' : esc(tdVal(tm.game, x.score))) + '</td></tr>';
+    }).join('') + '</table><div class="paykey">' + (tm.game === 'Team Skins' ? 'Most skins wins.' : tm.game === 'Low Ball/Low Total' ? 'Most points wins.' : (low ? 'Lowest' : 'Highest') + ' total wins.') + '</div></div>';
   }
   // Nov 23: night over and posted. If the Tonight tab's team totals no longer match what was saved on the night
   // (handicaps moved since), show the saved team results instead of the recalculated ones.

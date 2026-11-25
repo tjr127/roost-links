@@ -52,7 +52,7 @@
       // team game
       var tm = (b && b.team) || TEAM_FIX[x.night];
       if (tm && tm.teams && tm.teams.length) {
-        var sc = tm.teams.map(function (t) { return num(t.score); }).filter(function (v) { return v !== null; }), best = tm.lowWins === false ? Math.max.apply(null, sc) : Math.min.apply(null, sc);
+        var sc = tm.teams.map(function (t) { return num(t.score); }).filter(function (v) { return v !== null; }), low = tm.game && window.teamLowWins ? window.teamLowWins(tm.game, tm.scoring) : tm.lowWins !== false, best = low ? Math.min.apply(null, sc) : Math.max.apply(null, sc);
         var top = tm.teams.filter(function (t) { return num(t.score) === best; });
         ['net', 'putts'].forEach(function (k) {
           if (top.length < 2) return;

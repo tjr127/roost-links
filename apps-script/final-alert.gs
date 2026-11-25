@@ -143,18 +143,22 @@ function faTeams_() {
   var d = getBoardData(true);   // always a fresh build, so the final hole is included
   var g = d.teamGame || {}, teams = (d.teams || []).filter(function (t) { return t.players; });
   if (!teams.length || !g.game) return null;
-  var lowWins = String(g.scoring) === 'Net' || /vegas/i.test(String(g.game));
+  // Nov 25: Team Skins and Low Ball/Low Total are most-wins; Vegas games and Daytona lowest-wins; else Net low, Stableford high.
+  var gm = String(g.game);
+  var lowWins = gm === 'Team Skins' || gm === 'Low Ball/Low Total' ? false : /vegas/i.test(gm) || gm === 'Daytona' ? true : String(g.scoring) !== 'Stableford';
   var ok = teams.filter(function (t) { return t.score !== '' && t.score !== null && !isNaN(Number(t.score)); });
   var out = teams.filter(function (t) { return ok.indexOf(t) < 0; });
   ok.sort(function (a, b) { return lowWins ? a.score - b.score : b.score - a.score; });
   // teams are called by their members' names (Nov 13): Ty/Clint
   var who = function (t) { return String(t.players).split(/\s*,\s*/).join('/'); };
   var lines = [];
-  ok.forEach(function (t, i) { lines.push((i + 1) + '. ' + who(t) + ': ' + Number(t.score)); });
+  var unit = gm === 'Team Skins' ? ' skins' : gm === 'Low Ball/Low Total' ? ' pts' : '';
+  var fmt = function (v) { return String(Math.round(Number(v) * 100) / 100); };
+  ok.forEach(function (t, i) { lines.push((i + 1) + '. ' + who(t) + ': ' + fmt(t.score) + unit); });
   out.forEach(function (t) { lines.push(who(t) + ': no score (not enough players)'); });
   if (ok.length >= 2) {
     var w = ok[0], s = ok[1], last = ok[ok.length - 1];
-    var gap = Math.abs(Number(w.score) - Number(s.score));
+    var gap = Math.round(Math.abs(Number(w.score) - Number(s.score)) * 100) / 100;
     lines.push(gap === 0 ? who(w) + ' and ' + who(s) + ' tied for first. ' + faPick_(FA_TIE_, w.team + s.team)
       : who(w) + ' wins by ' + gap + '. ' + faPick_(FA_TEAMWIN_, w.team + gap));
     if (ok.length >= 3 || gap > 0) lines.push(who(last) + ' brought up the rear. ' + faPick_(FA_TEAMLAST_, last.team + last.score));
