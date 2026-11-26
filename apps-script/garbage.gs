@@ -2,7 +2,9 @@
 // Garbage side game (Bingo Bango Bongo), server side. Added Nov 25, 2026. See claude/bbb-side-game.md.
 // Three points a hole among the players the admin picked for tonight:
 //   FO  Furthest Out   first on the green from the furthest distance (yards to the pin where that shot was hit).
-//                      Par 3: everyone on from the tee counts the same; closest wins. Nobody on from the tee: furthest out.
+//                      Par 3: everyone on from the tee counts the same; closest wins. Nobody on from the tee (Ty, Nov 25):
+//                      the point pushes to the next par 3; none left at the end of the night: every pushed point goes to
+//                      the longest Furthest Out shot of the whole round.
 //                      The shot onto the green can't be a mulligan replay. Penalty strokes don't matter.
 //   CTP Closest to Pin closest once on the green, with a shot played from off the green. A chip-in is 0.
 //   LP  Longest Putt   fewest putts; the longest first putt breaks ties. A chip-in takes CTP and LP.
@@ -45,7 +47,7 @@ function garbHole_(players, rows, over) {
     var replay = s.length > 5 ? Number(s[5]) === 1 : (Number(r.mull) > 0 ? null : false);   // null = can't tell yet
     P.push({ p: p, start: Number(s[1]) || 0, tee: gi === 0, replay: replay, prox: chip ? 0 : (Number(s[3]) || 0), chip: chip, putts: putts });
   });
-  var out = { par: par, fo: '', ct: '', lp: '', foD: '', ctD: '', lpD: '', tag: '', note: '' };
+  var out = { par: par, fo: '', ct: '', lp: '', foD: '', ctD: '', lpD: '', tag: '', note: '', foV: null, ctV: null, lpV: null, push: false, far: null };
   function one(list, key, hi) {   // single best by key, or null on a tie / empty list
     if (!list.length) return null;
     var v = list.map(function (x) { return x[key]; }), b = hi ? Math.max.apply(null, v) : Math.min.apply(null, v);
@@ -56,12 +58,14 @@ function garbHole_(players, rows, over) {
   var elig = P.filter(function (x) { return x.replay === false; });
   if (P.some(function (x) { return x.replay === null; })) out.note = 'mull';
   var tee = par === 3 ? elig.filter(function (x) { return x.tee; }) : [];
-  var fo = tee.length ? one(tee, 'prox', false) : one(elig, 'start', true);
-  if (fo) { out.fo = fo.p; out.foD = tee.length ? 'on from the tee, ' + (fo.chip ? 'holed' : garbFt_(fo.prox)) : Math.round(fo.start) + ' yd'; }
+  var fo = par === 3 ? one(tee, 'prox', false) : one(elig, 'start', true);
+  if (par === 3 && !tee.length) { out.push = true; out.foD = 'nobody on from the tee'; }
+  if (fo) { out.fo = fo.p; out.foD = par === 3 ? 'on from the tee, ' + (fo.chip ? 'holed' : garbFt_(fo.prox)) : Math.round(fo.start) + ' yd'; if (par !== 3) out.foV = fo.start; }
+  var far = one(elig, 'start', true); if (far) out.far = { p: far.p, yd: far.start };   // this hole's longest shot onto the green (for pushed points)
   // Closest to Pin (several chip-ins: the longest one)
   var chips = P.filter(function (x) { return x.chip; });
   var ct = chips.length ? one(chips, 'start', true) : one(P, 'prox', false);
-  if (ct) { out.ct = ct.p; out.ctD = ct.chip ? 'chip-in from ' + Math.round(ct.start) + ' yd' : garbFt_(ct.prox); }
+  if (ct) { out.ct = ct.p; out.ctD = ct.chip ? 'chip-in from ' + Math.round(ct.start) + ' yd' : garbFt_(ct.prox); out.ctV = ct.prox; }
   // Longest Putt
   var lp = null;
   if (chips.length) lp = one(chips, 'start', true);
@@ -69,13 +73,14 @@ function garbHole_(players, rows, over) {
     var mn = Math.min.apply(null, P.map(function (x) { return x.putts; }));
     lp = one(P.filter(function (x) { return x.putts === mn; }), 'prox', true);
   }
-  if (lp) { out.lp = lp.p; out.lpD = lp.chip ? 'chip-in' : garbFt_(lp.prox) + ' ' + lp.putts + '-putt'; }
+  if (lp) { out.lp = lp.p; out.lpD = lp.chip ? 'chip-in' : garbFt_(lp.prox) + ' ' + lp.putts + '-putt'; if (!lp.chip) out.lpV = lp.prox; }
   if (ct && ct.chip && lp && lp.p === ct.p) out.tag = 'chip';
   else if (par === 3 && tee.length && fo && ct && fo.p === ct.p) out.tag = 'p3';
   // admin's hand-set winners ('-' = nobody)
   if (over) ['fo', 'ct', 'lp'].forEach(function (k) {
     if (over[k] === undefined || over[k] === '') return;
-    out[k] = over[k] === '-' ? '' : String(over[k]); out[k + 'D'] = 'set by hand'; out.src = 'admin'; out.tag = '';
+    out[k] = over[k] === '-' ? '' : String(over[k]); out[k + 'D'] = 'set by hand'; out[k + 'V'] = null; out.src = 'admin'; out.tag = '';
+    if (k === 'fo') out.push = false;
   });
   return out;
 }
@@ -89,7 +94,7 @@ function garbCompute_(players, holeNums, log, cfgOver, closed) {
     (by[h] = by[h] || {})[p] = { par: r[15], putts: r[5], mull: r[6], shots: shots };
   });
   var pts = {}; players.forEach(function (p) { pts[p] = { fo: 0, ct: 0, lp: 0, t: 0 }; });
-  var holes = [], done = 0;
+  var holes = [], done = 0, pushN = 0, held = false, far = null, farTie = false;
   holeNums.forEach(function (h) {
     var rows = by[h] || {}, ov = (cfgOver || {})[h];
     var have = players.filter(function (p) { return rows[p] && rows[p].shots && rows[p].shots.length; });
@@ -98,20 +103,32 @@ function garbCompute_(players, holeNums, log, cfgOver, closed) {
     var o = { n: Number(h) || h, par: 0, done: false };
     if (ready) {
       var x = garbHole_(have, rows, ov);
-      o = { n: Number(h) || h, par: x.par, done: true, fo: x.fo, ct: x.ct, lp: x.lp, foD: x.foD, ctD: x.ctD, lpD: x.lpD, tag: x.tag };
+      o = { n: Number(h) || h, par: x.par, done: true, fo: x.fo, ct: x.ct, lp: x.lp, foD: x.foD, ctD: x.ctD, lpD: x.lpD, tag: x.tag, foV: x.foV, ctV: x.ctV, lpV: x.lpV };
       if (x.note) o.note = x.note; if (x.src) o.src = x.src;
-      ['fo', 'ct', 'lp'].forEach(function (k) { if (o[k] && pts[o[k]]) { pts[o[k]][k]++; pts[o[k]].t++; } });
+      if (x.far) { if (!far || x.far.yd > far.yd) { far = { p: x.far.p, yd: x.far.yd, n: o.n }; farTie = false; } else if (x.far.yd === far.yd && x.far.p !== far.p) farTie = true; }
+      if (x.push) { o.push = true; pushN++; }
+      else if (x.par === 3 && o.fo && pushN > 0 && !held) { o.foX = pushN; pushN = 0; }   // pushed par-3 points land here
+      ['fo', 'ct', 'lp'].forEach(function (k) { if (o[k] && pts[o[k]]) { var n = k === 'fo' ? 1 + (o.foX || 0) : 1; pts[o[k]][k] += n; pts[o[k]].t += n; } });
       done++;
     } else {
       o.wait = players.filter(function (p) { return have.indexOf(p) < 0; });
       var anyRow = players.filter(function (p) { return rows[p]; });
       if (anyRow.length === players.length && have.length < players.length) o.note = 'noshots';   // entered by phone: needs a hand-set result
+      if (pushN > 0) held = true;   // a hole still to come could be the next par 3: pushed points wait for it
     }
     holes.push(o);
   });
-  var order = players.slice().sort(function (a, b) { return pts[b].t - pts[a].t || (a < b ? -1 : 1); });
   var final = players.length >= 2 && holeNums.length > 0 && (done === holeNums.length || (!!closed && done > 0));
-  return { players: players, total: holeNums.length, holes: holes, pts: pts, order: order, played: done, left: final ? 0 : (holeNums.length - done) * 3, final: final };
+  var bonus = null;
+  if (final && pushN > 0) {   // no par 3 left: pushed points go to the longest Furthest Out shot of the round
+    if (far && !farTie && pts[far.p]) { pts[far.p].fo += pushN; pts[far.p].t += pushN; bonus = { p: far.p, n: pushN, yd: Math.round(far.yd), hole: far.n }; }
+    else bonus = { p: '', n: pushN };
+    pushN = 0;
+  }
+  var order = players.slice().sort(function (a, b) { return pts[b].t - pts[a].t || (a < b ? -1 : 1); });
+  var st = { players: players, total: holeNums.length, holes: holes, pts: pts, order: order, played: done, left: final ? 0 : (holeNums.length - done) * 3 + pushN, final: final, pushed: pushN };
+  if (bonus) st.bonus = bonus;
+  return st;
 }
 
 function garbLogSheet_(ss, make) {
