@@ -26,7 +26,9 @@
   function load() {
     if (st.busy || !window.RL || !RL.get) return;
     st.busy = true;
+    RL.get('garbage', '&season=1').then(function (j) { st.garb = j.nights || []; }, function () { st.garb = st.garb || []; }).then(function () { if (st.nights && !st.busy) render(); });   // Nov 25: Garbage nights
     RL.get('rounds').then(function (j) {
+      st.labels = {}; (j.nights || []).forEach(function (x) { st.labels[x.night] = x.label; });
       st.nights = (j.nights || []).filter(function (x) { return x.type === 'League'; }).sort(function (a, b) { return a.night < b.night ? -1 : 1; });
       return Promise.all(st.nights.map(function (x, i) {
         var c = null; try { c = JSON.parse(ls('earn:' + x.night) || 'null'); } catch (z) {}
@@ -73,11 +75,18 @@
         carry = pw.length === 1 ? 0 : pot;
       }
     });
+    // Garbage (Nov 25): $1 a player on each finished Garbage night; a single leader takes the pot, a tie carries it.
+    var gCarry = 0;
+    (st.garb || []).filter(function (x) { return x.status === 'Final'; }).sort(function (a, b) { return a.night < b.night ? -1 : 1; }).forEach(function (x) {
+      var lab = (st.labels || {})[x.night] || x.label, win = x.result === 'Win' && x.winners.length === 1 ? x.winners[0] : '';
+      (x.players || []).forEach(function (p) { add(x.night, lab, 'garb', p, p === win ? x.pot : 0, 1); });
+      gCarry = win ? 0 : x.pot;
+    });
     EXTRA.forEach(function (x) { add(x.n, x.l, x.g, x.p, x.won, x.paid); });
     if (SEASON_SETTLED) members.forEach(function (p) { add('', 'Season entry', 'season', p, 0, BUY.season); });
     var T = {}; members.forEach(function (p) { T[p] = { p: p, won: 0, paid: 0, g: {}, rows: [] }; });
     L.forEach(function (r) { var t = T[r.p]; if (!t) return; t.won += r.won; t.paid += r.paid; var g = t.g[r.g] = t.g[r.g] || { won: 0, paid: 0 }; g.won += r.won; g.paid += r.paid; t.rows.push(r); });
-    return { members: members, T: T, carry: carry, noTeam: noTeam };
+    return { members: members, T: T, carry: carry, gCarry: gCarry, noTeam: noTeam };
   }
   function seasonProj(p) {   // regular-season money if it ended today (ties on points share the places they cover)
     var s = ((window.data || {}).standings || []).filter(function (x) { return num(x.pts) !== null; }), mine = s.filter(function (x) { return x.player === p; })[0]; if (!mine) return null;
@@ -118,11 +127,11 @@
       return '<tr' + (r.p === y ? ' class="me"' : '') + '><td class="l p">' + r.pll + '</td><td class="l"><button type="button" data-earn="' + e(r.p) + '">' + e(r.p) + ' <i>›</i></button></td><td>' + usd(r.won) + '</td><td class="m">' + usd(r.paid) + '</td><td class="b">' + net$(r.won - r.paid) + '</td></tr>';
     }).join('') + '</table>';
     var pool = BUY.season * c.members.length;
-    var left = (c.carry ? '<div class="card ern-left"><div class="bbb-sh">Still to be won</div><div><span>Putting pot carried over</span><b>' + usd(c.carry) + '</b></div></div>' : '') +
+    var left = (c.carry || c.gCarry ? '<div class="card ern-left"><div class="bbb-sh">Still to be won</div>' + (c.carry ? '<div><span>Putting pot carried over</span><b>' + usd(c.carry) + '</b></div>' : '') + (c.gCarry ? '<div><span>Garbage pot carried over</span><b>' + usd(c.gCarry) + '</b></div>' : '') + '</div>' : '') +
       '<div class="card ern-left"><div class="bbb-sh">Season prize pool</div><div><span>Entry: ' + usd(BUY.season) + ' × ' + c.members.length + ' players, all paid <i class="ern-ok">✓</i></span><b>' + usd(pool) + '</b></div>' +
       '<div class="sub"><span>Regular season (1st / 2nd / 3rd)</span><span>' + usd(SEASON_PAY[0] + SEASON_PAY[1] + SEASON_PAY[2]) + '</span></div><div class="sub"><span>Playoffs</span><span>' + usd(PLAYOFF_POOL) + '</span></div>' +
       '<small>Entries and prizes are added to everyone\'s Net when the prizes are paid.</small></div>';
-    var note = '<div class="ern-note">Net = money won minus money paid in. Counts low net, team game and the nightly putting pot. No CTP game money has been played for yet; Garbage joins once it is scored for real.' +
+    var note = '<div class="ern-note">Net = money won minus money paid in. Counts low net, team game, the nightly putting pot and Garbage. No CTP game money has been played for yet.' +
       (c.noTeam.length ? ' Team game results weren\'t saved for ' + c.noTeam.map(function (x) { return e(String(x.label).split(' · ')[0]); }).join(' and ') + ', so the team game isn\'t counted on ' + (c.noTeam.length > 1 ? 'those nights' : 'that night') + '.' : '') + ' Tap a player for the breakdown.' + (st.err ? ' Couldn\'t reach the server just now; showing what\'s saved on this phone.' : '') + '</div>';
     el.innerHTML = hero + '<div class="ern-h"><span class="bbb-sh">All players</span>' + seg + '</div><div class="card ern-c">' + tbl + '</div>' + left + note;
   }

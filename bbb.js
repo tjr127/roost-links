@@ -229,6 +229,46 @@
     }
     el.innerHTML = h;
   }
+  // ---- Season > Garbage: season totals from every saved night (?api=garbage&season=1) ----
+  var SN = null, snAt = 0, snBusy = false;
+  function renderSeason() {
+    var el = document.getElementById('garbseasonbody'); if (!el) return;
+    if (!snBusy && window.RL && RL.get && (!SN || Date.now() - snAt > 120000)) {
+      snBusy = true;
+      RL.get('garbage', '&season=1').then(function (j) { SN = j.nights || []; }, function () { SN = SN || null; }).then(function () { snBusy = false; snAt = Date.now(); if (vis('garbseason')) renderSeason(); });
+    }
+    if (!SN) { el.innerHTML = '<div class="card empty">' + (snBusy ? 'Loading…' : 'Couldn\'t load the Garbage season.') + '</div>'; return; }
+    var fin = SN.filter(function (x) { return x.status === 'Final'; }).sort(function (a, b) { return a.night < b.night ? 1 : -1; });
+    if (!fin.length) { el.innerHTML = '<div class="card empty">No Garbage nights finished yet.<br><small>Season totals start with the first night played.</small></div>' + RULES; return; }
+    var T = {}, me = meName(), carry = 0;
+    fin.slice().reverse().forEach(function (x) {
+      var win = x.result === 'Win' && x.winners.length === 1 ? x.winners[0] : '';
+      (x.players || []).forEach(function (p) {
+        var t = T[p] = T[p] || { p: p, n: 0, w: 0, won: 0, fo: 0, ct: 0, lp: 0, t: 0 }, q = (x.pts || {})[p] || {};
+        t.n++; t.fo += q.fo || 0; t.ct += q.ct || 0; t.lp += q.lp || 0; t.t += q.t || 0;
+        if (p === win) { t.w++; t.won += x.pot; }
+      });
+      carry = win ? 0 : x.pot;
+    });
+    var rows = Object.keys(T).map(function (k) { return T[k]; }).sort(function (a, b) { return b.t - a.t || b.w - a.w || (a.p < b.p ? -1 : 1); });
+    var mx = Math.max(1, rows[0].t), topW = rows.slice().sort(function (a, b) { return b.won - a.won || b.w - a.w; })[0];
+    var usd = function (v) { return (v < 0 ? '−$' : '$') + Math.abs(v); };
+    var lead = '<div class="gb-lead"><div><span class="gb-k">Garbage · season</span><b>' + e(short(rows[0].p)) + '</b><small>most points over ' + fin.length + ' night' + (fin.length > 1 ? 's' : '') + (topW && topW.won ? ' · most money: ' + e(short(topW.p)) + ' $' + topW.won : '') + '</small></div><div class="gb-big">' + rows[0].t + '<small>points</small></div></div>';
+    var list = rows.map(function (x, i) {
+      var better = rows.filter(function (y) { return y.t > x.t; }).length, tie = rows.filter(function (y) { return y.t === x.t; }).length > 1;
+      var seg = [['fo', x.fo], ['ct', x.ct], ['lp', x.lp]].map(function (q) { return q[1] ? '<i class="' + q[0] + '" style="flex:' + q[1] + '">' + q[1] + '</i>' : ''; }).join(''), net = x.won - x.n;
+      return '<div class="gb-r gs-r' + (x.p === me ? ' me' : '') + '" aria-label="' + e(x.p) + ': ' + x.t + ' points, ' + x.fo + ' Furthest Out, ' + x.ct + ' Closest to Pin, ' + x.lp + ' Longest Putt"><span class="gb-p">' + (tie ? 'T' : '') + (better + 1) + '</span><span class="gb-n">' + e(short(x.p)) + '<small>' + x.n + ' night' + (x.n > 1 ? 's' : '') + (x.w ? ' · ' + x.w + ' win' + (x.w > 1 ? 's' : '') : '') + ' · <span class="' + (net > 0 ? 'ern-up' : net < 0 ? 'ern-dn' : 'ern-0') + '">' + (net > 0 ? '+' : '') + usd(net) + '</span></small></span><span class="gb-barw"><span class="gb-bar" style="width:' + Math.round(x.t / mx * 100) + '%">' + seg + '</span></span><b' + (better === 0 ? ' class="a"' : '') + '>' + x.t + '</b></div>';
+    }).join('');
+    var nights = fin.map(function (x) {
+      var win = x.result === 'Win' && x.winners.length === 1 ? x.winners[0] : '', top = win && x.pts[win] ? x.pts[win].t : 0;
+      return '<div class="card ern-n"><div><b>' + e(x.label) + '</b><b class="num">' + (win ? e(short(win)) + ' won $' + x.pot : 'Tie · $' + x.pot + ' carried') + '</b></div><small>' + (x.players || []).length + ' played' + (win ? ' · ' + top + ' points' : x.winners.length ? ' · ' + x.winners.map(function (p) { return e(short(p)); }).join(' & ') + ' tied' : '') + (x.carry ? ' · $' + x.carry + ' carried in' : '') + '</small></div>';
+    }).join('');
+    el.innerHTML = lead + '<div class="card gb-c"><div class="gb-ch"><span class="bbb-sh">Season points</span><span class="gb-leg"><i class="gd fo"></i>FO <i class="gd ct"></i>CTP <i class="gd lp"></i>LP</span></div>' + list + '</div>' +
+      (carry ? '<div class="gb-st"><span>Pot carried to the next Garbage night</span><span><b>$' + carry + '</b></span></div>' : '') +
+      '<div class="gb-h">Nights</div>' + nights + '<div class="ern-note">Money under each name is winnings minus $1 for every night played. Pick a night in the Nightly tab\'s Garbage page to see its holes.</div>' + RULES;
+  }
+  window.renderGarbSeason = renderSeason;
+
   window.renderAdminBbb = renderAdmin;
   window.bbbAdminInfo = function () { if (!G) maybeLoad(true); var n = G && G.on ? (G.players || []).length : 0; return { on: !!(G && G.on), n: n, pot: G && G.on ? n + (Number(G.carry) || 0) : 0 }; };
   function refresh() {

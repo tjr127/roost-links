@@ -1527,3 +1527,6 @@ body.sb-open #enter .en-save { margin-top: 10px; }
 .bbba-btn { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--amber); background: #3a2f17; color: var(--amber); font: 600 14px Inter, sans-serif; cursor: pointer; }
 .bbba-btn.warn { border-color: #5a3a34; background: #2a1a17; color: var(--loss, #F28B7C); } .bbba-btn:disabled { opacity: .5; cursor: default; }
 .bbba-link { background: none; border: 0; color: var(--amber); font: 500 12.5px Inter, sans-serif; padding: 6px 0; cursor: pointer; text-align: left; }
+/* Season > Garbage (Nov 25) */
+.gs-r .gb-n { white-space: normal; line-height: 1.15; width: 36%; } .gs-r .gb-n small { display: block; font: 400 11px Inter, sans-serif; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+#garbseasonbody .card { padding: 12px 14px; } #garbseasonbody .card.gb-c { padding: 10px 8px 8px; margin-bottom: 10px; }
