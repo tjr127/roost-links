@@ -230,10 +230,11 @@
     el.innerHTML = h;
   }
   window.renderAdminBbb = renderAdmin;
-  window.bbbAdminInfo = function () { var n = G && G.on ? (G.players || []).length : 0; return { on: !!(G && G.on), n: n, pot: G && G.on ? n + (Number(G.carry) || 0) : 0 }; };
+  window.bbbAdminInfo = function () { if (!G) maybeLoad(true); var n = G && G.on ? (G.players || []).length : 0; return { on: !!(G && G.on), n: n, pot: G && G.on ? n + (Number(G.carry) || 0) : 0 }; };
   function refresh() {
     syncPill();
     if (vis('adminbbb')) renderAdmin();
+    if (typeof window.adminRefresh === 'function') window.adminRefresh();   // Admin home's Garbage line
     if (typeof window.renderField === 'function' && !document.body.classList.contains('bpast')) window.renderField();
     if (typeof window.renderTonightCard === 'function') window.renderTonightCard(window.data);
     if (vis('bbb')) renderPage();

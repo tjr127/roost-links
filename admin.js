@@ -86,7 +86,7 @@
       html += '<div class="ah-need"><div class="ah-k">Needs you</div><b>' + e(n.k) + '</b><div class="ah-s">' + e(n.s) + '</div>' +
         '<button type="button" class="en-save" ' + n.attr + '>' + e(n.btn) + '</button></div>';
     });
-    html += '<div class="ah-list">' + [['adminsched', 'Tee times and groups'], ['adminenter', 'Enter scores'], ['adminbbb', 'Garbage', 'Preview'], ['adminctp', 'Closest to the Pin'], ['adminmsg', 'Message']].map(function (r) {
+    html += '<div class="ah-list">' + [['adminsched', 'Tee times and groups'], ['adminenter', 'Enter scores'], ['adminbbb', 'Garbage'], ['adminctp', 'Closest to the Pin'], ['adminmsg', 'Message']].map(function (r) {
       var s = statusOf(r[0]);
       return '<button type="button" class="ah-row" data-gotab="' + r[0] + '"><span class="ah-ic">' + ic(ICON[r[0]]) + '</span>' +
         '<span class="ah-t"><b>' + e(r[1]) + (r[2] ? ' <i class="pv-badge">' + e(r[2]) + '</i>' : '') + '</b>' + (s ? '<small>' + e(s) + '</small>' : '') + '</span>' + CHEV + '</button>';
