@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=156">
-<link rel="stylesheet" href="theme.css?v=156">
+<link rel="stylesheet" href="app.css?v=157">
+<link rel="stylesheet" href="theme.css?v=157">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=156"></script>
-<script src="app.js?v=156"></script>
-<script src="rules.js?v=156"></script>
+<script src="live.js?v=157"></script>
+<script src="app.js?v=157"></script>
+<script src="rules.js?v=157"></script>
 </head>
 <body>
 <header>
@@ -569,15 +569,21 @@
   function renderNightChips() {
     var el = document.getElementById('nightchips'), info = nightInfo();
     var key = info.list.map(function (x) { return x.night + (x.played ? '*' : ''); }).join('|') + '#' + nightPick;
-    if (el.dataset.key === key) return;
-    var moved = el.dataset.pick !== nightPick;
-    el.dataset.key = key; el.dataset.pick = nightPick;
+    // Nov 27: the row is first drawn while the Schedule tab is hidden, where it can't scroll, so the selected chip
+    // sat cut off at the right edge. Centre it on the first draw that is on screen, once per selected night.
+    var centre = function () {
+      var on = el.querySelector('.sd-chip.on');
+      if (!on || !el.clientWidth || el.dataset.centred === nightPick) return;
+      el.scrollLeft = Math.max(0, on.offsetLeft - el.offsetLeft - (el.clientWidth - on.offsetWidth) / 2);
+      el.dataset.centred = nightPick;
+    };
+    if (el.dataset.key === key) { centre(); return; }
+    el.dataset.key = key;
     el.innerHTML = info.list.map(function (x) {
       return '<button type="button" class="sd-chip' + (x.night === nightPick ? ' on' : '') + (x.played ? ' done' : '') + '" data-night="' + esc(x.night) + '"' + (x.night === nightPick ? ' aria-pressed="true"' : '') + '>' +
         (x.off ? '<b>' + esc(x.dow) + '</b> ' : '') + esc(x.md) + (x.played ? ' <i aria-label="played">✓</i>' : '') + '</button>';
     }).join('');
-    var on = el.querySelector('.sd-chip.on');
-    if (on && moved) el.scrollLeft = Math.max(0, on.offsetLeft - el.offsetLeft - (el.clientWidth - on.offsetWidth) / 2);
+    centre();
   }
   function renderNightly() {
     var d = nightLoad(nightPick);
@@ -611,10 +617,16 @@
     var capR = '', html = '';
     if (G && (G.early.length || G.late.length)) {
       // Sign-up night with groups: each group's matches under its tee time; matches not (fully) placed after them.
-      var inE = [], inL = [], rest = [];
+      var inE = [], inL = [], rest = [], solo = {};
+      // Nov 27 (Ty): when one player said Can't play, his opponent is shown once under his own group as
+      // "Tom · opponent out" (the man who is out is already on the Can't play line), not under Not placed yet.
+      var isOut = function (n) { return !where(n) && G.choice(n) === 'Out'; };
       d.matches.forEach(function (m) {
         var wa = where(m.a.name), wb = where(m.b.name);
         if (wa && wa === wb) (wa === 'E' ? inE : inL).push(m);
+        else if (wa && isOut(m.b.name)) solo[m.a.name] = true;
+        else if (wb && isOut(m.a.name)) solo[m.b.name] = true;
+        else if (isOut(m.a.name) && isOut(m.b.name)) return;
         else rest.push(m);
       });
       var block = function (title, time, names, list) {
@@ -622,9 +634,12 @@
         // Group members without a match inside this group (a bye coming to play, a guest, or one half of a
         // match that is split or not placed yet) are named under it, so a group never shows as an empty heading.
         var also = names.filter(function (n) { return !list.some(function (m) { return m.a.name === n || m.b.name === n; }); });
+        var alone = also.filter(function (n) { return solo[n]; });
+        also = also.filter(function (n) { return !solo[n]; });
         return '<div class="sd-gh"><b>' + title + ' · ' + esc(time) + '</b><span class="tt-n">' + names.length + '</span></div>' +
           mineFirst(list).map(function (m) { return row(m, [G.nopick(m.a.name) ? 'no answer' : '', G.nopick(m.b.name) ? 'no answer' : '']); }).join('') +
-          (also.length ? '<div class="sd-line">' + (list.length ? '<b>Also playing:</b> ' : '') + also.map(esc).join(', ') + '</div>' : '');
+          alone.map(function (n) { return '<div class="sd-line sd-oo' + (n === mine ? ' me' : '') + '"><b>' + esc(n) + '</b> · opponent out</div>'; }).join('') +
+          (also.length ? '<div class="sd-line">' + (list.length || alone.length ? '<b>Also playing:</b> ' : '') + also.map(esc).join(', ') + '</div>' : '');
       };
       var lab = function (n) { var w = where(n), c = G.choice(n); return w === 'E' ? 'Early' : w === 'L' ? 'Late' : c === 'Out' ? 'can\'t play' : G.final ? 'not playing' : 'no answer'; };
       html += block('Early', G.times.Early, G.early, inE) + block('Late', G.times.Late, G.late, inL);
@@ -2230,22 +2245,22 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=156"></script>
-<script src="settings.js?v=156"></script>
-<script src="admin.js?v=156"></script>
-<script src="flip.js?v=156"></script>
-<script src="match.js?v=156"></script>
-<script src="msg.js?v=156"></script>
-<script src="puttstand.js?v=156"></script>
-<script src="stats.js?v=156"></script>
-<script src="bios.js?v=156"></script>
-<script src="ctp.js?v=156"></script>
-<script src="fine.js?v=156"></script>
-<script src="tonight.js?v=156"></script>
-<script src="scorebar.js?v=156"></script>
-<script src="anim.js?v=156"></script>
-<script src="bbb.js?v=156"></script>
-<script src="earnings.js?v=156"></script>
+<script src="tee.js?v=157"></script>
+<script src="settings.js?v=157"></script>
+<script src="admin.js?v=157"></script>
+<script src="flip.js?v=157"></script>
+<script src="match.js?v=157"></script>
+<script src="msg.js?v=157"></script>
+<script src="puttstand.js?v=157"></script>
+<script src="stats.js?v=157"></script>
+<script src="bios.js?v=157"></script>
+<script src="ctp.js?v=157"></script>
+<script src="fine.js?v=157"></script>
+<script src="tonight.js?v=157"></script>
+<script src="scorebar.js?v=157"></script>
+<script src="anim.js?v=157"></script>
+<script src="bbb.js?v=157"></script>
+<script src="earnings.js?v=157"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {

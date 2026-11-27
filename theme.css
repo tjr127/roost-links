@@ -1118,8 +1118,11 @@ table.ern-t td button i { font-style: normal; color: var(--muted); font-weight: 
 .sd-times button { min-height: 58px; border-radius: 14px; background: var(--card2); border: 1px solid var(--line2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .sd-times button b { font: 700 16px var(--num); }
 .sd-times button small { font-size: 12px; color: var(--muted); }
-.sd-times button.on, .sd-tees button.on { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
-.sd-times button.on small, .sd-tees button.on small { color: #3D2C08; }
+.sd-times button.on { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+.sd-times button.on small { color: #3D2C08; }
+/* Nov 27 (Ty): the selected tee is an amber outline, so solid amber means one thing on this card: the time he picked. */
+.sd-tees button.on { background: #2A2413; border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+.sd-tees button.on > b { color: var(--amber); }
 .sd-out { min-height: 44px; border-radius: 14px; border: 1px solid #4A2F2A; color: var(--loss); font-size: 14px; font-weight: 600; text-align: center; }
 .sd-out.on { background: var(--loss); border-color: var(--loss); color: #2A0F0B; }
 .sd-tees { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -1127,8 +1130,7 @@ table.ern-t td button i { font-style: normal; color: var(--muted); font-weight: 
 .sd-tl { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .sd-tn { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 15px; font-weight: 700; }
 .sd-tn em { font-style: normal; padding: 1px 6px; border-radius: 6px; background: var(--line2); color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
-.sd-tees button.on .sd-tn em { background: #101412; color: var(--amber); }
-.sd-tees button.on .tp-dot { box-shadow: 0 0 0 1px rgba(16,20,18,.55); }
+.sd-tees button.on .sd-tn em { background: var(--amber); color: var(--amber-ink); }
 .sd-tees small { font-size: 12px; color: var(--muted); }
 .sd-tees button > b { font: 700 24px/1 Inter, sans-serif; }
 .sd-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -1143,6 +1145,24 @@ table.ern-t td button i { font-style: normal; color: var(--muted); font-weight: 
 .sd-btn.amber { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); font-weight: 700; }
 .sd-foot { font-size: 12px; color: var(--muted); }
 .sd-hero .tt-msg { margin: 0; }
+/* Nov 27: status pill (one spot top left in every state), save marks on the tapped button, a message line that keeps
+   its space, the Reschedule prompt after Can't play, and the "opponent out" line in Matchups. */
+.sd-pill { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; background: var(--card2); color: var(--muted); }
+.sd-pill.need { background: var(--amber); color: var(--amber-ink); }
+.sd-pill.in { background: rgba(143,209,158,.16); color: var(--win); }
+.sd-pill.out { background: rgba(242,139,124,.16); color: var(--loss); }
+.sd-hero .sd-msg { min-height: 18px; font-size: 13px; line-height: 18px; text-align: center; }
+.sd-times button, .sd-out { position: relative; }
+.sd-times .sd-mk { position: absolute; top: 5px; right: 7px; display: flex; }
+.sd-out .sd-mk { display: inline-flex; vertical-align: -3px; margin-left: 8px; }
+.sd-tn .sd-mk { display: inline-flex; color: var(--amber); }
+.sd-mk svg { width: 14px; height: 14px; }
+.sd-spin { display: block; width: 12px; height: 12px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; opacity: .8; animation: rl-spin .8s linear infinite; }
+.sd-rsrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border-radius: 14px; background: #2A2413; border: 1px solid #3A3018; }
+.sd-rstx { font-size: 14px; font-weight: 600; line-height: 1.35; min-width: 0; }
+.sd-rsrow .rs-btn { flex: none; width: auto; min-height: 44px; padding: 0 14px; font-size: 14px; }
+.sd-line.sd-oo { padding: 8px 12px; }
+.sd-line.sd-oo.me b { color: var(--amber); }
 
 #schedule .sd-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 16px 0 10px; padding: 4px; border-radius: 16px; }
 #schedule .sd-seg button { min-height: 40px; line-height: 40px; padding: 0; text-align: center; border-radius: 12px; font-size: 14px; }

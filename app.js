@@ -93,7 +93,7 @@
   // ---- What the page asks about the signed-in player ----
   window.RL = {
     user: getAuth,
-    post: function (body) { return apiPost(body); },
+    post: function (body, opt) { return apiPost(body, opt); },   // opt (time limit, tries) only where the caller asks for it
     get: function (what, extra) { return apiGet(what, extra); },
     canEdit: function (name) { var a = getAuth(); return !!a && (a.admin || a.name === name); },
     // Enter Score follows your own name; admins can pick anyone.
@@ -175,7 +175,7 @@
       });
     }
     box.innerHTML = '<div class="rl-q">Who are you?</div><div class="rl-msg" id="rl-msg"><i class="rl-spin"></i>Loading players…</div><div id="rl-names"></div>' +
-      '<button type="button" class="rl-link" id="rl-browse">Just looking — skip for now</button>';
+      '<button type="button" class="rl-link" id="rl-browse">Just looking (you can\'t pick a tee time or enter scores)</button>';
     box.querySelector('#rl-browse').addEventListener('click', function () { stop(); pickSeq++; ls(BROWSE_KEY, '1'); hideLogin(); updateWho(); });
     var first = savedPlayers() || boardPlayers();
     if (first) draw(first);

@@ -137,7 +137,7 @@
   // into the Matchups card below it (index.html renderNightly, through window.teeGroups).
   // Tee colours as they read on the dark cards (plain CSS "blue" is too harsh); any other colour name is used as is.
   var DOT = { blue: '#3B6BE0', green: '#2E9E57', red: '#E0483B', gold: '#D9A520', yellow: '#E8CE3B', black: '#0B0D0C', white: '#FFFFFF', silver: '#C9D1CC' };
-  var openPick = false;   // the member tapped Change, or just answered: keep the pickers open until Done
+  var openPick = false;   // the member tapped Change, or just answered: keep the pickers open until Close
   var DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function nightDate(night) { var p = String(night || '').split('-'); return p.length === 3 ? new Date(+p[0], p[1] - 1, +p[2]) : null; }
   function shortTime(s) { var m = /^(\d+):(\d\d)/.exec(s || ''); return m ? (m[2] === '00' ? m[1] : m[1] + ':' + m[2]) : s; }
@@ -170,45 +170,72 @@
       choice: function (n) { return choiceOf(tt, n); }, nopick: function (n) { return !conf && noPick(tt, n); },
       tee: function (n) { return teesOf(tt, n); }, ch: function (n) { return chOf(tt, n); } };
   };
-  function heroHead(tt, me, sched) {
+  // Who the member plays that night, and what the Reschedule button needs for it ('' when there is nothing to move).
+  function myNight(tt, me) {
+    var d = nightDate(tt.night), opps = [], rs = '';
+    tt.pairs.forEach(function (p) { if (p[0] === me && opps.indexOf(p[1]) < 0) opps.push(p[1]); else if (p[1] === me && opps.indexOf(p[0]) < 0) opps.push(p[0]); });
+    if (opps.length && !tt.casual && d) {
+      var lab = MON[d.getMonth()] + ' ' + d.getDate();
+      var mine = ((window.data && window.data.schedule) || []).filter(function (p) { return p.name === me; })[0];
+      var wk = mine && (mine.weeks || []).filter(function (x) { return x.status === 'upcoming' && (x.date === lab || (x.rs && x.rs.night === tt.night)); })[0];
+      var r1 = wk && (wk.rs || ((wk.extras || []).filter(function (m) { return m.rs; })[0] || {}).rs);
+      if (r1) rs = { lab: lab, json: JSON.stringify({ night: r1.night, player: me, vs: opps.join(' and '), date: lab }) };
+    }
+    return { opps: opps, rs: rs };
+  }
+  // Same chip as the ones in My schedule (index.html's rsTap handles the tap on any .rs-btn).
+  function rsBtn(rs) {
+    return '<span role="button" tabindex="0" class="rs-btn" aria-label="Reschedule ' + e(rs.lab) + '" data-rs="' + e(rs.json) + '">' +
+      '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Reschedule</span></span>';
+  }
+  // Nov 27 (Ty): Can't play used to stop at "You're out this week". If the member still has a match that night,
+  // say so and put Reschedule right there.
+  function rsPrompt(mn) {
+    if (!mn.rs) return '';
+    var many = mn.opps.length > 1;
+    return '<div class="sd-rsrow"><div class="sd-rstx">Your ' + (many ? 'matches' : 'match') + ' with ' + mn.opps.map(e).join(' and ') + ' still ' + (many ? 'need' : 'needs') + ' a new night.</div>' + rsBtn(mn.rs) + '</div>';
+  }
+  // Nov 27: one status spot top left in every state, with the sign-up deadline always top right.
+  function topRow(kind, text, right) {
+    return '<div class="sd-top"><span class="sd-pill ' + kind + '">' + text + '</span>' + (right ? '<span class="sd-close">' + right + '</span>' : '') + '</div>';
+  }
+  function heroHead(tt, me, sched, mn, noRs) {
     var T = tt.tees, d = nightDate(tt.night), casual = !!tt.casual;
     var course = (T && T.course) || tt.course || '', nine = T && (T.nine === 'Front' || T.nine === 'Back') ? T.nine + ' 9' : '';
     var when = casual || !d ? e(tt.label) : '<b' + (d.getDay() !== 4 ? ' class="off"' : '') + '>' + DOW[d.getDay()] + '</b> ' + MON[d.getMonth()] + ' ' + d.getDate();
-    var opps = [];
-    tt.pairs.forEach(function (p) { if (p[0] === me && opps.indexOf(p[1]) < 0) opps.push(p[1]); else if (p[1] === me && opps.indexOf(p[0]) < 0) opps.push(p[0]); });
+    var opps = mn.opps;
     var inLeague = me && tt.players.some(function (p) { return p.name === me; });
     var title = opps.length ? 'You vs ' + opps.map(e).join(' &amp; ') : casual ? 'Casual round' : inLeague && !sched[me] && !isGuest(tt, me) ? 'Bye this week' : 'Tee times';
     var pill = function (who, n) { var x = teesOf(tt, n); return T && T.players && T.players[n] ? '<span>' + who + ' <b>HDCP ' + hcTxt(chOf(tt, n)) + '</b>' + (x ? ' · ' + e(x) : '') + '</span>' : ''; };
     var pills = inLeague ? pill('You', me) + opps.map(function (o) { return pill(e(o), o); }).join('') : '';
-    // Nov 25 (Ty): Reschedule chip beside "You vs X", same as the ones in My schedule (index.html's rsTap handles the tap).
-    var rs = '';
-    if (opps.length && !casual && d) {
-      var lab = MON[d.getMonth()] + ' ' + d.getDate();
-      var mine = ((window.data && window.data.schedule) || []).filter(function (p) { return p.name === me; })[0];
-      var wk = mine && mine.weeks.filter(function (x) { return x.status === 'upcoming' && (x.date === lab || (x.rs && x.rs.night === tt.night)); })[0];
-      var r1 = wk && (wk.rs || ((wk.extras || []).filter(function (m) { return m.rs; })[0] || {}).rs);
-      if (r1) rs = '<span role="button" tabindex="0" class="rs-btn" aria-label="Reschedule ' + e(lab) + '" data-rs="' + e(JSON.stringify({ night: r1.night, player: me, vs: opps.join(' and '), date: lab })) + '">' +
-        '<svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Reschedule</span></span>';
-    }
+    // Nov 25 (Ty): Reschedule chip beside "You vs X". Left out once he's said Can't play: the prompt below carries it.
+    var rs = !noRs && mn.rs ? rsBtn(mn.rs) : '';
     return '<div class="sd-hh"><div class="sd-eye">' + when + (course ? ' · ' + e(course) : '') + (nine ? ' · ' + nine : '') + '</div><div class="sd-trow"><div class="sd-title">' + title + '</div>' + rs + '</div></div>' +
       (pills ? '<div class="sd-pills">' + pills + '</div>' : '');
   }
-  function pickers(tt, me) {
+  // Nov 27: the tapped button itself shows the save (spinner, then a tick until the next board confirms it).
+  function mark(map, who, val) {
+    var q = map[who];
+    return !q || q.v !== val ? '' : q.state === 'saving' ? '<span class="sd-mk"><i class="sd-spin"></i></span>' : q.state === 'saved' ? '<span class="sd-mk">' + CHECK + '</span>' : '';
+  }
+  function pickers(tt, me, mn) {
     var T = tt.tees, p = T && T.players && T.players[me], cur = choiceOf(tt, me), tcur = teesOf(tt, me);
     var times = ['Early', 'Late', 'Either'].map(function (c) {
       var sub = c === 'Either' ? shortTime(tt.times.Early) + ' or ' + shortTime(tt.times.Late) : tt.times[c];
-      return '<button type="button" data-tee="' + c + '" class="' + (cur === c ? 'on' : '') + '"' + (cur === c ? ' aria-pressed="true"' : '') + '><b>' + LABEL[c] + '</b><small>' + e(sub) + '</small></button>';
+      return '<button type="button" data-tee="' + c + '" class="' + (cur === c ? 'on' : '') + '"' + (cur === c ? ' aria-pressed="true"' : '') + '><b>' + LABEL[c] + '</b><small>' + e(sub) + '</small>' + mark(pend, me, c) + '</button>';
     }).join('');
-    var tees = !T || !p ? '' : '<div class="sd-lab">Your tees <span>Big number = your handicap</span></div><div class="sd-tees">' +
+    // Tees only matter if he's playing: after Can't play they give way to the Reschedule prompt.
+    var tees = cur === 'Out' ? rsPrompt(mn) : !T || !p ? '' : '<div class="sd-lab">Your tees <span>Big number = your handicap</span></div><div class="sd-tees">' +
       T.tees.filter(function (x) { return x.ok; }).map(function (x) {
         var ch = p.chs[x.tee];
         return '<button type="button" data-ttee="' + e(x.tee) + '" class="' + (x.tee === tcur ? 'on' : '') + '"' + (x.tee === tcur ? ' aria-pressed="true"' : '') + '>' +
-          '<span class="sd-tl"><span class="sd-tn">' + (x.color ? '<i class="tp-dot" style="background:' + e(DOT[x.color.toLowerCase()] || x.color.toLowerCase()) + '"></i>' : '') + e(x.tee) + (x.tee === p.def ? '<em>usual</em>' : '') + '</span>' +
+          '<span class="sd-tl"><span class="sd-tn">' + (x.color ? '<i class="tp-dot" style="background:' + e(DOT[x.color.toLowerCase()] || x.color.toLowerCase()) + '"></i>' : '') + e(x.tee) + (x.tee === p.def ? '<em>usual</em>' : '') + mark(tpend, me, x.tee) + '</span>' +
           '<small>' + (x.yards ? Number(x.yards).toLocaleString('en-US') + ' yds' : e(x.color)) + '</small></span><b>' + hcTxt(ch) + '</b></button>';
       }).join('') + '</div>';
+    // The message line always keeps its space, so nothing moves under a thumb when "Saved" appears.
     return '<div class="sd-lab">When can you play?</div><div class="sd-times">' + times + '</div>' +
-      '<button type="button" data-tee="Out" class="sd-out' + (cur === 'Out' ? ' on' : '') + '"' + (cur === 'Out' ? ' aria-pressed="true"' : '') + '>Can\'t play this week</button>' +
-      (note.text ? '<div class="tt-msg' + (note.err ? ' err' : '') + '" role="status">' + e(note.text) + '</div>' : '') + tees;
+      '<button type="button" data-tee="Out" class="sd-out' + (cur === 'Out' ? ' on' : '') + '"' + (cur === 'Out' ? ' aria-pressed="true"' : '') + '>Can\'t play this week' + mark(pend, me, 'Out') + '</button>' +
+      '<div class="tt-msg sd-msg' + (note.err ? ' err' : '') + '" role="status">' + e(note.text) + '</div>' + tees;
   }
   var CHECK = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
   function statusRow(kind, main, sub, btn) {
@@ -219,40 +246,47 @@
     var conf = tt.confirmed, casual = !!tt.casual, me = a ? a.name : '', sched = scheduled(tt);
     if (tt.state === 'before' && !conf) return '';   // Nov 13 (Ty): nothing for players until sign-up opens
     var inLeague = !!a && tt.players.some(function (p) { return p.name === me; });
-    var my = inLeague ? choiceOf(tt, me) : '', myTees = inLeague ? teesOf(tt, me) : '';
+    var my = inLeague ? choiceOf(tt, me) : '', myTees = inLeague ? teesOf(tt, me) : '', out = my === 'Out';
     var teeLine = myTees ? e(myTees) + ' tees · HDCP ' + hcTxt(chOf(tt, me)) : '';
     var closes = casual ? 'Open until the first group tees off' : 'Closes ' + e(tt.closes);
-    var head = heroHead(tt, me, sched), html = '', need = false;
+    var mn = myNight(tt, me), head = heroHead(tt, me, sched, mn, out && tt.state === 'open' && !conf), html = '', need = false;
     var G = window.teeGroups(tt.night), grp = !G ? '' : G.early.indexOf(me) >= 0 ? 'Early' : G.late.indexOf(me) >= 0 ? 'Late' : '';
+    var mine = function (right) { return out ? topRow('out', 'You\'re out', right) : my ? topRow('in', 'You\'re in', right) : topRow('idle', 'No answer needed', right); };
     if (conf) {
       openPick = false;
       var by = 'Groups set by ' + e(conf.by) + (conf.at ? ' · ' + e(conf.at) : '');
-      html = head + '<div class="sd-div"></div>' + (!inLeague ? statusRow('lock', 'Groups are set', by)
+      html = (!inLeague ? topRow('idle', 'Tee times', 'Groups set') : grp ? topRow('in', 'You\'re in', 'Groups set') : out ? topRow('out', 'You\'re out', 'Groups set') : topRow('idle', 'Not playing', 'Groups set')) +
+        head + '<div class="sd-div"></div>' + (!inLeague ? statusRow('lock', 'Groups are set', by)
         : grp ? statusRow('lock', 'You\'re in: ' + grp + ' · ' + e(tt.times[grp]), (teeLine ? teeLine + ' · ' : '') + 'locked') + '<div class="sd-foot">' + by + '</div>'
-        : statusRow('none', my === 'Out' ? 'You\'re out this week' : !sched[me] ? 'You have a bye this week' : 'You\'re not in a group this week', by));
+        : statusRow('none', out ? 'You\'re out this week' : !sched[me] ? 'You have a bye this week' : 'You\'re not in a group this week', by));
     } else if (inLeague && tt.state === 'open') {
       var bye = !sched[me] && !isGuest(tt, me);
       need = !my && !bye;
       if (openPick || need) {
-        html = '<div class="sd-top">' + (need ? '<span class="sd-need">Your answer needed</span>' : '<span class="sd-yp">Your pick</span>') + '<span class="sd-close">' + closes + '</span></div>' + head + '<div class="sd-div"></div>' +
-          (bye ? '<div class="sd-foot">You have a bye this week. Pick a time only if you\'re coming to play.</div>' : '') + pickers(tt, me) +
-          (need ? '<div class="sd-foot">Saves when you tap. Change it any time until sign-up closes.</div>' : '<button type="button" class="sd-btn wide" id="sddone">Done</button>');
+        html = (need ? topRow('need', 'Your answer needed', closes) : mine(closes)) + head + '<div class="sd-div"></div>' +
+          (bye ? '<div class="sd-foot">You have a bye this week. Pick a time only if you\'re coming to play.</div>' : '') + pickers(tt, me, mn) +
+          (need ? '<div class="sd-foot">Saves when you tap. Change it any time until sign-up closes.</div>' : '<button type="button" class="sd-btn wide" id="sddone">Close</button>');
       } else {
         var chg = '<button type="button" class="sd-btn" id="sdchange">' + (my ? 'Change' : 'Play anyway') + '</button>';
-        var main = my === 'Out' ? 'You\'re out this week' : my === 'Either' ? 'You\'re in: Either time' : my ? 'You\'re in: ' + my + ' · ' + e(tt.times[my]) : 'No match for you this week';
-        var sub = my === 'Out' ? '' : my ? teeLine + (my === 'Either' && grp ? ' · ' + grp + ' group so far' : '') : 'Coming to play anyway? Pick a time.';
-        html = head + '<div class="sd-div"></div>' + statusRow(my === 'Out' ? 'out' : my ? 'ok' : 'none', main, sub, chg) +
-          (note.text ? '<div class="tt-msg' + (note.err ? ' err' : '') + '" role="status">' + e(note.text) + '</div>' : '') +
-          '<div class="sd-foot">' + (casual ? closes + '.' : 'You can change it until ' + e(tt.closes) + '.') + '</div>';
+        var main = out ? 'You\'re out this week' : my === 'Either' ? 'You\'re in: Either time' : my ? 'You\'re in: ' + my + ' · ' + e(tt.times[my]) : 'No match for you this week';
+        var sub = out ? '' : my ? teeLine + (my === 'Either' && grp ? ' · ' + grp + ' group for now, not final' : '') : 'Coming to play anyway? Pick a time.';
+        html = mine(closes) + head + '<div class="sd-div"></div>' + statusRow(out ? 'out' : my ? 'ok' : 'none', main, sub, chg) + (out ? rsPrompt(mn) : '') +
+          (note.text ? '<div class="tt-msg' + (note.err ? ' err' : '') + '" role="status">' + e(note.text) + '</div>' : '');
       }
     } else if (inLeague) {
       openPick = false;
-      html = head + '<div class="sd-div"></div>' + statusRow(my && my !== 'Out' ? 'ok' : 'none',
-        my === 'Out' ? 'You\'re out this week' : my ? 'You picked ' + LABEL[my] + (tt.times[my] ? ' · ' + e(tt.times[my]) : '') : 'No pick from you',
-        (my && my !== 'Out' && teeLine ? teeLine + ' · ' : '') + (casual ? 'Closed · the first group has teed off' : 'Sign-up closed · groups being set'));
+      html = (out ? topRow('out', 'You\'re out', casual ? 'Closed' : 'Sign-up closed') : my ? topRow('in', 'You\'re in', casual ? 'Closed' : 'Sign-up closed') : topRow('idle', 'No pick', casual ? 'Closed' : 'Sign-up closed')) +
+        head + '<div class="sd-div"></div>' + statusRow(my && !out ? 'ok' : 'none',
+        out ? 'You\'re out this week' : my ? 'You picked ' + LABEL[my] + (tt.times[my] ? ' · ' + e(tt.times[my]) : '') : 'No pick from you',
+        (my && !out && teeLine ? teeLine + ' · ' : '') + (casual ? 'Closed · the first group has teed off' : 'Sign-up closed · groups being set'));
+    } else if (!a) {
+      // Nov 27 (Ty): say plainly that he isn't signed in, which is why he can't pick.
+      var shut = casual ? 'Closed' : 'Sign-up closed';
+      html = topRow('idle', 'Not signed in', tt.state === 'open' ? closes : shut) + head +
+        (tt.state === 'open' ? '<div class="sd-div"></div>' + statusRow('none', 'You\'re not signed in', 'So you can\'t pick a tee time yet.') +
+          '<button type="button" class="sd-btn wide amber" id="ttsignin">Sign in to pick your time</button>' : '');
     } else {
-      html = '<div class="sd-top"><span class="sd-yp">Tee times</span><span class="sd-close">' + (tt.state === 'open' ? closes : casual ? 'Closed' : 'Sign-up closed') + '</span></div>' + head +
-        (!a && tt.state === 'open' ? '<button type="button" class="sd-btn wide amber" id="ttsignin">Sign in to pick your time</button>' : '');
+      html = topRow('idle', tt.state === 'open' ? 'Sign-up open' : casual ? 'Closed' : 'Sign-up closed', tt.state === 'open' ? closes : '') + head;
     }
     return '<div class="card sd-hero' + (need ? ' need' : '') + '">' + html + '</div>';
   }
@@ -491,11 +525,16 @@
     el.innerHTML = html;
   };
 
-  function post(body) {
+  function post(body, opt) {
     var a = RL.user();
     body.token = a && a.token;
-    return RL.post(body);
+    return RL.post(body, opt);
   }
+  // Nov 27: a tee pick gives up after 15 s instead of waiting forever on a bad connection. It is not sent again by
+  // itself; the member taps again.
+  var SAVE = { ms: 15000, tries: 1 };
+  function saveErr(er) { return er.net ? 'Didn\'t save. Check your signal and tap again.' : (er.message || 'Couldn\'t save. Try again.'); }
+  function adm() { return !!window.TEE_ADMIN; }
   function setNote(text, err) {
     note = { text: text, err: !!err }; renderTee();
     if (!window.TEE_ADMIN && typeof window.renderNightly === 'function' && !document.getElementById('svnight').classList.contains('hide')) window.renderNightly();
@@ -527,19 +566,19 @@
       var c = b.getAttribute('data-tee'), id = ++seq;
       if (!window.TEE_ADMIN) openPick = true;
       pend[who] = { v: c, id: id, state: 'saving', at: Date.now() };
-      setNote('Saving ' + who + ': ' + LABEL[c] + '…');
-      queue('t|' + who, function () { return post({ action: 'tee', name: who, choice: c }); }).then(function () {
+      setNote(adm() ? 'Saving ' + who + ': ' + LABEL[c] + '…' : 'Saving…');
+      queue('t|' + who, function () { return post({ action: 'tee', name: who, choice: c }, SAVE); }).then(function () {
         var q = pend[who];
         if (!q || q.id !== id) return; // a newer tap for this player replaced it
         q.state = 'saved'; q.at = Date.now(); q.ref = t();
-        setNote('Saved ' + who + ': ' + LABEL[c] + ' ✓');
+        setNote(adm() ? 'Saved ' + who + ': ' + LABEL[c] + ' ✓' : 'Saved ✓');
         load();
       }, function (er) {
         var q = pend[who];
         if (!q || q.id !== id) return;
         delete pend[who];
-        setNote(er.message || 'Couldn\'t save. Try again.', true);
-        if (er.code === 'locked') load();
+        setNote(saveErr(er), true);
+        if (er.code === 'locked' || er.net) load();   // no answer: show what the league actually has
       });
       return;
     }
@@ -550,19 +589,19 @@
       var tv = tb.getAttribute('data-ttee'), tid = ++seq;
       if (!window.TEE_ADMIN) openPick = true;
       tpend[w] = { v: tv, id: tid, state: 'saving', at: Date.now() };
-      setNote('Saving ' + w + ': ' + tv + ' tees…');
-      queue('s|' + w, function () { return post({ action: 'tee', name: w, tees: tv }); }).then(function () {
+      setNote(adm() ? 'Saving ' + w + ': ' + tv + ' tees…' : 'Saving…');
+      queue('s|' + w, function () { return post({ action: 'tee', name: w, tees: tv }, SAVE); }).then(function () {
         var q = tpend[w];
         if (!q || q.id !== tid) return;
         q.state = 'saved'; q.at = Date.now(); q.ref = t();
-        setNote('Saved ' + w + ': ' + tv + ' tees ✓');
+        setNote(adm() ? 'Saved ' + w + ': ' + tv + ' tees ✓' : 'Saved ✓');
         load();
       }, function (er) {
         var q = tpend[w];
         if (!q || q.id !== tid) return;
         delete tpend[w];
-        setNote(er.message || 'Couldn\'t save. Try again.', true);
-        if (er.code === 'locked') load();
+        setNote(saveErr(er), true);
+        if (er.code === 'locked' || er.net) load();
       });
       return;
     }
