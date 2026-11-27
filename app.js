@@ -8,7 +8,7 @@
  */
 (function () {
   var API_URL = 'https://script.google.com/macros/s/AKfycbxEt_gBNSohywQFft5jS1Cszm7Axd-9D7fzy0UXoY5v7gHxddkL_MslGOpaqpxlUrCF/exec';
-  var AUTH_KEY = 'roostAuth', BROWSE_KEY = 'roostBrowse', TIP_KEY = 'roostTipDone';
+  var AUTH_KEY = 'roostAuth', BROWSE_KEY = 'roostBrowse', TIP_KEY = 'roostTipDone', PLAYERS_KEY = 'roostPlayers';
 
   function ls(k, v) {
     try {
@@ -24,14 +24,36 @@
     if (!j || !j.ok) { var e = new Error((j && j.error) || 'Something went wrong'); e.code = j && j.code; throw e; }
     return j;
   }
-  function apiGet(what, extra) {
-    return fetch(API_URL + '?api=' + what + (extra || '') + '&_=' + Date.now(), { cache: 'no-store' })
-      .then(function (r) { return r.json(); }).then(check);
+  // Nov 27: a stalled request (weak signal, plane Wi-Fi) used to wait forever. Every GET now has a time limit and
+  // is tried again; an error with .net set means the league never answered (as opposed to answering "no").
+  function timedJson(url, opts, ms) {
+    var ctl = window.AbortController ? new AbortController() : null, t = null;
+    if (ctl) { opts.signal = ctl.signal; t = setTimeout(function () { ctl.abort(); }, ms); }
+    return fetch(url, opts).then(function (r) { return r.json(); }).then(
+      function (j) { clearTimeout(t); return j; },
+      function () { clearTimeout(t); var e = new Error('No answer from the league.'); e.net = true; throw e; });
+  }
+  // opt: { ms: time limit per try (default 45 s), tries: how many (default 2), onRetry: called before each extra try }
+  function apiGet(what, extra, opt) {
+    opt = opt || {};
+    var left = (opt.tries || 2) - 1;
+    function go() {
+      return timedJson(API_URL + '?api=' + what + (extra || '') + '&_=' + Date.now(), { cache: 'no-store' }, opt.ms || 45000)
+        .catch(function (e) { if (left-- > 0) { if (opt.onRetry) opt.onRetry(); return go(); } throw e; });
+    }
+    return go().then(check);
   }
   // text/plain keeps the request "simple", so the browser doesn't need a CORS preflight that Apps Script can't answer.
-  function apiPost(body) {
-    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); }).then(check);
+  // Saves are sent once with no time limit, as before. Sign-in passes opt (same shape as apiGet) so it can't hang.
+  function apiPost(body, opt) {
+    var init = function () { return { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }; };
+    if (!opt) return fetch(API_URL, init()).then(function (r) { return r.json(); }).then(check);
+    var left = (opt.tries || 1) - 1;
+    function go() {
+      return timedJson(API_URL, init(), opt.ms || 45000)
+        .catch(function (e) { if (left-- > 0) { if (opt.onRetry) opt.onRetry(); return go(); } throw e; });
+    }
+    return go().then(check);
   }
 
   // ---- google.script.run stand-in (only the two calls the page makes) ----
@@ -71,8 +93,8 @@
   // ---- What the page asks about the signed-in player ----
   window.RL = {
     user: getAuth,
-    post: apiPost,
-    get: apiGet,
+    post: function (body) { return apiPost(body); },
+    get: function (what, extra) { return apiGet(what, extra); },
     canEdit: function (name) { var a = getAuth(); return !!a && (a.admin || a.name === name); },
     // Enter Score follows your own name; admins can pick anyone.
     entryName: function (picked) { var a = getAuth(); return !a ? '' : a.admin ? picked : a.name; },
@@ -112,34 +134,84 @@
     document.body.classList.remove('rl-lock');
   }
 
+  // Nov 27: the name list is kept on the phone, so "Who are you?" shows at once on a slow connection and the
+  // fresh list is fetched behind it. On a first open, names come from the board the page already loaded.
+  function savedPlayers() {
+    try { var a = JSON.parse(ls(PLAYERS_KEY) || 'null'); return a && a.length ? a : null; } catch (e) { return null; }
+  }
+  function boardPlayers() {
+    var d = window.data, out = [], seen = {};
+    if (!d) return null;
+    function add(n, guest) { if (n && !seen[n]) { seen[n] = true; out.push({ name: n, guest: guest }); } }
+    (d.standings || []).forEach(function (x) { add(x.player, false); });
+    ((d.teeTimes && d.teeTimes.guests) || []).forEach(function (n) { add(n, true); });
+    return out.length ? out : null;   // no hasPin here: the PIN step asks the league
+  }
+  // Same people, in any order: the grid is only redrawn when someone was added or removed, so names don't
+  // move under a thumb when the fresh list lands.
+  function sameNames(a, b) {
+    var f = function (l) { return (l || []).map(function (p) { return p.name + (p.guest ? '*' : ''); }).sort().join('|'); };
+    return f(a) === f(b);
+  }
+  var pickSeq = 0;
   function pickStep() {
     step = {};
-    box.innerHTML = '<div class="rl-q">Who are you?</div><div class="rl-msg" id="rl-msg">Loading players…</div><div id="rl-names"></div>' +
-      '<button type="button" class="rl-link" id="rl-browse">Just looking — skip for now</button>';
-    box.querySelector('#rl-browse').addEventListener('click', function () { ls(BROWSE_KEY, '1'); hideLogin(); updateWho(); });
-    apiGet('players').then(function (j) {
-      players = j.players;
-      var league = players.filter(function (p) { return !p.guest; }), guests = players.filter(function (p) { return p.guest; });
-      function grid(list) {
-        return '<div class="rl-grid">' + list.map(function (p) {
+    var seq = ++pickSeq, shown = null, timers = [];
+    function here() { return seq === pickSeq && !!box.querySelector('#rl-names'); }
+    function msg(html) { var m = box.querySelector('#rl-msg'); if (m) m.innerHTML = html; }
+    function stop() { timers.forEach(clearInterval); timers = []; }
+    function draw(list) {
+      shown = players = list;
+      var league = list.filter(function (p) { return !p.guest; }), guests = list.filter(function (p) { return p.guest; });
+      function grid(l) {
+        return '<div class="rl-grid">' + l.map(function (p) {
           return '<button type="button" data-name="' + esc(p.name) + '">' + esc(p.name) + '</button>';
         }).join('') + '</div>';
       }
-      box.querySelector('#rl-msg').textContent = '';
+      msg('');
       box.querySelector('#rl-names').innerHTML = grid(league) + (guests.length ? '<div class="rl-sub">Guests</div>' + grid(guests) : '');
       box.querySelectorAll('[data-name]').forEach(function (b) {
-        b.addEventListener('click', function () { pinStep(b.getAttribute('data-name')); });
+        b.addEventListener('click', function () { stop(); pinStep(b.getAttribute('data-name')); });
       });
+    }
+    box.innerHTML = '<div class="rl-q">Who are you?</div><div class="rl-msg" id="rl-msg"><i class="rl-spin"></i>Loading players…</div><div id="rl-names"></div>' +
+      '<button type="button" class="rl-link" id="rl-browse">Just looking — skip for now</button>';
+    box.querySelector('#rl-browse').addEventListener('click', function () { stop(); pickSeq++; ls(BROWSE_KEY, '1'); hideLogin(); updateWho(); });
+    var first = savedPlayers() || boardPlayers();
+    if (first) draw(first);
+    else {
+      // Nothing saved yet: say so if it drags, and use the board's names the moment the board arrives.
+      timers.push(setInterval(function () {
+        if (!here() || shown) return stop();
+        var b = boardPlayers();
+        if (b) { stop(); draw(b); }
+      }, 500));
+      var slow = setInterval(function () {
+        clearInterval(slow);
+        if (here() && !shown) msg('<i class="rl-spin"></i>Still loading… slow connection');
+      }, 4000);
+      timers.push(slow);
+    }
+    apiGet('players', '', { ms: 8000, tries: 3, onRetry: function () { if (here() && !shown) msg('<i class="rl-spin"></i>Slow connection. Trying again…'); } }).then(function (j) {
+      ls(PLAYERS_KEY, JSON.stringify(j.players));
+      players = j.players;
+      if (!here()) return;
+      stop();
+      if (!shown || !sameNames(shown, j.players)) draw(j.players);
     }, function () {
-      box.querySelector('#rl-msg').textContent = 'Couldn\'t load the player list. Check your connection and try again.';
+      if (!here() || shown) return;   // a saved list is already on screen: nothing to report
+      stop();
+      msg('Couldn\'t load the player list. Check your signal and try again.');
       box.querySelector('#rl-names').innerHTML = '<button type="button" class="rl-btn" id="rl-retry">Try again</button>';
       box.querySelector('#rl-retry').addEventListener('click', pickStep);
     });
   }
 
   function pinStep(name) {
-    var p = (players || []).filter(function (x) { return x.name === name; })[0] || { name: name, hasPin: false };
-    step = { name: name, mode: p.hasPin ? 'login' : 'new', first: '', pin: '', busy: false };
+    var p = (players || []).filter(function (x) { return x.name === name; })[0] || { name: name };
+    // hasPin is only false when the league said so; a name taken from the board (no hasPin) tries sign-in first,
+    // and the league's "nopin" answer switches the screen to Choose a PIN.
+    step = { name: name, mode: p.hasPin === false ? 'new' : 'login', first: '', pin: '', busy: false };
     drawPin('');
   }
   function drawPin(msg, err) {
@@ -172,19 +244,28 @@
       step.pin = ''; step.first = ''; step.mode = 'new'; drawPin('Those didn\'t match. Choose your PIN again.', true); return;
     }
     step.busy = true;
-    drawPin(step.mode === 'login' ? 'Checking…' : 'Saving…');
-    apiPost({ action: step.mode === 'login' ? 'login' : 'setup', name: step.name, pin: step.pin }).then(function (j) {
+    var mine = step, login = step.mode === 'login', word = login ? 'Checking' : 'Saving';
+    function say(t) { var m = box.querySelector('.rl-msg'); if (step === mine && step.busy && m) m.innerHTML = '<i class="rl-spin"></i>' + t; }
+    drawPin('');
+    say(word + '…');
+    var slow = setTimeout(function () { say('Still ' + word.toLowerCase() + '… slow connection'); }, 4000);
+    // Sign-in is safe to send twice; choosing a new PIN is sent once (a second copy would come back "already has a PIN").
+    apiPost({ action: login ? 'login' : 'setup', name: step.name, pin: step.pin },
+      { ms: 12000, tries: login ? 2 : 1, onRetry: function () { say('Slow connection. Trying again…'); } }).then(function (j) {
+      clearTimeout(slow);
       setAuth({ name: j.name, token: j.token, admin: !!j.admin });
       ls(BROWSE_KEY, null);
       ls('me', j.name);
       hideLogin(); updateWho(); pushLogin(j.name); updatePush();
       if (typeof window.setMe === 'function') window.setMe(j.name);
     }, function (e) {
+      clearTimeout(slow);
+      if (step !== mine) return;   // they went back to the name list while this was out
       step.busy = false; step.pin = '';
       if (e.code === 'taken') { step.mode = 'login'; step.first = ''; }
       if (e.code === 'nopin') { step.mode = 'new'; step.first = ''; }
       if (step.mode === 'again') { step.mode = 'new'; step.first = ''; }
-      drawPin(e.message || 'Couldn\'t reach the league sheet. Try again.', true);
+      drawPin(e.net ? 'Couldn\'t reach the league. Check your signal and enter your PIN again.' : (e.message || 'Couldn\'t reach the league sheet. Try again.'), true);
     });
   }
 

@@ -21,6 +21,9 @@ body.rl-lock { overflow: hidden; }
 .rl-box .rl-back { display: block; margin: 0 0 8px; text-decoration: none; opacity: .9; }
 .rl-msg { min-height: 20px; font-size: 14px; margin: 8px 0; font-weight: 600; }
 .rl-msg.err { color: #ffd6d2; }
+.rl-spin { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -2px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: rl-spin .8s linear infinite; }
+@keyframes rl-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .rl-spin { animation-duration: 2.4s; } }
 .rl-dots { display: flex; justify-content: center; gap: 16px; margin: 18px 0 6px; }
 .rl-dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; }
 .rl-dots i.on { background: #fff; }

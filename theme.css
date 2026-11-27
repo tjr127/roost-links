@@ -190,6 +190,7 @@ table.sc .dots { color: var(--amber); }
 .rl-dots i { border-color: var(--amber); }
 .rl-dots i.on { background: var(--amber); }
 .rl-msg.err { color: var(--loss); }
+.rl-spin { border-color: var(--line2); border-top-color: var(--amber); }
 .rl-btn { background: var(--amber); color: var(--amber-ink); }
 .rl-who .rl-link { color: var(--amber); }
 .rl-tip { background: var(--card); color: var(--ink); border: 1px solid var(--line); bottom: calc(96px + env(safe-area-inset-bottom)); }
