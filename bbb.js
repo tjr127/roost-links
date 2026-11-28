@@ -142,12 +142,12 @@
         var best = function (k, hi) { var hs = s.holes.filter(function (h) { return h[k] !== null && h[k] !== undefined; }); if (!hs.length) return null; return hs.reduce(function (a, b) { return (hi ? b[k] > a[k] : b[k] < a[k]) ? b : a; }); };
         var bf = best('foV', true), bc = best('ctV', false), bl = best('lpV', true);
         tiles = '<div class="gb-h">' + (past ? 'Bests of the night' : 'Tonight\'s bests') + '</div><div class="gb-ts">' +
-          (bf ? tile3('FO', 'fo', e(short(bf.bi)), Math.round(bf.foV) + ' yd · H' + bf.n) : tile3('FO', 'fo', '—', '')) +
-          (bc ? tile3('CTP', 'ct', e(short(bc.ba)), (bc.ctV === 0 ? 'chip-in' : ft(bc.ctV)) + ' · H' + bc.n) : tile3('CTP', 'ct', '—', '')) +
-          (bl ? tile3('LP', 'lp', e(short(bl.bo)), ft(bl.lpV) + ' · H' + bl.n) : tile3('LP', 'lp', '—', '')) + '</div>';
+          (bf ? tile3('Furthest<br>Out', 'fo', e(short(bf.bi)), Math.round(bf.foV) + ' yd · H' + bf.n) : tile3('Furthest<br>Out', 'fo', '—', '')) +
+          (bc ? tile3('Closest<br>to Pin', 'ct', e(short(bc.ba)), (bc.ctV === 0 ? 'chip-in' : ft(bc.ctV)) + ' · H' + bc.n) : tile3('Closest<br>to Pin', 'ct', '—', '')) +
+          (bl ? tile3('Longest<br>Putt', 'lp', e(short(bl.bo)), ft(bl.lpV) + ' · H' + bl.n) : tile3('Longest<br>Putt', 'lp', '—', '')) + '</div>';
       } else {
         var tl = function (k, cls, lab) { if (!last[k]) return tile3(lab, cls, '—', k === 'bi' && last.push ? 'pushes to next par 3' : 'no winner'); return tile3(lab + (k === 'bi' && last.foX ? ' ×' + (last.foX + 1) : ''), cls, e(short(last[k])), e(String(last[k + 'D']).replace('chip-in from ', 'chip-in, ').replace('on from the tee, ', 'tee shot, '))); };
-        tiles = '<div class="gb-h">Latest · hole ' + last.n + ' · par ' + last.par + '</div><div class="gb-ts">' + tl('bi', 'fo', 'FO') + tl('ba', 'ct', 'CTP') + tl('bo', 'lp', 'LP') + '</div>';
+        tiles = '<div class="gb-h">Latest · hole ' + last.n + ' · par ' + last.par + '</div><div class="gb-ts">' + tl('bi', 'fo', 'Furthest<br>Out') + tl('ba', 'ct', 'Closest<br>to Pin') + tl('bo', 'lp', 'Longest<br>Putt') + '</div>';
       }
     }
     var grid = '';

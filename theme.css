@@ -1044,6 +1044,7 @@ table.fld th.bbb-th:not(.sorted) { color: var(--muted); }
 .gb-t b { display: block; font: 700 16px 'Space Grotesk', sans-serif; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gb-t small { display: block; font-size: 11.5px; color: var(--muted); line-height: 1.3; }
 .gb-t.fo { border-color: rgba(245,177,60,.35); } .gb-t.ct { border-color: rgba(143,209,158,.35); } .gb-t.lp { border-color: rgba(127,182,240,.35); }
+.gb-t .gb-k { line-height: 1.25; min-height: 2.5em; }
 .gb-t.fo .gb-k { color: var(--fo); } .gb-t.ct .gb-k { color: var(--ct); } .gb-t.lp .gb-k { color: var(--lp); }
 table.gb-g { width: 100%; table-layout: fixed; border-collapse: collapse; } table.gb-g + table.gb-g { margin-top: 8px; }
 table.gb-g th { font: 600 10px Inter, sans-serif; color: var(--muted); padding: 0; text-align: center; }
