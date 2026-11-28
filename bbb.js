@@ -14,12 +14,24 @@
 
   // ---- server state ----
   var G = null, gAt = 0, gBusy = false, gErr = '', PAST = {}, pastBusy = {}, timer = null, saveT = null, saving = false;
+  // Nov 27 fix (Ty: the switch flipped back after a few seconds): a refresh that started before a tap, or lands
+  // while a change is waiting to save, must not overwrite what the admin just did. lastLocal = time of the last tap.
+  var lastLocal = 0;
+  function busyLocal() { return saving || !!pend || Date.now() - lastLocal < 2500; }
+  function take(g, sentAt) {   // accept a server state only if it can't undo a newer local change
+    if (!g) return;
+    if (sentAt < lastLocal || busyLocal()) return;
+    if (G && (g.rev || 0) < (G.rev || 0) && g.night === G.night) return;
+    G = g;
+  }
   function auth() { try { return (window.RL && RL.user && RL.user()) || null; } catch (x) { return null; } }
   function load(force) {
     if (gBusy || !window.RL || !RL.get) return;
     if (!force && Date.now() - gAt < 10000) return;
+    if (G && busyLocal()) return;
     gBusy = true;
-    RL.get('garbage').then(function (j) { G = j.garbage || null; gErr = ''; }, function () { gErr = 'Couldn\'t reach the server.'; })
+    var sent = Date.now();
+    RL.get('garbage').then(function (j) { if (!G) G = j.garbage || null; else take(j.garbage, sent); gErr = ''; }, function () { gErr = 'Couldn\'t reach the server.'; })
       .then(function () { gBusy = false; gAt = Date.now(); refresh(); });
   }
   function maybeLoad(want) {
@@ -30,7 +42,7 @@
   }
   function vis(id) { var s = document.getElementById(id); return !!s && !s.classList.contains('hide'); }
   if (!timer) timer = setInterval(function () {   // while a Garbage night is running, keep up with it
-    if (document.hidden || !G || !G.on || G.final || saving) return;
+    if (document.hidden || !G || !G.on || G.final || busyLocal()) return;
     if (vis('bbb') || vis('field') || vis('tonight') || vis('teams')) load(false);
   }, 15000);
 
@@ -171,17 +183,23 @@
   // ---- Admin > Garbage ----
   var pend = null, fix = { hole: '' };
   function post(op, extra, quiet) {
+    lastLocal = Date.now();
     var a = auth(), body = { action: 'garbage', op: op, token: a && a.token };
     for (var k in (extra || {})) body[k] = extra[k];
     saving = true;
-    return RL.post(body).then(function (j) { G = j.garbage || G; gAt = Date.now(); gErr = ''; }, function (err) { gErr = (err && err.message) || 'That didn\'t save.'; load(true); })
-      .then(function () { saving = false; refresh(); });
+    var sent = Date.now();
+    return RL.post(body).then(function (j) {
+      saving = false; gErr = '';
+      if (j.garbage && !pend && sent >= lastLocal) { G = j.garbage; gAt = Date.now(); }
+    }, function (err) { saving = false; gErr = (err && err.message) || 'That didn\'t save. Showing what the server has.'; lastLocal = 0; gAt = 0; load(true); })
+      .then(function () { refresh(); });
   }
   function queueSet() {   // switch / players / carry: shown at once, saved a moment later so quick taps go as one
     clearTimeout(saveT);
-    saveT = setTimeout(function () { var p = pend; pend = null; if (p) post('set', p); }, 600);
+    saveT = setTimeout(function () { var p = pend; pend = null; if (p) post('set', p); }, 600);   // post() sets saving before pend clears matter
   }
   function setLocal(ch) {
+    lastLocal = Date.now();
     pend = pend || {};
     for (var k in ch) { pend[k] = ch[k]; }
     if ('on' in ch) G.on = ch.on;
@@ -192,7 +210,7 @@
   }
   function renderAdmin() {
     var el = document.getElementById('adminbbbbody'); if (!el) return;
-    maybeLoad(true);
+    if (!G) maybeLoad(true);
     if (!G) { el.innerHTML = '<div class="card empty">' + (gErr || 'Loading…') + '</div>'; return; }
     var all = G.roster || [], sel = G.players || [], guests = {}, carry = Number(G.carry) || 0, s = G.on ? adapt(G) : null;
     ((d().entry && d().entry.players) || []).forEach(function (p) { if (p.guest) guests[p.name] = 1; });
