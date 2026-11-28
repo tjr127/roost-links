@@ -229,12 +229,12 @@
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=158">
-<link rel="stylesheet" href="theme.css?v=158">
+<link rel="stylesheet" href="app.css?v=159">
+<link rel="stylesheet" href="theme.css?v=159">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script src="live.js?v=158"></script>
-<script src="app.js?v=158"></script>
-<script src="rules.js?v=158"></script>
+<script src="live.js?v=159"></script>
+<script src="app.js?v=159"></script>
+<script src="rules.js?v=159"></script>
 </head>
 <body>
 <header>
@@ -420,7 +420,7 @@
     if (grp === 'board' && !auto && data) store('boardPick', JSON.stringify({ n: data.title, t: tab }));
     if (grp === 'scores') store('scoresTab', tab);
     if (grp === 'admin') store('adminTab', tab);
-    if (grp === 'news') store('newsTab', tab);
+    if (grp === 'news') { store('newsTab', tab); if (window.bellPressSeen) bellPressSeen(); }   // Nov 27: opening Press clears the bell
     if (grp === 'stand') store('standTab', tab);
     var tbOn = document.querySelector('nav.tabbar button.on'); if (tbOn && tbOn.scrollIntoView) try { tbOn.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
     var wasAdminEnter = window.ADMIN_ENTER, wasTeeAdmin = window.TEE_ADMIN;
@@ -2215,6 +2215,7 @@ function renderField() {
     var list = n.announce.filter(function (m) { return !m.to || (me && m.to.indexOf(me) >= 0); });
     ab.innerHTML = list.length ? list.map(function (m) { return item(m, !!m.to); }).join('') + '<div class="nw-key">Announcements stay here for 3 days.</div>'
       : '<div class="card empty">No announcements in the last 3 days.</div>';
+    if (window.bellRefresh) try { bellRefresh(); } catch (x) { console.error(x); }   // Nov 27: header bell
   }
 
 
@@ -2245,22 +2246,23 @@ function renderField() {
     if (!document.hidden && Date.now() - lastLoad > 15000) load();
   });
 </script>
-<script src="tee.js?v=158"></script>
-<script src="settings.js?v=158"></script>
-<script src="admin.js?v=158"></script>
-<script src="flip.js?v=158"></script>
-<script src="match.js?v=158"></script>
-<script src="msg.js?v=158"></script>
-<script src="puttstand.js?v=158"></script>
-<script src="stats.js?v=158"></script>
-<script src="bios.js?v=158"></script>
-<script src="ctp.js?v=158"></script>
-<script src="fine.js?v=158"></script>
-<script src="tonight.js?v=158"></script>
-<script src="scorebar.js?v=158"></script>
-<script src="anim.js?v=158"></script>
-<script src="bbb.js?v=158"></script>
-<script src="earnings.js?v=158"></script>
+<script src="tee.js?v=159"></script>
+<script src="settings.js?v=159"></script>
+<script src="admin.js?v=159"></script>
+<script src="flip.js?v=159"></script>
+<script src="match.js?v=159"></script>
+<script src="msg.js?v=159"></script>
+<script src="puttstand.js?v=159"></script>
+<script src="stats.js?v=159"></script>
+<script src="bios.js?v=159"></script>
+<script src="ctp.js?v=159"></script>
+<script src="fine.js?v=159"></script>
+<script src="tonight.js?v=159"></script>
+<script src="scorebar.js?v=159"></script>
+<script src="anim.js?v=159"></script>
+<script src="bbb.js?v=159"></script>
+<script src="earnings.js?v=159"></script>
+<script src="notif.js?v=159"></script>
 <script>
   // Nov 24: on a refresh the last tab is reopened before these page scripts load, so draw it now that they're here.
   (function () {

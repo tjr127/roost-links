@@ -281,6 +281,7 @@
     if (typeof window.renderEntry === 'function' && window.data) window.renderEntry();
     if (typeof window.updateNav === 'function') window.updateNav();
     if (typeof window.rerenderYou === 'function') window.rerenderYou();
+    if (typeof window.bellRefresh === 'function') window.bellRefresh();   // Nov 27: bell shows only when signed in
     if (typeof window.updateHeaderChip === 'function') window.updateHeaderChip();   // Nov 23: your match first, your name highlighted
     if (typeof window.renderTee === 'function' && window.data) window.renderTee();
   }

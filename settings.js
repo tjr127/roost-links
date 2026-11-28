@@ -41,9 +41,12 @@
   function chipRoom() {
     var cog = document.getElementById('stbtn'), br = document.querySelector('header .brand'), ab = document.getElementById('admbtn');
     if (!cog || !br || !cog.offsetWidth) return;
+    // Nov 27: the notification bell (notif.js) sits at the right edge, the chip just left of it, the Admin button left of that.
+    var bl = document.getElementById('bellbtn'), bw = bl && !bl.classList.contains('hide') ? bl.offsetWidth + 8 : 0;
+    cog.style.right = (14 + bw) + 'px';
     var extra = ab && !ab.classList.contains('hide') ? ab.offsetWidth + 8 : 0;
-    if (ab) ab.style.right = (14 + cog.offsetWidth + 8) + 'px';
-    br.style.paddingRight = (cog.offsetWidth + extra + 22) + 'px';
+    if (ab) ab.style.right = (14 + bw + cog.offsetWidth + 8) + 'px';
+    br.style.paddingRight = (cog.offsetWidth + bw + extra + 22) + 'px';
   }
   window.updateHeaderChip = function () { build(); chipDraw(); chipRoom(); };
   function open() {
